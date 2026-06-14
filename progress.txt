@@ -4,6 +4,8 @@
 - Tailwind CSS v4 custom colors: define via `@theme { --color-<name>: <value>; }` in globals.css; no tailwind.config.ts needed
 - Use `var(--color-<name>)` in inline styles or CSS for semantic color tokens defined in `@theme`
 - TypeScript strict mode enabled via tsconfig.json
+- .gitignore blocks `.env*` — commit example env files as `env.local.example` (no leading dot)
+- Clerk auth: clerkMiddleware + createRouteMatcher in src/middleware.ts; ClerkProvider wraps layout; server components use `auth()` from @clerk/nextjs/server
 
 # Ralph Progress Log
 Started: Sun Jun 14 10:56:13 CDT 2026
@@ -41,4 +43,15 @@ Started: Sun Jun 14 10:56:13 CDT 2026
   - No .env.local exists; POSTGRES_URL must be set via `vercel env pull` before running migrations against a live DB
   - Use `CREATE EXTENSION IF NOT EXISTS pgcrypto` before any gen_random_uuid() calls in migrations
   - Use `CREATE TABLE IF NOT EXISTS` for idempotent migrations
+---
+
+## 2026-06-14 - US-004
+- Created src/middleware.ts using clerkMiddleware() + createRouteMatcher to protect /dashboard and /profile routes
+- Updated src/app/layout.tsx: wrapped in ClerkProvider, added NavAuth async server component showing SignInButton (signed out) or UserButton (signed in)
+- Created env.local.example (not .env.local.example — gitignore blocks .env* pattern) with placeholder Clerk keys and Postgres URL
+- Files changed: src/app/layout.tsx, src/middleware.ts, env.local.example
+- **Learnings for future iterations:**
+  - .gitignore uses `.env*` glob — use `env.local.example` (no leading dot) for committable example env files
+  - @clerk/nextjs v7 UserButton no longer accepts `afterSignOutUrl` prop — omit it
+  - NavAuth must be an async server component (uses `auth()` from @clerk/nextjs/server) — keep it separate from the layout function to avoid making the whole layout async
 ---
