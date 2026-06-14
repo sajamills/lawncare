@@ -74,3 +74,12 @@ Started: Sun Jun 14 10:56:13 CDT 2026
   - grass-scorer.ts uses Record<string, string> answers where keys are the trait field names on GrassType (bladeWidth, texture, color, growthPattern, activeSeason)
   - QuizQuestion options use `trait` (field name) and `traitValue` (field value) for the scorer to match against
 ---
+
+## 2026-06-14 - US-007
+- Created src/data/extension-sources.ts: static map of all 50 states + DC to land-grant university extension info; knownPdfUrls map for common state+grassType combos
+- Created src/app/api/find-pdf/route.ts: POST { state, grassType } → returns { pdfUrl, source } from known URLs or constructs search URL as fallback (with fallback: true flag)
+- Files changed: src/data/extension-sources.ts, src/app/api/find-pdf/route.ts
+- **Learnings for future iterations:**
+  - Route returns a search URL (not a direct PDF URL) as fallback — parse-pdf route must handle non-PDF URLs gracefully
+  - knownPdfUrls key format is `${STATE}_${grassType-id}` (e.g. "NC_tall-fescue")
+---
