@@ -64,3 +64,13 @@ Started: Sun Jun 14 10:56:13 CDT 2026
   - ZIP prefix map uses 3-digit string keys (e.g. "275") — must use zip.slice(0,3) to look up
   - @/lib/* path alias works via tsconfig paths (already configured by create-next-app)
 ---
+
+## 2026-06-14 - US-006
+- Created src/data/grass-types.ts: 10 GrassType objects (Bermudagrass, Zoysia, St. Augustine, Centipede, Bahia, Kentucky Bluegrass, Tall Fescue, Fine Fescue, Perennial Ryegrass, Buffalo Grass)
+- Created src/data/quiz-questions.ts: 5 QuizQuestion objects covering blade width, texture, color, growth pattern, active season
+- Created src/lib/grass-scorer.ts: scoreGrassTypes(answers) returns ScoredGrassType[] sorted by match count descending
+- Files changed: src/data/grass-types.ts, src/data/quiz-questions.ts, src/lib/grass-scorer.ts
+- **Learnings for future iterations:**
+  - grass-scorer.ts uses Record<string, string> answers where keys are the trait field names on GrassType (bladeWidth, texture, color, growthPattern, activeSeason)
+  - QuizQuestion options use `trait` (field name) and `traitValue` (field value) for the scorer to match against
+---
