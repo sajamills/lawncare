@@ -94,3 +94,15 @@ Started: Sun Jun 14 10:56:13 CDT 2026
   - Claude response may wrap JSON in markdown — use regex `\[[\s\S]*\]` to extract the array
   - DB operations are wrapped in try/catch so the route still works in dev without POSTGRES_URL
 ---
+
+## 2026-06-14 - US-009
+- Created src/actions/profile.ts with "use server" directive
+- saveProfile(): upserts user_profiles on session_id conflict, sets clerk_user_id if signed in; returns { success, error? }
+- getProfile(): queries by clerk_user_id OR session_id, returns most recent record; returns null if not found or DB unavailable
+- ProfileData type exported for use by UI components
+- Files changed: src/actions/profile.ts
+- **Learnings for future iterations:**
+  - Server actions must start with "use server" directive
+  - ON CONFLICT (session_id) requires session_id to have UNIQUE constraint — already defined in migration
+  - getProfile gracefully returns null when DB is unavailable (for dev without POSTGRES_URL)
+---
