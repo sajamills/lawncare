@@ -83,3 +83,14 @@ Started: Sun Jun 14 10:56:13 CDT 2026
   - Route returns a search URL (not a direct PDF URL) as fallback — parse-pdf route must handle non-PDF URLs gracefully
   - knownPdfUrls key format is `${STATE}_${grassType-id}` (e.g. "NC_tall-fescue")
 ---
+
+## 2026-06-14 - US-008
+- Created src/app/api/parse-pdf/route.ts: POST { pdfUrl, state, grassType }
+- Checks cached_plans DB first; fetches URL as PDF buffer or HTML text; calls claude-sonnet-4-6 with document or text content
+- Extracts JSON array from Claude response via regex; caches result to DB; gracefully degrades if DB unavailable
+- Files changed: src/app/api/parse-pdf/route.ts
+- **Learnings for future iterations:**
+  - Anthropic SDK document type for PDFs uses base64-encoded buffer with media_type "application/pdf"
+  - Claude response may wrap JSON in markdown — use regex `\[[\s\S]*\]` to extract the array
+  - DB operations are wrapped in try/catch so the route still works in dev without POSTGRES_URL
+---
