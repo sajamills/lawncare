@@ -30,3 +30,15 @@ Started: Sun Jun 14 10:56:13 CDT 2026
   - In Tailwind v4, `--color-text-primary` would map to class `text-text-primary` — awkward naming; prefer using CSS variables via `var(--color-*)` in inline styles for clarity
   - The `@theme` variables are also accessible in any CSS selector as standard CSS custom properties
 ---
+
+## 2026-06-14 - US-003
+- Created db/migrations/001_initial_schema.sql with user_profiles and cached_plans tables
+- user_profiles: uuid pk, clerk_user_id (unique nullable), session_id (unique nullable), zip_code, state, usda_zone, grass_type, square_footage (nullable), has_pets (default false), sun_exposure, created_at, updated_at
+- cached_plans: uuid pk, state, grass_type, pdf_url, parsed_plan (jsonb), created_at; UNIQUE constraint on (state, grass_type)
+- pgcrypto extension enabled for gen_random_uuid()
+- Files changed: db/migrations/001_initial_schema.sql
+- **Learnings for future iterations:**
+  - No .env.local exists; POSTGRES_URL must be set via `vercel env pull` before running migrations against a live DB
+  - Use `CREATE EXTENSION IF NOT EXISTS pgcrypto` before any gen_random_uuid() calls in migrations
+  - Use `CREATE TABLE IF NOT EXISTS` for idempotent migrations
+---
