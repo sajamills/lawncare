@@ -55,3 +55,12 @@ Started: Sun Jun 14 10:56:13 CDT 2026
   - @clerk/nextjs v7 UserButton no longer accepts `afterSignOutUrl` prop — omit it
   - NavAuth must be an async server component (uses `auth()` from @clerk/nextjs/server) — keep it separate from the layout function to avoid making the whole layout async
 ---
+
+## 2026-06-14 - US-005
+- Created src/lib/zip-zone-data.ts with ~700 ZIP prefix entries covering all 50 states + DC, mapping to state abbreviation and USDA hardiness zone
+- Created src/app/api/zone/route.ts: GET ?zip=XXXXX returns { zip, state, stateName, zone }; 400 for non-5-digit, 404 for no match
+- Files changed: src/lib/zip-zone-data.ts, src/app/api/zone/route.ts
+- **Learnings for future iterations:**
+  - ZIP prefix map uses 3-digit string keys (e.g. "275") — must use zip.slice(0,3) to look up
+  - @/lib/* path alias works via tsconfig paths (already configured by create-next-app)
+---
