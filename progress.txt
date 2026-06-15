@@ -174,3 +174,12 @@ Started: Sun Jun 14 10:56:13 CDT 2026
 - Empty state shown when no tasks for current month
 - Files changed: src/app/dashboard/page.tsx
 ---
+
+## 2026-06-14 - US-017
+- Created src/app/dashboard/calendar/page.tsx: annual calendar with Calendar/List toggle
+- Calendar view: 12 month columns, horizontal scroll, color dot chips per category, click to expand month
+- List view: all 12 months stacked with full task cards
+- Current month highlighted with green border/color
+- Legend at bottom shows all 7 category colors
+- Files changed: src/app/dashboard/calendar/page.tsx
+---
