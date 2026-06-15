@@ -146,3 +146,12 @@ Started: Sun Jun 14 10:56:13 CDT 2026
 - Skip link navigates directly to /onboarding/4 (no quiz answers saved)
 - Files changed: src/app/onboarding/[step]/steps/Step3.tsx
 ---
+
+## 2026-06-14 - US-014
+- Replaced Step4.tsx with grass type selection showing top 2-3 quiz results or full list
+- Card selection with green border highlight; "This is my grass" confirm button appears after selection
+- "None of these match" link expands to all 10 grass types
+- Trait chips show blade width, growth pattern, active season
+- Saves { grass_type: grass.id } to sessionStorage on confirm
+- Files changed: src/app/onboarding/[step]/steps/Step4.tsx
+---
