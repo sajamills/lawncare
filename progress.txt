@@ -202,3 +202,14 @@ Started: Sun Jun 14 10:56:13 CDT 2026
 - /profile is protected by Clerk middleware (already configured in US-004)
 - Files changed: src/app/profile/page.tsx
 ---
+
+## 2026-06-14 - US-020
+- Created public/manifest.json: name LawnGuide, theme #0d1a0d, background #0d1a0d, standalone display, start_url /
+- Updated next.config.ts to use next-pwa (withPWA wrapper) with dest: public, disabled in development
+- Updated layout.tsx metadata: manifest + themeColor (Next.js 15 metadata API handles the meta tags)
+- Files changed: next.config.ts, public/manifest.json, src/app/layout.tsx
+- **Learnings for future iterations:**
+  - next-pwa v5 is a CommonJS module — use require() in next.config.ts
+  - Next.js 15 Metadata API: use metadata.manifest and metadata.themeColor (not manual <link>/<meta> in head)
+  - PWA icons in public/icons/ are referenced but must be manually created (SVG→PNG conversion for real icons)
+---
