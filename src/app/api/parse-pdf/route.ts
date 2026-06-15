@@ -72,7 +72,17 @@ export async function POST(request: NextRequest) {
       [state.toUpperCase(), grassType]
     );
     if (cached.rows.length > 0) {
-      return NextResponse.json({ plan: cached.rows[0].parsed_plan, cached: true });
+      const cachedPlan = cached.rows[0].parsed_plan as Array<Record<string, unknown>>;
+      // Detect stale 12-month format (entries have 'month' not 'week')
+      const isStale = Array.isArray(cachedPlan) && cachedPlan.length > 0 && !("week" in cachedPlan[0]);
+      if (!isStale) {
+        return NextResponse.json({ plan: cachedPlan, cached: true });
+      }
+      // Stale format — delete and regenerate
+      await db.query(
+        "DELETE FROM cached_plans WHERE state = $1 AND grass_type = $2",
+        [state.toUpperCase(), grassType]
+      );
     }
   } catch {
     // DB not available in dev — continue without cache
