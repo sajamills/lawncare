@@ -27,3 +27,38 @@ Started: Sun Jun 14 2026
   - scripts/migrate.ts uses createPool() directly (not the shared db singleton) so it can call db.end() cleanly
   - tsx was not installed — had to add it before db:migrate script would work
 ---
+
+## 2026-06-15 - US-022
+- Created src/app/onboarding/[step]/steps/Step5New.tsx — 10-task checklist with "None yet" mutual-exclusion toggle
+- Tasks stored as IDs (not labels) in onboarding sessionStorage as completed_tasks: string[]
+- Continue button always enabled (zero-selection is valid)
+- **Learnings for future iterations:**
+  - "None yet" toggle: clear all others when selected, deselect when any other task is picked
+---
+
+## 2026-06-15 - US-023
+- Created Step6.tsx — reads state+grass_type from sessionStorage, constructs STATE_grassType key, shows knownPdfUrls entry or falls back to extensionSources searchUrl
+- All static data lookup — no API calls during onboarding
+- **Learnings for future iterations:**
+  - knownPdfUrls keys format: STATEUPPERCASE_grassId (e.g. NC_bermudagrass)
+  - extensionSources and knownPdfUrls both exported from src/data/extension-sources.ts
+---
+
+## 2026-06-15 - US-024
+- Created Step7.tsx (profile-save + confirmation); moved old Step5 save/AI-parse logic here but removed API calls
+- Replaced Step5.tsx with Step5New.tsx content (checklist becomes the new step 5)
+- Updated onboarding/[step]/page.tsx: STEP_COMPONENTS has 7 entries, guard updated to stepNum > 7
+- **Learnings for future iterations:**
+  - Step7 ignores onNext prop (final step navigates directly to /dashboard via router)
+  - Back button auto-appears for stepNum > 1 via existing router logic
+---
+
+## 2026-06-15 - US-025
+- Replaced placeholder src/app/page.tsx with full SaaS marketing one-pager
+- Sections: Hero, Features (3-col grid on md:), How It Works (numbered list), Bottom CTA
+- Server Component (no 'use client') — purely static, no interactivity needed
+- All colors use CSS variables for dark theme consistency
+- **Learnings for future iterations:**
+  - CtaButton extracted as a local function component to reuse in hero and bottom CTA
+  - grid-cols-1 md:grid-cols-3 pattern works with Tailwind v4 without config changes
+---

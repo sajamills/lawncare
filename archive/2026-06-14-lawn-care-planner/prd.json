@@ -1,0 +1,350 @@
+{
+  "project": "LawnCare Planner",
+  "branchName": "ralph/lawn-care-planner",
+  "description": "Utility-first lawn care app with zip-to-zone onboarding, grass type identification quiz, university extension PDF parsing, and personalized care plans with dark/green PWA theme",
+  "userStories": [
+    {
+      "id": "US-001",
+      "title": "Scaffold Next.js 15 project",
+      "description": "As a developer, I need the base project scaffolded so all other stories have a working foundation.",
+      "acceptanceCriteria": [
+        "Initialize project with `npx create-next-app@latest` using App Router, TypeScript, Tailwind CSS, ESLint, and src/ directory structure",
+        "Remove default Next.js placeholder content from app/page.tsx and app/globals.css",
+        "Install core dependencies: @clerk/nextjs, @vercel/postgres, ai, @anthropic-ai/sdk, next-pwa",
+        "package.json scripts include dev, build, start, and lint",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-002",
+      "title": "Global dark/green theme and layout shell",
+      "description": "As a developer, I need the global design tokens and layout shell so every page shares the correct dark/green visual theme.",
+      "acceptanceCriteria": [
+        "tailwind.config.ts defines custom colors: background #0d1a0d, surface #1a2e1a, primary #4caf50, secondary #a5d6a7, text-primary #e8f5e9, text-muted #81c784",
+        "app/globals.css applies background and text-primary as default body styles",
+        "app/layout.tsx renders a full-height dark layout with a top navigation bar showing the app name 'LawnGuide' in green",
+        "No light mode styles exist anywhere in the codebase",
+        "All text on dark backgrounds passes WCAG AA contrast ratio (4.5:1) — verify visually",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-003",
+      "title": "Database schema: user_profiles and cached_plans tables",
+      "description": "As a developer, I need database tables for storing user lawn profiles and cached extension plan data so the app can persist and retrieve user data.",
+      "acceptanceCriteria": [
+        "Create migration file at db/migrations/001_initial_schema.sql",
+        "user_profiles table columns: id (uuid pk), clerk_user_id (text unique nullable), session_id (text unique nullable), zip_code (text), state (text), usda_zone (text), grass_type (text), square_footage (integer nullable), has_pets (boolean default false), sun_exposure (text), created_at (timestamptz default now), updated_at (timestamptz default now)",
+        "cached_plans table columns: id (uuid pk), state (text), grass_type (text), pdf_url (text), parsed_plan (jsonb), created_at (timestamptz default now)",
+        "Unique constraint on cached_plans(state, grass_type)",
+        "Migration runs successfully against the connected Postgres database",
+        "Typecheck passes"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-004",
+      "title": "Clerk authentication setup",
+      "description": "As a developer, I need Clerk auth wired into the app so users can optionally create accounts to save their profile across devices.",
+      "acceptanceCriteria": [
+        "Install and configure @clerk/nextjs with NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY and CLERK_SECRET_KEY env vars (use placeholder values in .env.local.example)",
+        "src/middleware.ts uses Clerk's clerkMiddleware() to protect only /dashboard and /profile routes; onboarding routes remain public",
+        "app/layout.tsx wraps children in <ClerkProvider>",
+        "Clerk's <SignInButton> and <UserButton> are conditionally shown in the nav bar (SignInButton when signed out, UserButton when signed in)",
+        "Typecheck passes"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-005",
+      "title": "ZIP code to USDA hardiness zone API route",
+      "description": "As a developer, I need an API route that resolves a ZIP code to a USDA hardiness zone and state so the onboarding flow can personalize the plan.",
+      "acceptanceCriteria": [
+        "Create src/lib/zip-zone-data.ts containing a static lookup map of ZIP code prefixes (first 3 digits) to { state: string, zone: string } — cover all 50 US states with representative zone values",
+        "Create app/api/zone/route.ts that accepts GET ?zip=XXXXX, looks up the zone, and returns { zip, state, zone } as JSON",
+        "Returns 400 with { error: 'Invalid ZIP code' } for non-5-digit input",
+        "Returns 404 with { error: 'Zone not found for this ZIP' } if no match",
+        "Typecheck passes"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-006",
+      "title": "Grass types static data and quiz questions",
+      "description": "As a developer, I need static data files for grass types and quiz questions so the identification flow has content to work from.",
+      "acceptanceCriteria": [
+        "Create src/data/grass-types.ts exporting an array of GrassType objects each with: id, name, description, bladeWidth ('fine'|'medium'|'coarse'), texture ('soft'|'rough'|'stiff'), color ('bright-green'|'dark-green'|'blue-green'), growthPattern ('clumping'|'spreading'), activeSeason ('warm'|'cool'|'year-round'), photoUrl (placeholder string), traits (string[])",
+        "Include at least 10 grass types: Bermudagrass, Zoysia, St. Augustine, Centipede, Bahia, Kentucky Bluegrass, Tall Fescue, Fine Fescue, Perennial Ryegrass, Buffalo Grass",
+        "Create src/data/quiz-questions.ts exporting an array of 5 QuizQuestion objects each with: id, question (string), options (array of { label, value, trait, traitValue })",
+        "Quiz questions cover: blade width, texture, color, growth pattern, active season",
+        "Create src/lib/grass-scorer.ts with a scoreGrassTypes(answers: Record<string, string>) function that returns grass types ranked by how many quiz answers match each type's traits",
+        "Typecheck passes"
+      ],
+      "priority": 6,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-007",
+      "title": "University extension PDF discovery API route",
+      "description": "As a developer, I need a backend route that finds the most relevant university extension PDF URL for a given US state and grass type.",
+      "acceptanceCriteria": [
+        "Create src/data/extension-sources.ts with a static map of state abbreviation to { universityName: string, baseUrl: string, searchUrl: string } for all 50 states (use land-grant universities: e.g. NC State, UGA, Texas A&M, Rutgers, etc.)",
+        "Create app/api/find-pdf/route.ts accepting POST { state, grassType }",
+        "Route constructs a targeted search query combining state extension URL + grass type keyword",
+        "Route uses fetch to search the extension site or falls back to a known PDF URL pattern per state",
+        "Returns { pdfUrl: string, source: string } on success or { error: string } with fallback flag",
+        "Typecheck passes"
+      ],
+      "priority": 7,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-008",
+      "title": "PDF fetch and Claude AI parse to structured monthly plan",
+      "description": "As a developer, I need a backend route that fetches a PDF from a URL and uses the Claude API to extract a structured month-by-month care plan.",
+      "acceptanceCriteria": [
+        "Create app/api/parse-pdf/route.ts accepting POST { pdfUrl, state, grassType }",
+        "Route fetches the PDF as a buffer using node fetch",
+        "Route calls the Anthropic Claude API (claude-sonnet-4-6) with the PDF content and a system prompt instructing it to extract a JSON array of { month: number, tasks: [{ title, description, category, priority, petSafetyNote }] }",
+        "Valid categories: 'mow' | 'fertilize' | 'water' | 'aerate' | 'seed' | 'pest-weed' | 'other'",
+        "Valid priorities: 'urgent' | 'routine' | 'optional'",
+        "Returns the parsed plan JSON on success",
+        "Saves the result to the cached_plans table using state + grassType as the cache key",
+        "If a cached plan already exists for that state + grassType, returns the cached version without re-parsing",
+        "Typecheck passes"
+      ],
+      "priority": 8,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-009",
+      "title": "User profile server actions (save and retrieve)",
+      "description": "As a developer, I need server actions for saving and loading a user's lawn profile so the frontend can persist data across the onboarding steps.",
+      "acceptanceCriteria": [
+        "Create src/actions/profile.ts with server actions: saveProfile(data: ProfileData) and getProfile(sessionId: string)",
+        "saveProfile upserts a user_profiles row using session_id as the key; if the user is signed in via Clerk, also sets clerk_user_id",
+        "getProfile retrieves the profile by session_id OR clerk_user_id (whichever is available)",
+        "ProfileData type includes all user_profiles fields except id and timestamps",
+        "Session ID is a UUID generated client-side on first visit and stored in localStorage under the key 'lawn_session_id'",
+        "Typecheck passes"
+      ],
+      "priority": 9,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-010",
+      "title": "Onboarding wizard shell with progress indicator",
+      "description": "As a user, I want a step-by-step onboarding flow with a clear progress indicator so I always know where I am in the setup process.",
+      "acceptanceCriteria": [
+        "Create app/onboarding/layout.tsx rendering a centered single-column container (max-w-md) on the dark background",
+        "Progress indicator at the top shows 5 steps as dots/segments; active step is green (#4caf50), completed steps are dimmed green, future steps are dark",
+        "Step routing uses app/onboarding/[step]/page.tsx where step is 1 through 5",
+        "Navigating to /onboarding redirects to /onboarding/1",
+        "A 'Back' button is shown on steps 2–5 and navigates to the previous step",
+        "Onboarding state (all collected answers so far) is persisted in sessionStorage under 'onboarding_state' between steps",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 10,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-011",
+      "title": "Onboarding Step 1: ZIP code entry",
+      "description": "As a new user, I want to enter my ZIP code on the first screen so the app can determine my growing zone.",
+      "acceptanceCriteria": [
+        "app/onboarding/1/page.tsx renders a full-screen step with headline 'Where is your lawn?' and a ZIP code input field",
+        "Input accepts only 5 numeric digits",
+        "On submit, calls GET /api/zone?zip=XXXXX and shows a loading state",
+        "On success, displays the resolved zone (e.g. 'Zone 7a — North Carolina') in green text below the input",
+        "A 'Continue' button appears after successful zone resolution and advances to step 2",
+        "Error state shows 'We couldn't find a zone for that ZIP. Please check and try again.' in red",
+        "Resolved zip, state, and zone are saved to sessionStorage onboarding_state",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 11,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-012",
+      "title": "Onboarding Step 2: Yard profile inputs",
+      "description": "As a user, I want to enter my yard details so the plan can give me accurate task quantities and relevant advice.",
+      "acceptanceCriteria": [
+        "app/onboarding/2/page.tsx renders headline 'Tell us about your yard'",
+        "Square footage field: numeric input with label 'Approximate lawn size (sq ft)' and a 'Not sure' toggle that sets value to null and shows 'We'll use a standard yard size'",
+        "Pets toggle: labeled 'Do you have pets or animals that use the lawn?' with Yes/No buttons",
+        "Sun exposure: three card-style buttons for 'Full Sun', 'Partial Shade', 'Full Shade' — selected card has green border",
+        "'Continue' button is enabled only after pets and sun exposure are selected (sq ft is optional)",
+        "All values saved to onboarding_state in sessionStorage on Continue",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 12,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-013",
+      "title": "Onboarding Step 3: Grass identification quiz",
+      "description": "As a user, I want to answer questions about my grass one at a time so the app can suggest what grass type I have.",
+      "acceptanceCriteria": [
+        "app/onboarding/3/page.tsx shows one quiz question at a time from src/data/quiz-questions.ts",
+        "Each question shows 3–4 answer options as large tap-friendly cards with label and optional icon",
+        "Selecting an answer immediately advances to the next question (no separate Next button)",
+        "Progress within the quiz is shown as 'Question 2 of 5' text",
+        "A 'Skip quiz — I know my grass type' link at the bottom navigates directly to step 4 with no quiz answers",
+        "After the last question, calls scoreGrassTypes() with the collected answers and saves results + answers to onboarding_state, then navigates to step 4",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 13,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-014",
+      "title": "Onboarding Step 4: Grass type photo confirmation",
+      "description": "As a user, I want to see photos of the suggested grass types so I can confirm which one is in my yard.",
+      "acceptanceCriteria": [
+        "app/onboarding/4/page.tsx renders headline 'Does your grass look like this?'",
+        "Shows top 2–3 ranked grass types from onboarding_state (or full list if quiz was skipped)",
+        "Each grass type card shows: photo (use photoUrl from grass-types data, placeholder image if empty), grass name, and 3 key trait chips (e.g. 'Fine blade · Spreads · Warm season')",
+        "Tapping a card selects it (green border) and shows a 'This is my grass' confirm button",
+        "A 'None of these match' link at the bottom shows all 10+ grass types in a scrollable list",
+        "Confirmed grass type saved to onboarding_state and advances to step 5",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 14,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-015",
+      "title": "Onboarding Step 5: Save profile and trigger plan generation",
+      "description": "As a user completing onboarding, I want my profile saved and my care plan generated while I optionally create an account.",
+      "acceptanceCriteria": [
+        "app/onboarding/5/page.tsx renders headline 'Your plan is being built...' with an animated green loading spinner",
+        "On mount, calls saveProfile() server action with all onboarding_state data using a generated session UUID stored in localStorage",
+        "Simultaneously, calls POST /api/find-pdf then POST /api/parse-pdf in sequence to generate and cache the user's plan",
+        "While loading, shows encouraging copy: 'We're finding your local university extension guide and building your personalized plan'",
+        "On completion, shows optional account creation: 'Save your plan across devices — create a free account' with Sign Up and 'Continue without account' options",
+        "Both paths navigate to /dashboard",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 15,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-016",
+      "title": "'Do This Now' dashboard — current week tasks",
+      "description": "As a user, I want to see what lawn tasks I should do this week so I can take immediate action.",
+      "acceptanceCriteria": [
+        "app/dashboard/page.tsx loads the user's profile via getProfile() and their cached plan from cached_plans",
+        "Filters the plan to the current month's tasks",
+        "Renders a 'Right Now' section at the top showing tasks for the current week, sorted by priority (urgent first)",
+        "Each task card shows: category icon, task title, 1–2 sentence description, priority badge (red=urgent, yellow=routine, gray=optional)",
+        "If has_pets is true and a task has a petSafetyNote, show a yellow 'Pet caution' badge with the note in a tooltip/expandable",
+        "Tasks involving fertilizer or product quantities show amounts scaled to the user's square footage (e.g. '2.5 lbs nitrogen per 1,000 sq ft × your 3,200 sq ft = 8 lbs total')",
+        "Empty state: 'Nothing urgent this week — check back soon or view your full annual calendar'",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 16,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-017",
+      "title": "Annual care calendar view",
+      "description": "As a user, I want to see all 12 months of lawn care tasks in a calendar so I can plan ahead for the whole year.",
+      "acceptanceCriteria": [
+        "app/dashboard/calendar/page.tsx renders a full annual calendar below a 'Your Year at a Glance' heading",
+        "12 month columns displayed horizontally with horizontal scroll on mobile",
+        "Current month is highlighted with a green border",
+        "Each month shows category color chips for tasks present that month (mow=green, fertilize=yellow, water=blue, aerate=orange, seed=lime, pest-weed=red, other=gray)",
+        "Tapping a month expands it (accordion or modal on mobile) to show the full task list for that month",
+        "Expanded task list matches the same card design as the 'Do This Now' view",
+        "A toggle at the top switches between 'Calendar View' and 'List View' (list view shows all months stacked vertically)",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 17,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-018",
+      "title": "Sign in / sign up pages",
+      "description": "As a user, I want dedicated sign-in and sign-up pages so I can create or access my account at any time.",
+      "acceptanceCriteria": [
+        "app/sign-in/[[...sign-in]]/page.tsx renders Clerk's <SignIn> component centered on the dark background with green accent styling",
+        "app/sign-up/[[...sign-up]]/page.tsx renders Clerk's <SignUp> component with the same styling",
+        "Both pages have the LawnGuide logo/name at the top",
+        "After sign-in, redirects to /dashboard",
+        "After sign-up, redirects to /dashboard (profile from localStorage session is merged with the new Clerk account via clerk_user_id update)",
+        "Clerk appearance config matches dark theme (background, text, button colors)",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 18,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-019",
+      "title": "Profile edit page",
+      "description": "As a returning user, I want to edit my yard profile so my plan stays accurate if things change.",
+      "acceptanceCriteria": [
+        "app/profile/page.tsx is protected by Clerk middleware (redirects to sign-in if not authenticated)",
+        "Page shows a form pre-populated with current profile values from getProfile()",
+        "All onboarding fields are editable: ZIP code, grass type (dropdown from grass-types data), square footage, pets toggle, sun exposure",
+        "Changing the grass type or ZIP code shows a warning: 'Changing these fields will regenerate your plan'",
+        "Save button calls saveProfile() server action and re-triggers plan generation if grass type or zip changed",
+        "Success toast: 'Profile updated' in green",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 19,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-020",
+      "title": "PWA manifest and service worker",
+      "description": "As a mobile user, I want to install the app to my home screen and access my plan offline.",
+      "acceptanceCriteria": [
+        "public/manifest.json defines: name 'LawnGuide', short_name 'LawnGuide', theme_color '#0d1a0d', background_color '#0d1a0d', display 'standalone', start_url '/', icons at 192x192 and 512x512 (green leaf icon on dark background)",
+        "next.config.ts configures next-pwa with dest: 'public', disable in development, and caches the /dashboard page and its API responses",
+        "app/layout.tsx links to the manifest and sets theme-color meta tag",
+        "Lighthouse PWA audit passes (run via Chrome DevTools or Lighthouse CLI) — score 90+",
+        "Typecheck passes"
+      ],
+      "priority": 20,
+      "passes": true,
+      "notes": ""
+    }
+  ]
+}
