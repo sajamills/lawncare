@@ -155,3 +155,12 @@ Started: Sun Jun 14 10:56:13 CDT 2026
 - Saves { grass_type: grass.id } to sessionStorage on confirm
 - Files changed: src/app/onboarding/[step]/steps/Step4.tsx
 ---
+
+## 2026-06-14 - US-015
+- Replaced Step5.tsx with plan generation flow: spinner while loading, done state with Sign Up + Continue options
+- On mount: calls saveProfile() server action, then /api/find-pdf, then /api/parse-pdf in sequence
+- Both API calls are best-effort (try/catch) — navigates to dashboard regardless
+- Uses useRef(started) to prevent double-execution in React StrictMode
+- getOrCreateSessionId() creates UUID in localStorage under 'lawn_session_id'
+- Files changed: src/app/onboarding/[step]/steps/Step5.tsx
+---
