@@ -106,3 +106,16 @@ Started: Sun Jun 14 10:56:13 CDT 2026
   - ON CONFLICT (session_id) requires session_id to have UNIQUE constraint — already defined in migration
   - getProfile gracefully returns null when DB is unavailable (for dev without POSTGRES_URL)
 ---
+
+## 2026-06-14 - US-010
+- Created src/app/onboarding/layout.tsx: "use client" layout with 5-segment progress bar; active=green, completed=dimmed green, future=dark
+- Created src/app/onboarding/page.tsx: redirects to /onboarding/1
+- Created src/app/onboarding/[step]/page.tsx: routes to StepN component, renders Back button on steps 2-5
+- Created placeholder step components Step1-Step5 in src/app/onboarding/[step]/steps/
+- Files changed: src/app/onboarding/{layout.tsx, page.tsx, [step]/page.tsx, [step]/steps/Step1-5.tsx}
+- **Learnings for future iterations:**
+  - onboarding/layout.tsx must be "use client" to use usePathname() for active step detection
+  - Step components receive onNext prop from [step]/page.tsx for navigation
+  - Step placeholder files will be replaced by US-011 through US-015
+  - sessionStorage persistence of onboarding_state happens within each step component
+---
