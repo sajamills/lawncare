@@ -1,6 +1,6 @@
 "use server";
 
-import { auth } from "@clerk/nextjs/server";
+// Demo mode: Clerk auth bypassed; userId always null.
 import { db } from "@/lib/db";
 
 export interface ProfileData {
@@ -12,17 +12,18 @@ export interface ProfileData {
   square_footage?: number | null;
   has_pets: boolean;
   sun_exposure: string;
+  completed_tasks?: string[];
 }
 
 export async function saveProfile(data: ProfileData): Promise<{ success: boolean; error?: string }> {
-  const { userId } = await auth();
+  const userId: string | null = null;
 
   try {
     await db.query(
       `INSERT INTO user_profiles (
         clerk_user_id, session_id, zip_code, state, usda_zone,
-        grass_type, square_footage, has_pets, sun_exposure, updated_at
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
+        grass_type, square_footage, has_pets, sun_exposure, completed_tasks, updated_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, NOW())
       ON CONFLICT (session_id) DO UPDATE SET
         clerk_user_id = EXCLUDED.clerk_user_id,
         zip_code = EXCLUDED.zip_code,
@@ -32,6 +33,7 @@ export async function saveProfile(data: ProfileData): Promise<{ success: boolean
         square_footage = EXCLUDED.square_footage,
         has_pets = EXCLUDED.has_pets,
         sun_exposure = EXCLUDED.sun_exposure,
+        completed_tasks = EXCLUDED.completed_tasks,
         updated_at = NOW()`,
       [
         userId ?? null,
@@ -43,6 +45,7 @@ export async function saveProfile(data: ProfileData): Promise<{ success: boolean
         data.square_footage ?? null,
         data.has_pets,
         data.sun_exposure,
+        data.completed_tasks ?? [],
       ]
     );
     return { success: true };
@@ -52,24 +55,11 @@ export async function saveProfile(data: ProfileData): Promise<{ success: boolean
 }
 
 export async function getProfile(sessionId: string): Promise<ProfileData | null> {
-  const { userId } = await auth();
-
   try {
-    let result;
-
-    if (userId) {
-      result = await db.query(
-        `SELECT * FROM user_profiles
-         WHERE clerk_user_id = $1 OR session_id = $2
-         ORDER BY updated_at DESC LIMIT 1`,
-        [userId, sessionId]
-      );
-    } else {
-      result = await db.query(
-        `SELECT * FROM user_profiles WHERE session_id = $1 LIMIT 1`,
-        [sessionId]
-      );
-    }
+    const result = await db.query(
+      `SELECT * FROM user_profiles WHERE session_id = $1 LIMIT 1`,
+      [sessionId]
+    );
 
     if (result.rows.length === 0) return null;
 
@@ -83,6 +73,7 @@ export async function getProfile(sessionId: string): Promise<ProfileData | null>
       square_footage: row.square_footage,
       has_pets: row.has_pets,
       sun_exposure: row.sun_exposure,
+      completed_tasks: row.completed_tasks ?? [],
     };
   } catch {
     return null;
