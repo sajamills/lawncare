@@ -193,3 +193,12 @@ Started: Sun Jun 14 10:56:13 CDT 2026
 - **Learnings for future iterations:**
   - @clerk/nextjs v7 appearance.variables only supports a limited set: colorBackground, colorPrimary, colorDanger, colorSuccess, colorWarning, fontFamily, borderRadius — check types before adding
 ---
+
+## 2026-06-14 - US-019
+- Created src/app/profile/page.tsx: pre-populated form using getProfile() on mount
+- Fields: ZIP code, grass type (dropdown from grassTypes), sq ft, pets Yes/No, sun exposure
+- Warning banner when grass type or ZIP changes (will regenerate plan)
+- Save calls saveProfile() server action; shows green toast "Profile updated"
+- /profile is protected by Clerk middleware (already configured in US-004)
+- Files changed: src/app/profile/page.tsx
+---
