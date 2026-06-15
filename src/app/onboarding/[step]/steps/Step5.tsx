@@ -1,9 +1,21 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { useRouter } from "next/navigation";
-import { saveProfile } from "@/actions/profile";
-import { SignUpButton } from "@clerk/nextjs";
+import { useState } from "react";
+
+const TASKS = [
+  { id: "fertilize", label: "Applied fertilizer" },
+  { id: "pre-emergent", label: "Applied pre-emergent weed control" },
+  { id: "post-emergent", label: "Applied post-emergent (weed killer)" },
+  { id: "aerate", label: "Aerated the lawn" },
+  { id: "overseed", label: "Overseeded" },
+  { id: "dethatch", label: "Dethatched" },
+  { id: "lime", label: "Applied lime or soil amendment" },
+  { id: "pesticide", label: "Applied pesticide / grub control" },
+  { id: "mow-started", label: "Started regular mowing" },
+  { id: "irrigation", label: "Set up / ran irrigation system" },
+] as const;
+
+const NONE_ID = "none";
 
 function getOnboardingState(): Record<string, unknown> {
   if (typeof window === "undefined") return {};
@@ -14,149 +26,104 @@ function getOnboardingState(): Record<string, unknown> {
   }
 }
 
-function getOrCreateSessionId(): string {
-  const existing = localStorage.getItem("lawn_session_id");
-  if (existing) return existing;
-  const id = crypto.randomUUID();
-  localStorage.setItem("lawn_session_id", id);
-  return id;
+function setOnboardingState(data: Record<string, unknown>) {
+  if (typeof window === "undefined") return;
+  const current = getOnboardingState();
+  sessionStorage.setItem(
+    "onboarding_state",
+    JSON.stringify({ ...current, ...data })
+  );
 }
 
-export default function Step5({ onNext }: { onNext: () => void }) {
-  const router = useRouter();
-  const [status, setStatus] = useState<"loading" | "done" | "error">("loading");
-  const [errorMsg, setErrorMsg] = useState("");
-  const started = useRef(false);
+export default function Step5New({ onNext }: { onNext: () => void }) {
+  const [selected, setSelected] = useState<Set<string>>(new Set());
 
-  useEffect(() => {
-    if (started.current) return;
-    started.current = true;
-
-    async function build() {
-      const state = getOnboardingState();
-      const sessionId = getOrCreateSessionId();
-
-      // Save profile
-      try {
-        await saveProfile({
-          session_id: sessionId,
-          zip_code: (state.zip as string) ?? "",
-          state: (state.state as string) ?? "",
-          usda_zone: (state.usda_zone as string) ?? "",
-          grass_type: (state.grass_type as string) ?? "",
-          square_footage: state.square_footage as number | null,
-          has_pets: (state.has_pets as boolean) ?? false,
-          sun_exposure: (state.sun_exposure as string) ?? "",
-        });
-      } catch {
-        // Non-fatal — DB may not be configured in dev
+  const toggle = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (id === NONE_ID) {
+        return next.has(NONE_ID) ? new Set() : new Set([NONE_ID]);
       }
-
-      // Find PDF
-      try {
-        const pdfRes = await fetch("/api/find-pdf", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            state: state.state,
-            grassType: state.grass_type,
-          }),
-        });
-
-        if (pdfRes.ok) {
-          const { pdfUrl } = await pdfRes.json() as { pdfUrl: string };
-
-          // Parse plan
-          await fetch("/api/parse-pdf", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              pdfUrl,
-              state: state.state,
-              grassType: state.grass_type,
-            }),
-          });
-        }
-      } catch {
-        // Non-fatal — plan generation is best-effort
+      next.delete(NONE_ID);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
       }
+      return next;
+    });
+  };
 
-      setStatus("done");
-    }
-
-    build().catch(() => setStatus("error"));
-  }, []);
+  const handleContinue = () => {
+    const completed_tasks = selected.has(NONE_ID)
+      ? []
+      : Array.from(selected);
+    setOnboardingState({ completed_tasks });
+    onNext();
+  };
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-6">
       <div>
         <h1
           className="text-2xl font-bold mb-1"
           style={{ color: "var(--color-text-primary)" }}
         >
-          {status === "loading"
-            ? "Your plan is being built..."
-            : "Your plan is ready!"}
+          What have you done so far this year?
         </h1>
         <p style={{ color: "var(--color-text-muted)" }}>
-          {status === "loading"
-            ? "We're finding your local university extension guide and building your personalized plan"
-            : "Save your plan across devices by creating a free account."}
+          Check off anything you&apos;ve already done in {new Date().getFullYear()}
         </p>
       </div>
 
-      {status === "loading" && (
-        <div className="flex justify-center py-4">
-          <div
-            className="w-12 h-12 rounded-full border-4 border-t-transparent animate-spin"
-            style={{ borderColor: "var(--color-primary)", borderTopColor: "transparent" }}
-          />
-        </div>
-      )}
-
-      {status === "done" && (
-        <div className="flex flex-col gap-3">
-          <SignUpButton mode="modal">
+      <div className="flex flex-col gap-2">
+        {TASKS.map((task) => {
+          const isSelected = selected.has(task.id);
+          return (
             <button
-              className="w-full py-3 rounded-lg font-semibold text-sm"
+              key={task.id}
+              type="button"
+              onClick={() => toggle(task.id)}
+              className="w-full px-4 py-3 rounded-lg text-left border transition-all"
               style={{
-                backgroundColor: "var(--color-primary)",
-                color: "var(--color-background)",
+                backgroundColor: "var(--color-surface)",
+                borderColor: isSelected ? "var(--color-primary)" : "#2d4a2d",
+                borderWidth: isSelected ? "2px" : "1px",
+                color: "var(--color-text-primary)",
               }}
             >
-              Create a free account
+              <span className="text-sm font-medium">{task.label}</span>
             </button>
-          </SignUpButton>
-          <button
-            onClick={() => router.push("/dashboard")}
-            className="w-full py-3 rounded-lg font-medium text-sm border"
-            style={{
-              borderColor: "#2d4a2d",
-              color: "var(--color-text-muted)",
-            }}
-          >
-            Continue without account
-          </button>
-        </div>
-      )}
+          );
+        })}
 
-      {status === "error" && (
-        <div className="flex flex-col gap-3">
-          <p className="text-sm" style={{ color: "#ef4444" }}>
-            {errorMsg || "Something went wrong. Your profile may not be saved."}
-          </p>
-          <button
-            onClick={() => router.push("/dashboard")}
-            className="w-full py-3 rounded-lg font-semibold text-sm"
-            style={{
-              backgroundColor: "var(--color-primary)",
-              color: "var(--color-background)",
-            }}
-          >
-            Continue to dashboard anyway
-          </button>
-        </div>
-      )}
+        <button
+          type="button"
+          onClick={() => toggle(NONE_ID)}
+          className="w-full px-4 py-3 rounded-lg text-left border transition-all mt-1"
+          style={{
+            backgroundColor: "var(--color-surface)",
+            borderColor: selected.has(NONE_ID) ? "var(--color-primary)" : "#2d4a2d",
+            borderWidth: selected.has(NONE_ID) ? "2px" : "1px",
+            color: "var(--color-text-muted)",
+          }}
+        >
+          <span className="text-sm font-medium">
+            None yet — it&apos;s early in the season
+          </span>
+        </button>
+      </div>
+
+      <button
+        onClick={handleContinue}
+        className="w-full py-3 rounded-lg font-semibold text-sm"
+        style={{
+          backgroundColor: "var(--color-primary)",
+          color: "var(--color-background)",
+        }}
+      >
+        Continue →
+      </button>
     </div>
   );
 }
