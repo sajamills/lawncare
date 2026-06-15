@@ -1,0 +1,122 @@
+{
+  "project": "LawnCare Planner",
+  "branchName": "ralph/ai-plan-v2-enhancements",
+  "description": "52-week AI plan generation with current-date-aware dashboard, real grass photos in onboarding picker, and soil-temperature-based pre-emergent timing banners",
+  "userStories": [
+    {
+      "id": "US-026",
+      "title": "Soil temperature pre-emergent data by state",
+      "description": "As a developer, I need a data file mapping each US state to its average spring and fall pre-emergent application windows so the banner and plan can use accurate timing without any external API.",
+      "acceptanceCriteria": [
+        "Create src/data/preemergent-windows.ts",
+        "Export a PREEMERGENT_WINDOWS record keyed by two-letter uppercase state code (e.g. 'NC')",
+        "Each entry has: spring: { startDate: 'MM-DD', endDate: 'MM-DD' } and fall: { startDate: 'MM-DD', endDate: 'MM-DD' }",
+        "Spring window = typical date range soil reaches 50°F; fall window = typical date range soil reaches 70°F",
+        "Export a getPreemergentWindow(state: string) function returning the entry or null for unknown states",
+        "All 50 US states are covered (group by climate zone — see PRD technical notes for zone assignments)",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-027",
+      "title": "Upgrade API to 52-week plan generation",
+      "description": "As a developer, I need the /api/parse-pdf route to return a 52-week plan instead of a 12-month plan so the dashboard can show week-precise tasks using today's date.",
+      "acceptanceCriteria": [
+        "Rename MonthlyPlan interface to WeeklyPlan: { week: number; tasks: WeeklyTask[] } where week is 1–52",
+        "Rename MonthlyTask interface to WeeklyTask (same fields: title, description, category, priority, petSafetyNote)",
+        "Update the Claude system prompt to request exactly 52 entries (weeks 1–52) instead of 12 months",
+        "Prompt must instruct Claude to factor in state and grassType for seasonally correct week-level timing",
+        "Response JSON array has exactly 52 entries; weeks with no tasks use tasks: []",
+        "pdfUrl parameter is now optional — when empty string or omitted, skip the URL fetch and pass state/grassType directly to Claude for knowledge-based generation",
+        "Validation: require state and grassType but not pdfUrl (return 400 only if state or grassType are missing)",
+        "DB cache upsert remains unchanged (ON CONFLICT ... DO UPDATE) — old 12-month entries are replaced on next fetch",
+        "Typecheck passes"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-028",
+      "title": "Dashboard 'This Week' card using current date",
+      "description": "As a user, I want the dashboard to show exactly what I should do on my lawn this week, not just this month, based on today's date.",
+      "acceptanceCriteria": [
+        "Add a getISOWeek(date: Date): number utility (see PRD for ISO week math using UTC) — do NOT use a library",
+        "Dashboard calls /api/parse-pdf with { state, grassType } (no pdfUrl) and receives the 52-week WeeklyPlan[]",
+        "Use getISOWeek(new Date()) to find the matching week entry in the plan",
+        "The subtitle below the heading changes from just month name to the week date range (e.g. 'Your lawn: Bermudagrass • June 9–15')",
+        "Compute the week date range from the ISO week number and current year (Monday–Sunday)",
+        "Tasks sort urgent → routine → optional as before",
+        "If the current week has no tasks, show the existing empty-state message",
+        "Pet safety notes still display when has_pets is true",
+        "The sqFt quantity-scaling regex logic is preserved unchanged",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-029",
+      "title": "Pre-curate real grass type photo URLs",
+      "description": "As a developer, I need the grassTypes data to include real publicly accessible photo URLs so the onboarding picker can display them without a runtime API call.",
+      "acceptanceCriteria": [
+        "Add photoCredit: string field to the GrassType interface in src/data/grass-types.ts",
+        "Replace all 10 photoUrl values (currently /images/grass/*.jpg placeholders) with real CDN URLs from Pexels or Unsplash",
+        "Pexels format: https://images.pexels.com/photos/[ID]/pexels-photo-[ID].jpeg?auto=compress&cs=tinysrgb&w=640",
+        "Unsplash format: https://images.unsplash.com/photo-[ID]?w=640&q=80",
+        "Each photo must clearly show the blade texture/color/growth pattern characteristic of that specific grass species — not a generic lawn",
+        "All 10 grass types have a working URL and a populated photoCredit string (e.g. 'Photo by Jane Doe on Pexels')",
+        "Add images.pexels.com and/or images.unsplash.com to remotePatterns in next.config.ts so next/image can load them",
+        "Typecheck passes"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-030",
+      "title": "Grass photo picker in onboarding",
+      "description": "As a new user selecting my grass type, I want to see a real photo of each variety so I can visually confirm my grass before selecting it.",
+      "acceptanceCriteria": [
+        "Identify which onboarding step currently renders the grass-type selector (check src/app/onboarding/[step]/steps/Step*.tsx files)",
+        "Replace the existing text-only list with a card grid: each card shows the grass photo (top ~60% of card via next/image) and name + up to 3 trait badges (bottom ~40%)",
+        "Grid layout: grid-cols-2 on mobile, grid-cols-3 on md: breakpoint",
+        "Selected card gets a 2px border in var(--color-primary) color; unselected cards get the existing #2d4a2d border",
+        "Use next/image with the photoUrl from grassTypes data; add width and height or use fill with a relative parent",
+        "Show a small muted attribution line below each photo using the photoCredit field",
+        "Tapping/clicking a card selects that grass type and the Continue button enables",
+        "Previously selected grass type (from sessionStorage onboarding_state.grass_type) is pre-selected on mount",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-031",
+      "title": "Pre-emergent timing banner on dashboard",
+      "description": "As a user, I want a prominent alert when my pre-emergent window is 3 weeks away or currently active so I don't miss the critical timing.",
+      "acceptanceCriteria": [
+        "Import getPreemergentWindow from src/data/preemergent-windows.ts in the dashboard page",
+        "After reading state from sessionStorage, call getPreemergentWindow(state) to get spring and fall windows",
+        "Compute whether today falls within 21 days before OR during either the spring or fall window",
+        "If yes, render a banner above the task list with: seasonal icon (🌱 spring, 🍂 fall), headline ('Pre-Emergent Window: X weeks away' or 'Pre-Emergent Window: Active Now'), sub-line ('Apply when soil temp reaches 50°F (spring) or 70°F (fall). Typical window for [STATE]: [startDate] – [endDate]'), and a dismiss button (×)",
+        "Banner background: #3d3000, text: #eab308 (matching existing pet safety note style)",
+        "Dismiss button sets a sessionStorage flag 'preemergent_banner_dismissed' = 'true' and hides the banner",
+        "On mount, check the sessionStorage flag — if set, do not show the banner",
+        "If neither spring nor fall window is within 21 days, render nothing",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 6,
+      "passes": true,
+      "notes": ""
+    }
+  ]
+}

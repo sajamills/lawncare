@@ -1,0 +1,64 @@
+## Codebase Patterns
+- Next.js 15 project using App Router with `src/` directory layout (`src/app/`, `src/lib/`, `src/data/`, `src/actions/`)
+- Tailwind CSS v4 uses `@import "tailwindcss"` in globals.css (not `@tailwind` directives)
+- Tailwind CSS v4 custom colors: define via `@theme { --color-<name>: <value>; }` in globals.css; no tailwind.config.ts needed
+- Use `var(--color-<name>)` in inline styles or CSS for semantic color tokens defined in `@theme`
+- TypeScript strict mode enabled via tsconfig.json
+- .gitignore blocks `.env*` — commit example env files as `env.local.example` (no leading dot)
+- Clerk auth: clerkMiddleware + createRouteMatcher in src/middleware.ts; ClerkProvider wraps layout; server components use `auth()` from @clerk/nextjs/server
+- Onboarding state persisted in sessionStorage under key `onboarding_state`; session UUID in localStorage under `lawn_session_id`
+- All onboarding step components take `{ onNext: () => void }` prop; routing handled by `src/app/onboarding/[step]/page.tsx`
+- Extension PDF sources in `src/data/extension-sources.ts`: `extensionSources[STATE]` gives university info; `knownPdfUrls[STATE_grassType]` gives direct PDF URL
+- DB uses `@vercel/postgres` (createPool); works with any `POSTGRES_URL` env var including Supabase connection strings
+
+# Ralph Progress Log
+Started: Sun Jun 14 2026
+---
+
+## 2026-06-15 - US-021
+- Added db/migrations/002_add_completed_tasks.sql (ALTER TABLE ... ADD COLUMN IF NOT EXISTS)
+- Created scripts/migrate.ts — reads all .sql files from db/migrations/ in order and runs them via @vercel/postgres
+- Added db:migrate npm script to package.json
+- Updated env.local.example with Vercel Postgres (Neon) and Supabase setup instructions
+- Updated ProfileData interface and saveProfile/getProfile in src/actions/profile.ts to include completed_tasks?: string[]
+- Installed tsx as devDependency for running the migrate script
+- **Learnings for future iterations:**
+  - Existing migrations live in db/migrations/ (not scripts/); new migration script runs all files there in alphabetical order
+  - scripts/migrate.ts uses createPool() directly (not the shared db singleton) so it can call db.end() cleanly
+  - tsx was not installed — had to add it before db:migrate script would work
+---
+
+## 2026-06-15 - US-022
+- Created src/app/onboarding/[step]/steps/Step5New.tsx — 10-task checklist with "None yet" mutual-exclusion toggle
+- Tasks stored as IDs (not labels) in onboarding sessionStorage as completed_tasks: string[]
+- Continue button always enabled (zero-selection is valid)
+- **Learnings for future iterations:**
+  - "None yet" toggle: clear all others when selected, deselect when any other task is picked
+---
+
+## 2026-06-15 - US-023
+- Created Step6.tsx — reads state+grass_type from sessionStorage, constructs STATE_grassType key, shows knownPdfUrls entry or falls back to extensionSources searchUrl
+- All static data lookup — no API calls during onboarding
+- **Learnings for future iterations:**
+  - knownPdfUrls keys format: STATEUPPERCASE_grassId (e.g. NC_bermudagrass)
+  - extensionSources and knownPdfUrls both exported from src/data/extension-sources.ts
+---
+
+## 2026-06-15 - US-024
+- Created Step7.tsx (profile-save + confirmation); moved old Step5 save/AI-parse logic here but removed API calls
+- Replaced Step5.tsx with Step5New.tsx content (checklist becomes the new step 5)
+- Updated onboarding/[step]/page.tsx: STEP_COMPONENTS has 7 entries, guard updated to stepNum > 7
+- **Learnings for future iterations:**
+  - Step7 ignores onNext prop (final step navigates directly to /dashboard via router)
+  - Back button auto-appears for stepNum > 1 via existing router logic
+---
+
+## 2026-06-15 - US-025
+- Replaced placeholder src/app/page.tsx with full SaaS marketing one-pager
+- Sections: Hero, Features (3-col grid on md:), How It Works (numbered list), Bottom CTA
+- Server Component (no 'use client') — purely static, no interactivity needed
+- All colors use CSS variables for dark theme consistency
+- **Learnings for future iterations:**
+  - CtaButton extracted as a local function component to reuse in hero and bottom CTA
+  - grid-cols-1 md:grid-cols-3 pattern works with Tailwind v4 without config changes
+---

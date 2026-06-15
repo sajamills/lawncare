@@ -1,0 +1,107 @@
+{
+  "project": "LawnCare Planner",
+  "branchName": "ralph/pdf-list-onboarding-landing",
+  "description": "Replace AI-based PDF parsing with curated extension resource list, add year activity check-in onboarding step, DB migration script for Vercel/Supabase, and SaaS marketing landing page",
+  "userStories": [
+    {
+      "id": "US-021",
+      "title": "DB migration script with completed_tasks column",
+      "description": "As a developer, I need a runnable SQL migration script and npm command so I can provision the database on Vercel Postgres (Neon) or Supabase without manual SQL work.",
+      "acceptanceCriteria": [
+        "Create scripts/migrate.sql with CREATE TABLE IF NOT EXISTS for user_profiles (id uuid default gen_random_uuid() pk, clerk_user_id text unique nullable, session_id text unique nullable, zip_code text, state text, usda_zone text, grass_type text, square_footage integer nullable, has_pets boolean default false, sun_exposure text, completed_tasks text[] default '{}', created_at timestamptz default now(), updated_at timestamptz default now())",
+        "migrate.sql also includes cached_plans table: id uuid pk, state text, grass_type text, pdf_url text, parsed_plan jsonb, created_at timestamptz default now(), unique(state, grass_type)",
+        "migrate.sql uses ALTER TABLE ... ADD COLUMN IF NOT EXISTS for completed_tasks so it's safe to re-run on an existing DB",
+        "Create scripts/migrate.ts that imports @vercel/postgres, reads migrate.sql, and runs it via db.query()",
+        "package.json gets a db:migrate script: npx tsx scripts/migrate.ts",
+        "Create env.local.example (no leading dot) documenting POSTGRES_URL with comments for Vercel Marketplace (Neon) and Supabase connection string options",
+        "src/actions/profile.ts ProfileData interface adds completed_tasks?: string[]",
+        "saveProfile INSERT/UPDATE includes completed_tasks column (pass data.completed_tasks ?? [])",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-022",
+      "title": "Onboarding Step 5: What have you done this year checklist",
+      "description": "As a user, I want to check off which lawn care tasks I've already completed this year so my plan can focus on what's left.",
+      "acceptanceCriteria": [
+        "Create src/app/onboarding/[step]/steps/Step5New.tsx (a new component; do not delete old Step5.tsx yet — it will be moved in US-024)",
+        "Step heading: 'What have you done so far this year?'",
+        "Subheading: 'Check off anything you've already done in 2026'",
+        "Renders 10 toggleable checkbox-style buttons (full-width, bordered, green border when selected): fertilize=Applied fertilizer, pre-emergent=Applied pre-emergent weed control, post-emergent=Applied post-emergent (weed killer), aerate=Aerated the lawn, overseed=Overseeded, dethatch=Dethatched, lime=Applied lime or soil amendment, pesticide=Applied pesticide / grub control, mow-started=Started regular mowing, irrigation=Set up / ran irrigation system",
+        "A 'None yet — it's early in the season' button at the bottom: selecting it deselects all others; selecting any other task deselects this option",
+        "Multiple tasks can be selected simultaneously",
+        "Continue button is always enabled (step can be skipped with zero selections)",
+        "On continue, saves completed_tasks as array of selected task IDs to onboarding sessionStorage state",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-023",
+      "title": "Onboarding Step 6: PDF resource list (remove AI parse call)",
+      "description": "As a user completing onboarding, I want to see the official lawn care guides for my grass type and state as clickable links, without the app needing an AI API key.",
+      "acceptanceCriteria": [
+        "Create src/app/onboarding/[step]/steps/Step6.tsx",
+        "Step heading: 'Your lawn care resources'",
+        "On mount, reads state and grass_type from onboarding sessionStorage state",
+        "Constructs lookup key as STATE_grassType (e.g. NC_bermuda-grass) and checks knownPdfUrls from src/data/extension-sources.ts",
+        "If knownPdfUrls entry exists: show it as a primary link card labeled '[University Name] — Lawn Care Guide (PDF)'",
+        "If no knownPdfUrls entry: show the extensionSources[state].searchUrl as a fallback link labeled '[University Name] — Search Extension Library'",
+        "Each link card opens in a new tab (target=_blank rel=noopener noreferrer)",
+        "Continue button is always enabled — user does not need to click any link",
+        "Does NOT call /api/parse-pdf or /api/find-pdf — resource lookup is entirely client-side from the static data",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-024",
+      "title": "Wire 7-step onboarding router and add done confirmation screen",
+      "description": "As a developer, I need the onboarding router to support 7 steps and the final step to save the profile and show a confirmation instead of calling the AI API.",
+      "acceptanceCriteria": [
+        "Create src/app/onboarding/[step]/steps/Step7.tsx with the profile-save + confirmation logic (moved from old Step5.tsx)",
+        "Step7 on mount calls saveProfile() with all onboarding_state data including completed_tasks; does NOT call /api/find-pdf or /api/parse-pdf",
+        "While saving: shows 'Setting up your profile...' with a loading indicator",
+        "On success: heading 'You're all set!', subtext 'Your lawn profile is saved. Head to your dashboard to see this month's tasks.', button 'Go to my dashboard →' navigating to /dashboard",
+        "Delete or replace old Step5.tsx: import Step5New.tsx as Step5 (or rename the file to Step5.tsx directly)",
+        "Update STEP_COMPONENTS in src/app/onboarding/[step]/page.tsx to [Step1, Step2, Step3, Step4, Step5, Step6, Step7]",
+        "Route guard updated: stepNum > 7 triggers notFound",
+        "Back button works correctly on all 7 steps",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-025",
+      "title": "SaaS marketing landing page",
+      "description": "As a potential user, I want to land on a compelling one-page overview of LawnGuide so I understand the value and am motivated to start my free plan.",
+      "acceptanceCriteria": [
+        "src/app/page.tsx is replaced with a full marketing landing page (Server Component, no 'use client')",
+        "Hero section: wordmark 'LawnGuide', headline 'The lawn plan built for your yard, your grass, and your zone.', subheadline 'Answer a few questions and get a science-backed care calendar — free, no account required.', CTA button 'Get my free lawn plan →' linking to /onboarding/1, muted note below: 'Takes 2 minutes. No credit card.'",
+        "Features section heading 'Why LawnGuide?' with 3 cards: 🌿 Zone-aware — 'Plans calibrated to your USDA growing zone and local university extension research.'; 🌱 Grass-specific — 'From Bermuda to Tall Fescue, care schedules matched to your exact grass type.'; 🐾 Pet-friendly flags — 'Every recommendation notes whether it's safe for dogs and cats on the lawn.'",
+        "How it works section heading 'How it works' with 3 numbered steps: 1. Enter your ZIP code — 'We detect your USDA zone and your state's extension resources.'; 2. Tell us about your lawn — 'Grass type, sun exposure, lawn size, and what you've done this year.'; 3. Get your plan — 'A month-by-month care calendar with official university guide links.'",
+        "Bottom CTA banner: 'Ready to get started?' heading and 'Get my free lawn plan →' button linking to /onboarding/1",
+        "Uses CSS variables (--color-primary, --color-surface, --color-text-primary, --color-text-muted, --color-background) for all colors",
+        "Features grid: 1-column on mobile, 3-column on md: breakpoint",
+        "No external images — emoji icons only for feature cards",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": ""
+    }
+  ]
+}
