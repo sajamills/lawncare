@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { grassTypes } from "@/data/grass-types";
 import { getPreemergentWindow } from "@/data/preemergent-windows";
+import Link from "next/link";
 import type { WeeklyPlan, WeeklyTask } from "@/app/api/parse-pdf/route";
 
 type TaskCategory = "mow" | "fertilize" | "water" | "aerate" | "seed" | "pest-weed" | "other";
@@ -254,7 +255,11 @@ export default function DashboardPage() {
           style={{ backgroundColor: "var(--color-surface)", borderColor: "#2d4a2d" }}
         >
           <p style={{ color: "var(--color-text-muted)" }}>
-            Nothing urgent this week — check back soon or view your full annual calendar.
+            Nothing urgent this week — check back soon or{" "}
+            <Link href="/dashboard/calendar" className="underline" style={{ color: "var(--color-primary)" }}>
+              view your full annual calendar
+            </Link>
+            .
           </p>
         </div>
       ) : (
