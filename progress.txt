@@ -138,3 +138,11 @@ Started: Sun Jun 14 10:56:13 CDT 2026
 - Saves { square_footage, has_pets, sun_exposure } to sessionStorage onboarding_state on Continue
 - Files changed: src/app/onboarding/[step]/steps/Step2.tsx
 ---
+
+## 2026-06-14 - US-013
+- Replaced Step3.tsx with one-at-a-time quiz using quizQuestions data
+- Selecting answer immediately advances to next question (no Next button)
+- After last question: calls scoreGrassTypes(), saves { quiz_answers, grass_scores } to sessionStorage, calls onNext()
+- Skip link navigates directly to /onboarding/4 (no quiz answers saved)
+- Files changed: src/app/onboarding/[step]/steps/Step3.tsx
+---
