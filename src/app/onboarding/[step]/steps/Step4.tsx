@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { grassTypes, GrassType } from "@/data/grass-types";
 
 function getOnboardingState(): Record<string, unknown> {
@@ -46,13 +47,75 @@ function TraitChip({ label }: { label: string }) {
   return (
     <span
       className="text-xs px-2 py-0.5 rounded-full"
-      style={{
-        backgroundColor: "#1a3a1a",
-        color: "var(--color-text-muted)",
-      }}
+      style={{ backgroundColor: "#1a3a1a", color: "var(--color-text-muted)" }}
     >
       {label}
     </span>
+  );
+}
+
+function GrassCard({
+  grass,
+  isSelected,
+  onSelect,
+}: {
+  grass: GrassType;
+  isSelected: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className="rounded-lg border text-left overflow-hidden transition-all flex flex-col"
+      style={{
+        backgroundColor: "var(--color-surface)",
+        borderColor: isSelected ? "var(--color-primary)" : "#2d4a2d",
+        borderWidth: isSelected ? "2px" : "1px",
+      }}
+    >
+      {/* Photo */}
+      <div className="relative w-full aspect-video bg-[#1a3a1a]">
+        <Image
+          src={grass.photoUrl}
+          alt={`${grass.name} grass`}
+          fill
+          sizes="(max-width: 768px) 50vw, 33vw"
+          className="object-cover"
+          unoptimized={false}
+        />
+      </div>
+
+      {/* Info */}
+      <div className="flex flex-col gap-1.5 p-2.5">
+        <p
+          className="font-semibold text-sm leading-tight"
+          style={{ color: "var(--color-text-primary)" }}
+        >
+          {grass.name}
+        </p>
+        <div className="flex flex-wrap gap-1">
+          <TraitChip
+            label={
+              grass.bladeWidth === "fine"
+                ? "Fine blade"
+                : grass.bladeWidth === "medium"
+                ? "Med. blade"
+                : "Wide blade"
+            }
+          />
+          <TraitChip
+            label={grass.activeSeason === "warm" ? "Warm season" : "Cool season"}
+          />
+        </div>
+        <p
+          className="text-[10px] leading-tight mt-0.5"
+          style={{ color: "var(--color-text-muted)", opacity: 0.6 }}
+        >
+          {grass.photoCredit}
+        </p>
+      </div>
+    </button>
   );
 }
 
@@ -63,6 +126,8 @@ export default function Step4({ onNext }: { onNext: () => void }) {
 
   useEffect(() => {
     setTopGrasses(getTopGrasses());
+    const state = getOnboardingState();
+    if (state.grass_type) setSelected(state.grass_type as string);
   }, []);
 
   const displayList = showAll ? grassTypes : topGrasses;
@@ -87,65 +152,15 @@ export default function Step4({ onNext }: { onNext: () => void }) {
         </p>
       </div>
 
-      <div className="flex flex-col gap-3">
-        {displayList.map((grass) => {
-          const isSelected = selected === grass.id;
-          return (
-            <button
-              key={grass.id}
-              type="button"
-              onClick={() => setSelected(grass.id)}
-              className="w-full rounded-lg border text-left overflow-hidden transition-all"
-              style={{
-                backgroundColor: "var(--color-surface)",
-                borderColor: isSelected ? "var(--color-primary)" : "#2d4a2d",
-                borderWidth: isSelected ? "2px" : "1px",
-              }}
-            >
-              <div className="px-4 py-3 flex flex-col gap-2">
-                <p
-                  className="font-semibold"
-                  style={{ color: "var(--color-text-primary)" }}
-                >
-                  {grass.name}
-                </p>
-                <p
-                  className="text-xs line-clamp-2"
-                  style={{ color: "var(--color-text-muted)" }}
-                >
-                  {grass.description}
-                </p>
-                <div className="flex flex-wrap gap-1 mt-1">
-                  <TraitChip
-                    label={
-                      grass.bladeWidth === "fine"
-                        ? "Fine blade"
-                        : grass.bladeWidth === "medium"
-                        ? "Medium blade"
-                        : "Wide blade"
-                    }
-                  />
-                  <TraitChip
-                    label={
-                      grass.growthPattern === "spreading"
-                        ? "Spreads"
-                        : "Clumping"
-                    }
-                  />
-                  <TraitChip
-                    label={
-                      grass.activeSeason === "warm"
-                        ? "Warm season"
-                        : grass.activeSeason === "cool"
-                        ? "Cool season"
-                        : "Year-round"
-                    }
-                  />
-                </div>
-              </div>
-            </button>
-          );
-        })}
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        {displayList.map((grass) => (
+          <GrassCard
+            key={grass.id}
+            grass={grass}
+            isSelected={selected === grass.id}
+            onSelect={() => setSelected(grass.id)}
+          />
+        ))}
       </div>
 
       {!showAll && (
