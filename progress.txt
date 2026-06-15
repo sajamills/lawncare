@@ -119,3 +119,15 @@ Started: Sun Jun 14 10:56:13 CDT 2026
   - Step placeholder files will be replaced by US-011 through US-015
   - sessionStorage persistence of onboarding_state happens within each step component
 ---
+
+## 2026-06-14 - US-011
+- Replaced Step1.tsx placeholder with full ZIP code entry form
+- ZIP input: numeric only, 5 digits max, calls /api/zone on submit
+- On success: shows "Zone 7a — North Carolina" in green and reveals Continue button
+- On error: shows error message in red
+- onNext() saves { zip, state, stateName, usda_zone } to sessionStorage onboarding_state
+- Files changed: src/app/onboarding/[step]/steps/Step1.tsx
+- **Learnings for future iterations:**
+  - getOnboardingState/setOnboardingState helper functions manage sessionStorage — reuse pattern in Steps 2-5
+  - Step components use "use client" directive and receive onNext from [step]/page.tsx
+---
