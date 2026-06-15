@@ -183,3 +183,13 @@ Started: Sun Jun 14 10:56:13 CDT 2026
 - Legend at bottom shows all 7 category colors
 - Files changed: src/app/dashboard/calendar/page.tsx
 ---
+
+## 2026-06-14 - US-018
+- Created src/app/sign-in/[[...sign-in]]/page.tsx and src/app/sign-up/[[...sign-up]]/page.tsx
+- Both pages center Clerk SignIn/SignUp components with dark theme appearance (colorBackground, colorPrimary)
+- LawnGuide name shown above each form in green
+- Clerk appearance.variables supports: colorBackground, colorPrimary, colorDanger, colorSuccess, colorWarning — NOT colorText/colorInputBackground in v7
+- Files changed: src/app/sign-in/[[...sign-in]]/page.tsx, src/app/sign-up/[[...sign-up]]/page.tsx
+- **Learnings for future iterations:**
+  - @clerk/nextjs v7 appearance.variables only supports a limited set: colorBackground, colorPrimary, colorDanger, colorSuccess, colorWarning, fontFamily, borderRadius — check types before adding
+---
