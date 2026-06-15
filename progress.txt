@@ -10,55 +10,72 @@
 - All onboarding step components take `{ onNext: () => void }` prop; routing handled by `src/app/onboarding/[step]/page.tsx`
 - Extension PDF sources in `src/data/extension-sources.ts`: `extensionSources[STATE]` gives university info; `knownPdfUrls[STATE_grassType]` gives direct PDF URL
 - DB uses `@vercel/postgres` (createPool); works with any `POSTGRES_URL` env var including Supabase connection strings
+- Warning colors: background #3d3000, text #eab308 (used for pet safety notes — reuse for pre-emergent banners)
+- grassTypes data lives in `src/data/grass-types.ts`; each entry has id, name, description, traits[], photoUrl, photoCredit
+- `/api/parse-pdf` route: accepts { state, grassType, pdfUrl? }; checks DB cache first; calls Claude claude-sonnet-4-6 to generate plan; caches result in cached_plans table
+- ISO week utility: getISOWeek(date) using UTC math — always use for week-of-year calculations to avoid timezone bugs
 
 # Ralph Progress Log
-Started: Sun Jun 14 2026
+Started: Sun Jun 15 2026
 ---
 
-## 2026-06-15 - US-021
-- Added db/migrations/002_add_completed_tasks.sql (ALTER TABLE ... ADD COLUMN IF NOT EXISTS)
-- Created scripts/migrate.ts — reads all .sql files from db/migrations/ in order and runs them via @vercel/postgres
-- Added db:migrate npm script to package.json
-- Updated env.local.example with Vercel Postgres (Neon) and Supabase setup instructions
-- Updated ProfileData interface and saveProfile/getProfile in src/actions/profile.ts to include completed_tasks?: string[]
-- Installed tsx as devDependency for running the migrate script
+## 2026-06-15 - US-026
+- Created src/data/preemergent-windows.ts
+- PREEMERGENT_WINDOWS covers all 50 states grouped by climate zone (Deep South, Mid-South, Transition, Mid-Atlantic/Midwest, Northeast, Upper Midwest, Pacific Coast, Northwest, Mountain, AK, HI)
+- getPreemergentWindow(state) does .toUpperCase() so callers don't need to normalize
 - **Learnings for future iterations:**
-  - Existing migrations live in db/migrations/ (not scripts/); new migration script runs all files there in alphabetical order
-  - scripts/migrate.ts uses createPool() directly (not the shared db singleton) so it can call db.end() cleanly
-  - tsx was not installed — had to add it before db:migrate script would work
+  - Spring target soil temp = 50°F; fall target = 70°F (standard pre-emergent thresholds)
+  - Date format is "MM-DD" strings — parse with split("-") for UTC Date math to avoid timezone issues
 ---
 
-## 2026-06-15 - US-022
-- Created src/app/onboarding/[step]/steps/Step5New.tsx — 10-task checklist with "None yet" mutual-exclusion toggle
-- Tasks stored as IDs (not labels) in onboarding sessionStorage as completed_tasks: string[]
-- Continue button always enabled (zero-selection is valid)
+## 2026-06-15 - US-027
+- Rewrote src/app/api/parse-pdf/route.ts: MonthlyPlan/MonthlyTask → WeeklyPlan/WeeklyTask (week: 1–52)
+- pdfUrl is now optional — empty/omitted skips fetch, Claude generates from knowledge
+- max_tokens raised from 4096 to 8192 to fit 52-entry JSON response
+- WeeklyPlan and WeeklyTask interfaces are now exported so dashboard can import types
+- Validation: only state + grassType required (400 if missing)
 - **Learnings for future iterations:**
-  - "None yet" toggle: clear all others when selected, deselect when any other task is picked
+  - 52-week JSON is larger than 12-month — 8192 tokens needed or response gets truncated
+  - DB cache still works with ON CONFLICT upsert; no schema change needed
 ---
 
-## 2026-06-15 - US-023
-- Created Step6.tsx — reads state+grass_type from sessionStorage, constructs STATE_grassType key, shows knownPdfUrls entry or falls back to extensionSources searchUrl
-- All static data lookup — no API calls during onboarding
+## 2026-06-15 - US-028
+- Updated src/app/dashboard/page.tsx: getISOWeek() + getWeekDateRange() utilities (pure UTC math)
+- Dashboard finds current week entry from plan by week number, shows "Jun 9–15" style subtitle
+- Removed pdfUrl from fetch call body (now optional per US-027)
 - **Learnings for future iterations:**
-  - knownPdfUrls keys format: STATEUPPERCASE_grassId (e.g. NC_bermudagrass)
-  - extensionSources and knownPdfUrls both exported from src/data/extension-sources.ts
+  - getISOWeek uses the ISO standard (week starts Monday, Jan 4 always in week 1)
+  - getWeekDateRange: find Monday of ISO week via jan4 anchor, then +6 days for Sunday
 ---
 
-## 2026-06-15 - US-024
-- Created Step7.tsx (profile-save + confirmation); moved old Step5 save/AI-parse logic here but removed API calls
-- Replaced Step5.tsx with Step5New.tsx content (checklist becomes the new step 5)
-- Updated onboarding/[step]/page.tsx: STEP_COMPONENTS has 7 entries, guard updated to stepNum > 7
+## 2026-06-15 - US-029
+- Updated GrassType interface to add photoCredit: string
+- Replaced 10 placeholder /images/grass/*.jpg URLs with real Pexels CDN URLs
+- Added images.pexels.com + images.unsplash.com to next.config.ts remotePatterns
+- Photo IDs sourced via Pexels search: 949584 (bermuda), 186236 (zoysia), 53504 (st-augustine), 15430931 (centipede), 434138 (bahia), 129166 (kentucky-bluegrass), 33211887 (tall-fescue), 33211499 (fine-fescue), 11654274 (perennial-ryegrass), 10390723 (buffalo-grass)
 - **Learnings for future iterations:**
-  - Step7 ignores onNext prop (final step navigates directly to /dashboard via router)
-  - Back button auto-appears for stepNum > 1 via existing router logic
+  - Pexels CDN URL format: https://images.pexels.com/photos/[ID]/pexels-photo-[ID].jpeg?auto=compress&cs=tinysrgb&w=640
+  - next.config.ts has a PWA wrapper in prod — add images remotePatterns to the base nextConfig object before wrapping
 ---
 
-## 2026-06-15 - US-025
-- Replaced placeholder src/app/page.tsx with full SaaS marketing one-pager
-- Sections: Hero, Features (3-col grid on md:), How It Works (numbered list), Bottom CTA
-- Server Component (no 'use client') — purely static, no interactivity needed
-- All colors use CSS variables for dark theme consistency
+## 2026-06-15 - US-030
+- Rewrote src/app/onboarding/[step]/steps/Step4.tsx: text list → photo card grid
+- Grid: grid-cols-2 md:grid-cols-3; each card has aspect-video image (next/image fill) + name + trait chips + photo credit
+- Pre-selects from sessionStorage onboarding_state.grass_type on mount
+- Kept quiz-score top-3 display and "show all" toggle from original Step4
 - **Learnings for future iterations:**
-  - CtaButton extracted as a local function component to reuse in hero and bottom CTA
-  - grid-cols-1 md:grid-cols-3 pattern works with Tailwind v4 without config changes
+  - Use fill + relative parent + aspect-video class for responsive image cards
+  - sizes="(max-width: 768px) 50vw, 33vw" matches the 2-col/3-col grid
+  - Bracket paths require quoting in git add: git add "src/app/onboarding/[step]/..."
+---
+
+## 2026-06-15 - US-031
+- Added pre-emergent banner to src/app/dashboard/page.tsx
+- getPreemergentAlert(state, today): checks spring then fall windows; returns alert if within 21 days or active
+- Dismissal via sessionStorage key "preemergent_banner_dismissed"; checked on mount before setting alert
+- Banner matches pet safety note style (#3d3000 bg, #eab308 text)
+- **Learnings for future iterations:**
+  - parseMD("MM-DD", year) uses Date.UTC to avoid DST edge cases
+  - Check BOTH spring and fall windows in same function — early return on first match
+  - The × dismiss button needs aria-label="Dismiss banner" for accessibility
 ---
