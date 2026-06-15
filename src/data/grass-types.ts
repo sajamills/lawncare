@@ -63,8 +63,8 @@ export const grassTypes: GrassType[] = [
     color: "dark-green",
     growthPattern: "spreading",
     activeSeason: "warm",
-    photoUrl: "https://images.pexels.com/photos/53504/pexels-photo-53504.jpeg?auto=compress&cs=tinysrgb&w=640",
-    photoCredit: "Photo by Pixabay on Pexels",
+    photoUrl: "https://images.pexels.com/photos/9996535/pexels-photo-9996535.jpeg?auto=compress&cs=tinysrgb&w=640",
+    photoCredit: "Photo by Engin Akyurt on Pexels",
     traits: ["Wide blades", "Shade tolerant", "Spreads via stolons", "Warm season", "Coastal-friendly"],
   },
   {
