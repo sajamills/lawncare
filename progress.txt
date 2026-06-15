@@ -26,3 +26,43 @@
 # Ralph Progress Log
 Started: Sun Jun 15 2026
 ---
+
+## 2026-06-15 - US-032
+- Added stale cache detection in /api/parse-pdf/route.ts: checks if cachedPlan[0]?.week exists; if missing (old 12-month format), deletes the row and falls through to regeneration
+- **Learnings:** Array.isArray check needed before indexing; "week" in cachedPlan[0] is the reliable discriminator
+---
+
+## 2026-06-15 - US-033
+- Rewrote src/app/dashboard/calendar/page.tsx: replaced MonthlyPlan with WeeklyPlan types imported from API route
+- Added weekToMonth(week): groups 52 weeks into 12 months via Math.min(Math.ceil(week / (52/12)), 12)
+- Calendar view: expands to show per-week task groups with "Week N" subheadings
+- List view: flat tasks per month (no week subheadings)
+- **Learnings:** Import WeeklyPlan/WeeklyTask from @/app/api/parse-pdf/route (already exported)
+---
+
+## 2026-06-15 - US-034
+- Updated src/app/layout.tsx: added "use client", usePathname, Link; extracted metadata to src/app/metadata.ts
+- Desktop: inline header links with active state; Mobile: fixed bottom tab bar (56px, z-50)
+- NAV_ITEMS hidden on "/" and "/onboarding/*" routes; pb-16 added to <main> on mobile to avoid content hiding behind tab bar
+- **Learnings:** Can re-export metadata from client layout.tsx via "export { metadata } from './metadata'"
+---
+
+## 2026-06-15 - US-035
+- Added Link import to dashboard/page.tsx; wrapped "view your full annual calendar" text in <Link href="/dashboard/calendar">
+---
+
+## 2026-06-15 - US-036/037/038/039/040
+- Dashboard page.tsx full rewrite combining 5 stories:
+  - US-036: Cold-load from DB via dynamic import of getProfile when sessionStorage empty
+  - US-037: showOnboardingGate flag + CTA card with "Get started →" to /onboarding/1
+  - US-038: generatingPlan state + setInterval cycling through LOADING_MESSAGES every 3s; cleared in finally block
+  - US-039: completedTitles Set state; circular ✓ button per task; sessionStorage key completed_tasks_week_{N}; completed tasks sorted to bottom
+  - US-040: nextWeekTasks sliced to 3 from plan[week+1]; "Up Next" card with week range subtitle
+- **Learnings:** 5 stories sharing one file should be done in a single rewrite pass; useRef for interval avoids stale closure issues
+---
+
+## 2026-06-15 - US-041
+- Added deleteCachedPlan(state, grassType) server action to src/actions/profile.ts
+- Profile page: added originalState tracking; on save syncs sessionStorage onboarding_state; calls deleteCachedPlan if warn=true; shows "Go to dashboard →" Link after successful save
+- **Learnings:** db cannot be imported in client components — must wrap in a server action; saveSuccess state controls link visibility separately from toast (toast auto-clears but link should persist)
+---
