@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { grassTypes } from "@/data/grass-types";
-import { saveProfile } from "@/actions/profile";
+import { saveProfile, deleteCachedPlan } from "@/actions/profile";
 
 type SunExposure = "full-sun" | "partial-shade" | "full-shade";
 
@@ -23,6 +24,8 @@ export default function ProfilePage() {
   const [grassType, setGrassType] = useState("");
   const [originalGrassType, setOriginalGrassType] = useState("");
   const [originalZip, setOriginalZip] = useState("");
+  const [originalState, setOriginalState] = useState("");
+  const [saveSuccess, setSaveSuccess] = useState(false);
   const [sqFt, setSqFt] = useState<string>("");
   const [hasPets, setHasPets] = useState(false);
   const [sunExposure, setSunExposure] = useState<SunExposure>("full-sun");
@@ -43,6 +46,7 @@ export default function ProfilePage() {
           setGrassType(profile.grass_type);
           setOriginalGrassType(profile.grass_type);
           setOriginalZip(profile.zip_code);
+          setOriginalState(profile.state);
           setSqFt(profile.square_footage?.toString() ?? "");
           setHasPets(profile.has_pets);
           setSunExposure((profile.sun_exposure as SunExposure) ?? "full-sun");
@@ -74,8 +78,28 @@ export default function ProfilePage() {
       });
 
       if (result.success) {
+        // Invalidate stale cached plan if grass type or location changed
+        if (warn) {
+          await deleteCachedPlan(originalState || state, originalGrassType || grassType);
+        }
+
+        // Sync updated values to sessionStorage so dashboard picks them up
+        try {
+          const current = JSON.parse(sessionStorage.getItem("onboarding_state") ?? "{}") as Record<string, unknown>;
+          sessionStorage.setItem("onboarding_state", JSON.stringify({
+            ...current,
+            state,
+            grass_type: grassType,
+            square_footage: sqFt ? parseInt(sqFt, 10) : null,
+            has_pets: hasPets,
+            sun_exposure: sunExposure,
+          }));
+        } catch { /* ignore */ }
+
         setOriginalGrassType(grassType);
         setOriginalZip(zipCode);
+        setOriginalState(state);
+        setSaveSuccess(true);
         setToast("Profile updated");
         setTimeout(() => setToast(""), 3000);
       }
@@ -274,6 +298,20 @@ export default function ProfilePage() {
       >
         {saving ? "Saving..." : "Save Profile"}
       </button>
+
+      {saveSuccess && (
+        <Link
+          href="/dashboard"
+          className="w-full py-3 rounded-lg font-semibold text-sm border text-center block"
+          style={{
+            borderColor: "var(--color-primary)",
+            color: "var(--color-primary)",
+            backgroundColor: "transparent",
+          }}
+        >
+          Go to dashboard →
+        </Link>
+      )}
 
       {toast && (
         <div

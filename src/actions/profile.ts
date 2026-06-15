@@ -54,6 +54,17 @@ export async function saveProfile(data: ProfileData): Promise<{ success: boolean
   }
 }
 
+export async function deleteCachedPlan(state: string, grassType: string): Promise<void> {
+  try {
+    await db.query(
+      "DELETE FROM cached_plans WHERE state = $1 AND grass_type = $2",
+      [state.toUpperCase(), grassType]
+    );
+  } catch {
+    // Best-effort — DB may not be available in dev
+  }
+}
+
 export async function getProfile(sessionId: string): Promise<ProfileData | null> {
   try {
     const result = await db.query(
