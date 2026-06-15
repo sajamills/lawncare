@@ -17,6 +17,8 @@ const geistMono = Geist_Mono({
 export const metadata: Metadata = {
   title: "LawnGuide",
   description: "Your personalized lawn care planner",
+  manifest: "/manifest.json",
+  themeColor: "#0d1a0d",
 };
 
 async function NavAuth() {
