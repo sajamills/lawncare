@@ -2,22 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { grassTypes } from "@/data/grass-types";
+import type { WeeklyPlan, WeeklyTask } from "@/app/api/parse-pdf/route";
 
 type TaskCategory = "mow" | "fertilize" | "water" | "aerate" | "seed" | "pest-weed" | "other";
 type TaskPriority = "urgent" | "routine" | "optional";
-
-interface Task {
-  title: string;
-  description: string;
-  category: TaskCategory;
-  priority: TaskPriority;
-  petSafetyNote: string;
-}
-
-interface MonthlyPlan {
-  month: number;
-  tasks: Task[];
-}
 
 const CATEGORY_ICONS: Record<TaskCategory, string> = {
   mow: "🌿",
@@ -34,6 +22,28 @@ const PRIORITY_COLORS: Record<TaskPriority, string> = {
   routine: "#eab308",
   optional: "#6b7280",
 };
+
+function getISOWeek(date: Date): number {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
+}
+
+function getWeekDateRange(week: number, year: number): string {
+  // Find Monday of the given ISO week
+  const jan4 = new Date(Date.UTC(year, 0, 4));
+  const dayOfWeek = jan4.getUTCDay() || 7;
+  const monday = new Date(jan4);
+  monday.setUTCDate(jan4.getUTCDate() - (dayOfWeek - 1) + (week - 1) * 7);
+  const sunday = new Date(monday);
+  sunday.setUTCDate(monday.getUTCDate() + 6);
+
+  const fmt = (d: Date) =>
+    d.toLocaleDateString("default", { month: "short", day: "numeric", timeZone: "UTC" });
+  return `${fmt(monday)} – ${fmt(sunday)}`;
+}
 
 function getSessionId(): string | null {
   if (typeof window === "undefined") return null;
@@ -61,16 +71,17 @@ function scaleQuantity(description: string, sqFt: number | null): string {
 }
 
 export default function DashboardPage() {
-  const [tasks, setTasks] = useState<Task[]>([]);
+  const [tasks, setTasks] = useState<WeeklyTask[]>([]);
   const [hasPets, setHasPets] = useState(false);
   const [sqFt, setSqFt] = useState<number | null>(null);
   const [grassName, setGrassName] = useState("");
+  const [weekRange, setWeekRange] = useState("");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function loadData() {
       const state = getOnboardingState();
-      const sessionId = getSessionId();
+      void getSessionId();
 
       setHasPets((state.has_pets as boolean) ?? false);
       setSqFt((state.square_footage as number) ?? null);
@@ -81,27 +92,28 @@ export default function DashboardPage() {
         setGrassName(grass?.name ?? grassId);
       }
 
-      // Try to load cached plan from the API
-      if (sessionId && state.state && state.grass_type) {
+      const now = new Date();
+      const currentWeek = getISOWeek(now);
+      setWeekRange(getWeekDateRange(currentWeek, now.getFullYear()));
+
+      if (state.state && state.grass_type) {
         try {
           const res = await fetch("/api/parse-pdf", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({
-              pdfUrl: "",
               state: state.state,
               grassType: state.grass_type,
             }),
           });
           if (res.ok) {
-            const { plan } = await res.json() as { plan: MonthlyPlan[] };
-            const currentMonth = new Date().getMonth() + 1;
-            const monthPlan = plan?.find((m) => m.month === currentMonth);
-            if (monthPlan) {
-              const sorted = [...monthPlan.tasks].sort((a, b) => {
-                const order: Record<TaskPriority, number> = { urgent: 0, routine: 1, optional: 2 };
-                return order[a.priority] - order[b.priority];
-              });
+            const { plan } = await res.json() as { plan: WeeklyPlan[] };
+            const weekPlan = plan?.find((w) => w.week === currentWeek);
+            if (weekPlan) {
+              const PRIORITY_ORDER: Record<TaskPriority, number> = { urgent: 0, routine: 1, optional: 2 };
+              const sorted = [...weekPlan.tasks].sort(
+                (a, b) => PRIORITY_ORDER[a.priority as TaskPriority] - PRIORITY_ORDER[b.priority as TaskPriority]
+              );
               setTasks(sorted);
             }
           }
@@ -138,8 +150,8 @@ export default function DashboardPage() {
         </h1>
         {grassName && (
           <p style={{ color: "var(--color-text-muted)" }}>
-            Your lawn: {grassName} •{" "}
-            {new Date().toLocaleString("default", { month: "long" })}
+            Your lawn: {grassName}
+            {weekRange && ` • ${weekRange}`}
           </p>
         )}
       </div>
@@ -170,7 +182,7 @@ export default function DashboardPage() {
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2">
-                  <span>{CATEGORY_ICONS[task.category]}</span>
+                  <span>{CATEGORY_ICONS[task.category as TaskCategory]}</span>
                   <p
                     className="font-semibold"
                     style={{ color: "var(--color-text-primary)" }}
@@ -181,8 +193,8 @@ export default function DashboardPage() {
                 <span
                   className="text-xs px-2 py-0.5 rounded-full font-medium shrink-0"
                   style={{
-                    backgroundColor: `${PRIORITY_COLORS[task.priority]}22`,
-                    color: PRIORITY_COLORS[task.priority],
+                    backgroundColor: `${PRIORITY_COLORS[task.priority as TaskPriority]}22`,
+                    color: PRIORITY_COLORS[task.priority as TaskPriority],
                   }}
                 >
                   {task.priority}
