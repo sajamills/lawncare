@@ -164,3 +164,13 @@ Started: Sun Jun 14 10:56:13 CDT 2026
 - getOrCreateSessionId() creates UUID in localStorage under 'lawn_session_id'
 - Files changed: src/app/onboarding/[step]/steps/Step5.tsx
 ---
+
+## 2026-06-14 - US-016
+- Created src/app/dashboard/page.tsx: "Do This Now" view loading current month tasks
+- Loads cached plan via POST /api/parse-pdf (returns cached version without re-parsing)
+- Tasks sorted urgent→routine→optional; category icons + priority badges
+- Pet caution banner shown when hasPets and task has petSafetyNote
+- scaleQuantity() replaces "X lbs per 1,000 sq ft" with scaled total
+- Empty state shown when no tasks for current month
+- Files changed: src/app/dashboard/page.tsx
+---
