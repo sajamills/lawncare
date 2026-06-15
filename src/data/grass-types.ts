@@ -8,6 +8,7 @@ export interface GrassType {
   growthPattern: "clumping" | "spreading";
   activeSeason: "warm" | "cool" | "year-round";
   photoUrl: string;
+  photoCredit: string;
   traits: string[];
 }
 
@@ -22,7 +23,8 @@ export const grassTypes: GrassType[] = [
     color: "bright-green",
     growthPattern: "spreading",
     activeSeason: "warm",
-    photoUrl: "/images/grass/bermudagrass.jpg",
+    photoUrl: "https://images.pexels.com/photos/949584/pexels-photo-949584.jpeg?auto=compress&cs=tinysrgb&w=640",
+    photoCredit: "Photo by rovenimages.com on Pexels",
     traits: [
       "Fine blade",
       "Spreads quickly",
@@ -41,7 +43,8 @@ export const grassTypes: GrassType[] = [
     color: "dark-green",
     growthPattern: "spreading",
     activeSeason: "warm",
-    photoUrl: "/images/grass/zoysia.jpg",
+    photoUrl: "https://images.pexels.com/photos/186236/pexels-photo-186236.jpeg?auto=compress&cs=tinysrgb&w=640",
+    photoCredit: "Photo by Digital Buggu on Pexels",
     traits: [
       "Dense carpet",
       "Slow growing",
@@ -60,7 +63,8 @@ export const grassTypes: GrassType[] = [
     color: "dark-green",
     growthPattern: "spreading",
     activeSeason: "warm",
-    photoUrl: "/images/grass/st-augustine.jpg",
+    photoUrl: "https://images.pexels.com/photos/53504/pexels-photo-53504.jpeg?auto=compress&cs=tinysrgb&w=640",
+    photoCredit: "Photo by Pixabay on Pexels",
     traits: ["Wide blades", "Shade tolerant", "Spreads via stolons", "Warm season", "Coastal-friendly"],
   },
   {
@@ -73,7 +77,8 @@ export const grassTypes: GrassType[] = [
     color: "bright-green",
     growthPattern: "spreading",
     activeSeason: "warm",
-    photoUrl: "/images/grass/centipede.jpg",
+    photoUrl: "https://images.pexels.com/photos/15430931/pexels-photo-15430931.jpeg?auto=compress&cs=tinysrgb&w=640",
+    photoCredit: "Photo by Thiago Andrade on Pexels",
     traits: ["Low maintenance", "Slow growing", "Light green", "Warm season", "Acid soil"],
   },
   {
@@ -86,7 +91,8 @@ export const grassTypes: GrassType[] = [
     color: "bright-green",
     growthPattern: "clumping",
     activeSeason: "warm",
-    photoUrl: "/images/grass/bahia.jpg",
+    photoUrl: "https://images.pexels.com/photos/434138/pexels-photo-434138.jpeg?auto=compress&cs=tinysrgb&w=640",
+    photoCredit: "Photo by Padrinan on Pexels",
     traits: ["Drought-tolerant", "Deep roots", "Sandy soil", "Warm season", "Low input"],
   },
   {
@@ -99,7 +105,8 @@ export const grassTypes: GrassType[] = [
     color: "blue-green",
     growthPattern: "spreading",
     activeSeason: "cool",
-    photoUrl: "/images/grass/kentucky-bluegrass.jpg",
+    photoUrl: "https://images.pexels.com/photos/129166/pexels-photo-129166.jpeg?auto=compress&cs=tinysrgb&w=640",
+    photoCredit: "Photo by Aaron Kittredge on Pexels",
     traits: ["Blue-green color", "Fine blade", "Self-repairs", "Cool season", "Northern lawns"],
   },
   {
@@ -112,7 +119,8 @@ export const grassTypes: GrassType[] = [
     color: "dark-green",
     growthPattern: "clumping",
     activeSeason: "cool",
-    photoUrl: "/images/grass/tall-fescue.jpg",
+    photoUrl: "https://images.pexels.com/photos/33211887/pexels-photo-33211887.jpeg?auto=compress&cs=tinysrgb&w=640",
+    photoCredit: "Photo by Engina Kyurt on Pexels",
     traits: ["Heat-tolerant", "Deep roots", "Clumping", "Cool season", "Stays green in summer"],
   },
   {
@@ -125,7 +133,8 @@ export const grassTypes: GrassType[] = [
     color: "dark-green",
     growthPattern: "clumping",
     activeSeason: "cool",
-    photoUrl: "/images/grass/fine-fescue.jpg",
+    photoUrl: "https://images.pexels.com/photos/33211499/pexels-photo-33211499.jpeg?auto=compress&cs=tinysrgb&w=640",
+    photoCredit: "Photo by Engina Kyurt on Pexels",
     traits: ["Very fine blades", "Shade tolerant", "Low maintenance", "Cool season", "Drought tolerant"],
   },
   {
@@ -138,7 +147,8 @@ export const grassTypes: GrassType[] = [
     color: "bright-green",
     growthPattern: "clumping",
     activeSeason: "cool",
-    photoUrl: "/images/grass/perennial-ryegrass.jpg",
+    photoUrl: "https://images.pexels.com/photos/11654274/pexels-photo-11654274.jpeg?auto=compress&cs=tinysrgb&w=640",
+    photoCredit: "Photo by Printexstar on Pexels",
     traits: ["Fast germination", "Shiny leaves", "Cool season", "Quick repairs", "Transition zone"],
   },
   {
@@ -151,7 +161,8 @@ export const grassTypes: GrassType[] = [
     color: "blue-green",
     growthPattern: "spreading",
     activeSeason: "warm",
-    photoUrl: "/images/grass/buffalo-grass.jpg",
+    photoUrl: "https://images.pexels.com/photos/10390723/pexels-photo-10390723.jpeg?auto=compress&cs=tinysrgb&w=640",
+    photoCredit: "Photo by Alex Krugla on Pexels",
     traits: ["Native grass", "Drought-tolerant", "Minimal mowing", "Warm season", "Prairie regions"],
   },
 ];
