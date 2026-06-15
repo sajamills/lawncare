@@ -131,3 +131,10 @@ Started: Sun Jun 14 10:56:13 CDT 2026
   - getOnboardingState/setOnboardingState helper functions manage sessionStorage — reuse pattern in Steps 2-5
   - Step components use "use client" directive and receive onNext from [step]/page.tsx
 ---
+
+## 2026-06-14 - US-012
+- Replaced Step2.tsx with full yard profile inputs: sq footage + "not sure" toggle, pets Yes/No, sun exposure 3-card select
+- Continue enabled only when pets and sun exposure selected (sq ft optional)
+- Saves { square_footage, has_pets, sun_exposure } to sessionStorage onboarding_state on Continue
+- Files changed: src/app/onboarding/[step]/steps/Step2.tsx
+---
