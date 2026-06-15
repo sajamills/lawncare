@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { grassTypes } from "@/data/grass-types";
+import { getPreemergentWindow } from "@/data/preemergent-windows";
 import type { WeeklyPlan, WeeklyTask } from "@/app/api/parse-pdf/route";
 
 type TaskCategory = "mow" | "fertilize" | "water" | "aerate" | "seed" | "pest-weed" | "other";
@@ -32,22 +33,69 @@ function getISOWeek(date: Date): number {
 }
 
 function getWeekDateRange(week: number, year: number): string {
-  // Find Monday of the given ISO week
   const jan4 = new Date(Date.UTC(year, 0, 4));
   const dayOfWeek = jan4.getUTCDay() || 7;
   const monday = new Date(jan4);
   monday.setUTCDate(jan4.getUTCDate() - (dayOfWeek - 1) + (week - 1) * 7);
   const sunday = new Date(monday);
   sunday.setUTCDate(monday.getUTCDate() + 6);
-
   const fmt = (d: Date) =>
     d.toLocaleDateString("default", { month: "short", day: "numeric", timeZone: "UTC" });
   return `${fmt(monday)} – ${fmt(sunday)}`;
 }
 
-function getSessionId(): string | null {
-  if (typeof window === "undefined") return null;
-  return localStorage.getItem("lawn_session_id");
+function parseMD(mmdd: string, year: number): Date {
+  const [m, d] = mmdd.split("-").map(Number);
+  return new Date(Date.UTC(year, m - 1, d));
+}
+
+function daysUntil(target: Date, from: Date): number {
+  return Math.ceil((target.getTime() - from.getTime()) / 86400000);
+}
+
+function formatMD(mmdd: string): string {
+  const [m, d] = mmdd.split("-").map(Number);
+  return new Date(Date.UTC(2000, m - 1, d)).toLocaleDateString("default", {
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+interface PreemergentAlert {
+  season: "spring" | "fall";
+  weeksAway: number | null; // null = active now
+  startLabel: string;
+  endLabel: string;
+}
+
+function getPreemergentAlert(state: string, today: Date): PreemergentAlert | null {
+  const win = getPreemergentWindow(state);
+  if (!win) return null;
+
+  const year = today.getUTCFullYear();
+
+  for (const season of ["spring", "fall"] as const) {
+    const w = win[season];
+    const start = parseMD(w.startDate, year);
+    const end = parseMD(w.endDate, year);
+
+    if (today >= start && today <= end) {
+      return { season, weeksAway: null, startLabel: formatMD(w.startDate), endLabel: formatMD(w.endDate) };
+    }
+
+    const daysToStart = daysUntil(start, today);
+    if (daysToStart > 0 && daysToStart <= 21) {
+      return {
+        season,
+        weeksAway: Math.ceil(daysToStart / 7),
+        startLabel: formatMD(w.startDate),
+        endLabel: formatMD(w.endDate),
+      };
+    }
+  }
+
+  return null;
 }
 
 function getOnboardingState(): Record<string, unknown> {
@@ -70,6 +118,8 @@ function scaleQuantity(description: string, sqFt: number | null): string {
   );
 }
 
+const BANNER_DISMISSED_KEY = "preemergent_banner_dismissed";
+
 export default function DashboardPage() {
   const [tasks, setTasks] = useState<WeeklyTask[]>([]);
   const [hasPets, setHasPets] = useState(false);
@@ -77,11 +127,12 @@ export default function DashboardPage() {
   const [grassName, setGrassName] = useState("");
   const [weekRange, setWeekRange] = useState("");
   const [loading, setLoading] = useState(true);
+  const [alert, setAlert] = useState<PreemergentAlert | null>(null);
+  const [bannerDismissed, setBannerDismissed] = useState(false);
 
   useEffect(() => {
     async function loadData() {
       const state = getOnboardingState();
-      void getSessionId();
 
       setHasPets((state.has_pets as boolean) ?? false);
       setSqFt((state.square_footage as number) ?? null);
@@ -96,15 +147,19 @@ export default function DashboardPage() {
       const currentWeek = getISOWeek(now);
       setWeekRange(getWeekDateRange(currentWeek, now.getFullYear()));
 
+      // Pre-emergent banner
+      const dismissed = sessionStorage.getItem(BANNER_DISMISSED_KEY) === "true";
+      setBannerDismissed(dismissed);
+      if (!dismissed && state.state) {
+        setAlert(getPreemergentAlert(state.state as string, now));
+      }
+
       if (state.state && state.grass_type) {
         try {
           const res = await fetch("/api/parse-pdf", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              state: state.state,
-              grassType: state.grass_type,
-            }),
+            body: JSON.stringify({ state: state.state, grassType: state.grass_type }),
           });
           if (res.ok) {
             const { plan } = await res.json() as { plan: WeeklyPlan[] };
@@ -112,7 +167,8 @@ export default function DashboardPage() {
             if (weekPlan) {
               const PRIORITY_ORDER: Record<TaskPriority, number> = { urgent: 0, routine: 1, optional: 2 };
               const sorted = [...weekPlan.tasks].sort(
-                (a, b) => PRIORITY_ORDER[a.priority as TaskPriority] - PRIORITY_ORDER[b.priority as TaskPriority]
+                (a, b) =>
+                  PRIORITY_ORDER[a.priority as TaskPriority] - PRIORITY_ORDER[b.priority as TaskPriority]
               );
               setTasks(sorted);
             }
@@ -128,6 +184,11 @@ export default function DashboardPage() {
     loadData();
   }, []);
 
+  const dismissBanner = () => {
+    sessionStorage.setItem(BANNER_DISMISSED_KEY, "true");
+    setBannerDismissed(true);
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center flex-1 py-16">
@@ -141,6 +202,37 @@ export default function DashboardPage() {
 
   return (
     <div className="flex flex-col gap-6 p-6 max-w-2xl mx-auto w-full">
+      {/* Pre-emergent banner */}
+      {alert && !bannerDismissed && (
+        <div
+          className="flex items-start gap-3 rounded-lg px-4 py-3 border"
+          style={{ backgroundColor: "#3d3000", borderColor: "#6b4c00" }}
+        >
+          <span className="text-lg shrink-0">{alert.season === "spring" ? "🌱" : "🍂"}</span>
+          <div className="flex flex-col gap-0.5 flex-1">
+            <p className="font-semibold text-sm" style={{ color: "#eab308" }}>
+              {alert.weeksAway === null
+                ? "Pre-Emergent Window: Active Now"
+                : `Pre-Emergent Window: ${alert.weeksAway} week${alert.weeksAway === 1 ? "" : "s"} away`}
+            </p>
+            <p className="text-xs leading-snug" style={{ color: "#d4a017" }}>
+              Apply when soil temp reaches{" "}
+              {alert.season === "spring" ? "50°F (spring)" : "70°F (fall)"}. Typical window:{" "}
+              {alert.startLabel} – {alert.endLabel}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={dismissBanner}
+            className="text-sm leading-none shrink-0 mt-0.5"
+            style={{ color: "#eab308" }}
+            aria-label="Dismiss banner"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       <div>
         <h1
           className="text-2xl font-bold mb-1"
@@ -159,14 +251,10 @@ export default function DashboardPage() {
       {tasks.length === 0 ? (
         <div
           className="rounded-lg p-6 text-center border"
-          style={{
-            backgroundColor: "var(--color-surface)",
-            borderColor: "#2d4a2d",
-          }}
+          style={{ backgroundColor: "var(--color-surface)", borderColor: "#2d4a2d" }}
         >
           <p style={{ color: "var(--color-text-muted)" }}>
-            Nothing urgent this week — check back soon or view your full annual
-            calendar.
+            Nothing urgent this week — check back soon or view your full annual calendar.
           </p>
         </div>
       ) : (
@@ -175,18 +263,12 @@ export default function DashboardPage() {
             <div
               key={i}
               className="rounded-lg p-4 border flex flex-col gap-2"
-              style={{
-                backgroundColor: "var(--color-surface)",
-                borderColor: "#2d4a2d",
-              }}
+              style={{ backgroundColor: "var(--color-surface)", borderColor: "#2d4a2d" }}
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <span>{CATEGORY_ICONS[task.category as TaskCategory]}</span>
-                  <p
-                    className="font-semibold"
-                    style={{ color: "var(--color-text-primary)" }}
-                  >
+                  <p className="font-semibold" style={{ color: "var(--color-text-primary)" }}>
                     {task.title}
                   </p>
                 </div>
@@ -200,10 +282,7 @@ export default function DashboardPage() {
                   {task.priority}
                 </span>
               </div>
-              <p
-                className="text-sm"
-                style={{ color: "var(--color-text-muted)" }}
-              >
+              <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>
                 {scaleQuantity(task.description, sqFt)}
               </p>
               {hasPets && task.petSafetyNote && (
