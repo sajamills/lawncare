@@ -1,4 +1,5 @@
 import type { WeeklyPlan, WeeklyTask } from "@/lib/week-utils";
+import { extensionSources, knownPdfUrls } from "@/data/extension-sources";
 
 type SeasonStrategy = "warm" | "cool";
 
@@ -12,7 +13,7 @@ export interface SeededPlanDefinition {
 const AR_LAWNS = "https://uaex.uada.edu/yard-garden/lawns/default.aspx";
 const GA_CALENDARS = "https://turf.caes.uga.edu/publications/Lawn_Care_Calendars.html";
 
-export const seededPlanDefinitions: SeededPlanDefinition[] = [
+const specificPlanDefinitions: SeededPlanDefinition[] = [
   {
     state: "AR",
     grassType: "bermudagrass",
@@ -97,6 +98,110 @@ export const seededPlanDefinitions: SeededPlanDefinition[] = [
     strategy: "cool",
   },
 ];
+
+const regionalGrassTypes: Record<string, string[]> = {
+  AL: ["bermudagrass", "zoysia", "centipede", "st-augustine", "tall-fescue"],
+  AK: ["kentucky-bluegrass", "fine-fescue"],
+  AZ: ["bermudagrass", "buffalo-grass", "tall-fescue"],
+  AR: ["bermudagrass", "zoysia", "centipede", "st-augustine", "tall-fescue"],
+  CA: ["tall-fescue", "bermudagrass", "zoysia", "kentucky-bluegrass"],
+  CO: ["kentucky-bluegrass", "tall-fescue", "fine-fescue", "buffalo-grass"],
+  CT: ["kentucky-bluegrass", "tall-fescue", "fine-fescue", "perennial-ryegrass"],
+  DE: ["tall-fescue", "kentucky-bluegrass", "fine-fescue", "zoysia"],
+  DC: ["tall-fescue", "kentucky-bluegrass", "zoysia"],
+  FL: ["st-augustine", "bermudagrass", "zoysia", "bahia", "centipede"],
+  GA: ["bermudagrass", "zoysia", "centipede", "st-augustine", "tall-fescue"],
+  HI: ["bermudagrass", "zoysia", "st-augustine", "bahia"],
+  ID: ["kentucky-bluegrass", "tall-fescue", "fine-fescue"],
+  IL: ["kentucky-bluegrass", "tall-fescue", "fine-fescue", "perennial-ryegrass"],
+  IN: ["kentucky-bluegrass", "tall-fescue", "fine-fescue", "perennial-ryegrass"],
+  IA: ["kentucky-bluegrass", "tall-fescue", "fine-fescue", "perennial-ryegrass"],
+  KS: ["tall-fescue", "bermudagrass", "zoysia", "buffalo-grass", "kentucky-bluegrass"],
+  KY: ["tall-fescue", "kentucky-bluegrass", "zoysia", "bermudagrass"],
+  LA: ["centipede", "st-augustine", "bermudagrass", "zoysia", "bahia"],
+  ME: ["kentucky-bluegrass", "fine-fescue", "tall-fescue", "perennial-ryegrass"],
+  MD: ["tall-fescue", "kentucky-bluegrass", "fine-fescue", "zoysia"],
+  MA: ["kentucky-bluegrass", "tall-fescue", "fine-fescue", "perennial-ryegrass"],
+  MI: ["kentucky-bluegrass", "tall-fescue", "fine-fescue", "perennial-ryegrass"],
+  MN: ["kentucky-bluegrass", "fine-fescue", "tall-fescue", "perennial-ryegrass"],
+  MS: ["centipede", "st-augustine", "bermudagrass", "zoysia", "bahia", "tall-fescue"],
+  MO: ["tall-fescue", "kentucky-bluegrass", "zoysia", "bermudagrass"],
+  MT: ["kentucky-bluegrass", "fine-fescue", "tall-fescue", "buffalo-grass"],
+  NE: ["kentucky-bluegrass", "tall-fescue", "buffalo-grass", "fine-fescue"],
+  NV: ["tall-fescue", "bermudagrass", "kentucky-bluegrass", "buffalo-grass"],
+  NH: ["kentucky-bluegrass", "fine-fescue", "tall-fescue", "perennial-ryegrass"],
+  NJ: ["tall-fescue", "kentucky-bluegrass", "fine-fescue", "perennial-ryegrass"],
+  NM: ["bermudagrass", "buffalo-grass", "tall-fescue", "kentucky-bluegrass"],
+  NY: ["kentucky-bluegrass", "tall-fescue", "fine-fescue", "perennial-ryegrass"],
+  NC: ["tall-fescue", "bermudagrass", "zoysia", "centipede", "st-augustine"],
+  ND: ["kentucky-bluegrass", "fine-fescue", "tall-fescue", "buffalo-grass"],
+  OH: ["kentucky-bluegrass", "tall-fescue", "fine-fescue", "perennial-ryegrass"],
+  OK: ["bermudagrass", "zoysia", "tall-fescue", "buffalo-grass"],
+  OR: ["tall-fescue", "fine-fescue", "kentucky-bluegrass", "perennial-ryegrass"],
+  PA: ["tall-fescue", "kentucky-bluegrass", "fine-fescue", "perennial-ryegrass"],
+  RI: ["kentucky-bluegrass", "tall-fescue", "fine-fescue", "perennial-ryegrass"],
+  SC: ["centipede", "st-augustine", "bermudagrass", "zoysia", "tall-fescue"],
+  SD: ["kentucky-bluegrass", "fine-fescue", "tall-fescue", "buffalo-grass"],
+  TN: ["tall-fescue", "bermudagrass", "zoysia", "centipede"],
+  TX: ["bermudagrass", "st-augustine", "zoysia", "buffalo-grass", "bahia", "tall-fescue"],
+  UT: ["kentucky-bluegrass", "tall-fescue", "fine-fescue", "buffalo-grass"],
+  VT: ["kentucky-bluegrass", "fine-fescue", "tall-fescue", "perennial-ryegrass"],
+  VA: ["tall-fescue", "kentucky-bluegrass", "zoysia", "bermudagrass"],
+  WA: ["tall-fescue", "fine-fescue", "kentucky-bluegrass", "perennial-ryegrass"],
+  WV: ["tall-fescue", "kentucky-bluegrass", "fine-fescue", "perennial-ryegrass"],
+  WI: ["kentucky-bluegrass", "fine-fescue", "tall-fescue", "perennial-ryegrass"],
+  WY: ["kentucky-bluegrass", "fine-fescue", "tall-fescue", "buffalo-grass"],
+};
+
+const warmSeasonGrassTypes = new Set([
+  "bermudagrass",
+  "zoysia",
+  "st-augustine",
+  "centipede",
+  "bahia",
+  "buffalo-grass",
+]);
+
+function sourceUrlFor(state: string, grassType: string) {
+  const knownUrl = knownPdfUrls[`${state}_${grassType}`];
+  if (knownUrl) return knownUrl;
+
+  const source = extensionSources[state];
+  if (!source) return "";
+
+  return `${source.searchUrl}${encodeURIComponent(`${grassType} lawn care maintenance`)}`;
+}
+
+function strategyFor(grassType: string): SeasonStrategy {
+  return warmSeasonGrassTypes.has(grassType) ? "warm" : "cool";
+}
+
+function buildSeededPlanDefinitions(): SeededPlanDefinition[] {
+  const byKey = new Map<string, SeededPlanDefinition>();
+
+  for (const definition of specificPlanDefinitions) {
+    byKey.set(`${definition.state}_${definition.grassType}`, definition);
+  }
+
+  for (const [state, grassTypes] of Object.entries(regionalGrassTypes)) {
+    for (const grassType of grassTypes) {
+      const key = `${state}_${grassType}`;
+      if (byKey.has(key)) continue;
+      byKey.set(key, {
+        state,
+        grassType,
+        sourceUrl: sourceUrlFor(state, grassType),
+        strategy: strategyFor(grassType),
+      });
+    }
+  }
+
+  return [...byKey.values()].sort(
+    (a, b) => a.state.localeCompare(b.state) || a.grassType.localeCompare(b.grassType)
+  );
+}
+
+export const seededPlanDefinitions: SeededPlanDefinition[] = buildSeededPlanDefinitions();
 
 interface SeededPlan {
   plan: WeeklyPlan[];
