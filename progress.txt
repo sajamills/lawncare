@@ -2,67 +2,35 @@
 - Next.js 15 project using App Router with `src/` directory layout (`src/app/`, `src/lib/`, `src/data/`, `src/actions/`)
 - Tailwind CSS v4 uses `@import "tailwindcss"` in globals.css (not `@tailwind` directives)
 - Tailwind CSS v4 custom colors: define via `@theme { --color-<name>: <value>; }` in globals.css; no tailwind.config.ts needed
-- Use `var(--color-<name>)` in inline styles or CSS for semantic color tokens defined in `@theme`
+- Use `var(--color-<name>)` in inline styles for semantic color tokens defined in `@theme`
 - TypeScript strict mode enabled via tsconfig.json
 - .gitignore blocks `.env*` — commit example env files as `env.local.example` (no leading dot)
-- Clerk auth: clerkMiddleware + createRouteMatcher in src/middleware.ts; ClerkProvider wraps layout; server components use `auth()` from @clerk/nextjs/server (currently in demo/bypass mode)
+- Clerk auth: currently in demo/bypass mode — middleware is a passthrough NextResponse.next()
 - Onboarding state persisted in sessionStorage under key `onboarding_state`; session UUID in localStorage under `lawn_session_id`
 - All onboarding step components take `{ onNext: () => void }` prop; routing handled by `src/app/onboarding/[step]/page.tsx`
-- Extension PDF sources in `src/data/extension-sources.ts`: `extensionSources[STATE]` gives university info; `knownPdfUrls[STATE_grassType]` gives direct PDF URL
-- DB uses `@vercel/postgres` (createPool); works with any `POSTGRES_URL` env var including Supabase connection strings
-- Warning/alert colors: background #3d3000, text #eab308 (used for pet safety notes and pre-emergent banners)
-- grassTypes data in `src/data/grass-types.ts`; each entry has id, name, description, traits[], photoUrl, photoCredit
+- DB uses `@vercel/postgres` (createPool); works with any `POSTGRES_URL` env var; createPool() is LAZY (only called on first query) to avoid module-load crash in dev without POSTGRES_URL
+- grassTypes data in `src/data/grass-types.ts`; each entry has id, name, description, traits[], photoUrl, photoCredit, bladeWidth, texture, activeSeason
 - Pre-emergent windows in `src/data/preemergent-windows.ts`; getPreemergentWindow(state) returns spring/fall date ranges
-- `/api/parse-pdf` route: accepts { state, grassType, pdfUrl? }; checks DB cache first; calls Claude claude-sonnet-4-6; returns WeeklyPlan[] (52 entries); WeeklyPlan and WeeklyTask types are exported from that route file
+- `/api/parse-pdf` route: accepts { state, grassType, pdfUrl? }; checks DB cache first; calls Claude claude-sonnet-4-6; returns WeeklyPlan[] (52 entries); WeeklyPlan and WeeklyTask types exported from that route file
 - ISO week utility getISOWeek(date): uses UTC math; week 1 = week containing Jan 4
-- Pexels CDN URL format: https://images.pexels.com/photos/[ID]/pexels-photo-[ID].jpeg?auto=compress&cs=tinysrgb&w=640
+- Pexels CDN URL format: https://images.pexels.com/photos/[ID]/pexels-photo-[ID].jpeg?auto=compress&cs=tinysrgb&w=640 — ALWAYS verify photo ID returns 200 before using
 - next.config.ts has PWA wrapper in prod — add config changes to base nextConfig object before the PWA wrap
 - Bracket paths require quoting in git add: git add "src/app/onboarding/[step]/..."
-- Profile page at src/app/profile/page.tsx: full edit form (ZIP, grass type, sq ft, pets, sun); uses saveProfile() and getProfile() from @/actions/profile
-- Calendar page at src/app/dashboard/calendar/page.tsx: CURRENTLY BROKEN — still uses old MonthlyPlan (12-month) interface; needs rewrite for WeeklyPlan (52-week)
-- Dashboard at src/app/dashboard/page.tsx: reads onboarding_state from sessionStorage; calls /api/parse-pdf; uses getISOWeek to find current week tasks
-- Layout at src/app/layout.tsx: header has only LawnGuide wordmark; NO nav links exist yet
+- Layout: src/app/layout.tsx is a SERVER component (exports metadata); client nav is in src/app/ClientNav.tsx ("use client", usePathname, nav rendering)
+- Design tokens in globals.css @theme: --color-background, --color-surface, --color-primary, --color-secondary, --color-text-primary, --color-text-muted + (after US-042) --color-surface-alt, --color-border, --color-warning-*, --color-urgent, --color-routine, --color-optional
+- Hardcoded hex colors to AVOID (use CSS vars instead): #2d4a2d → var(--color-border), #3d3000 → var(--color-warning-bg), #eab308 → var(--color-warning-text), #1a3a1a → var(--color-surface-alt)
+- SVG icon components: src/components/icons.tsx exports HomeIcon, CalendarIcon, ProfileIcon (after US-043)
 
 # Ralph Progress Log
 Started: Sun Jun 15 2026
 ---
 
-## 2026-06-15 - US-032
-- Added stale cache detection in /api/parse-pdf/route.ts: checks if cachedPlan[0]?.week exists; if missing (old 12-month format), deletes the row and falls through to regeneration
-- **Learnings:** Array.isArray check needed before indexing; "week" in cachedPlan[0] is the reliable discriminator
----
-
-## 2026-06-15 - US-033
-- Rewrote src/app/dashboard/calendar/page.tsx: replaced MonthlyPlan with WeeklyPlan types imported from API route
-- Added weekToMonth(week): groups 52 weeks into 12 months via Math.min(Math.ceil(week / (52/12)), 12)
-- Calendar view: expands to show per-week task groups with "Week N" subheadings
-- List view: flat tasks per month (no week subheadings)
-- **Learnings:** Import WeeklyPlan/WeeklyTask from @/app/api/parse-pdf/route (already exported)
----
-
-## 2026-06-15 - US-034
-- Updated src/app/layout.tsx: added "use client", usePathname, Link; extracted metadata to src/app/metadata.ts
-- Desktop: inline header links with active state; Mobile: fixed bottom tab bar (56px, z-50)
-- NAV_ITEMS hidden on "/" and "/onboarding/*" routes; pb-16 added to <main> on mobile to avoid content hiding behind tab bar
-- **Learnings:** Can re-export metadata from client layout.tsx via "export { metadata } from './metadata'"
----
-
-## 2026-06-15 - US-035
-- Added Link import to dashboard/page.tsx; wrapped "view your full annual calendar" text in <Link href="/dashboard/calendar">
----
-
-## 2026-06-15 - US-036/037/038/039/040
-- Dashboard page.tsx full rewrite combining 5 stories:
-  - US-036: Cold-load from DB via dynamic import of getProfile when sessionStorage empty
-  - US-037: showOnboardingGate flag + CTA card with "Get started →" to /onboarding/1
-  - US-038: generatingPlan state + setInterval cycling through LOADING_MESSAGES every 3s; cleared in finally block
-  - US-039: completedTitles Set state; circular ✓ button per task; sessionStorage key completed_tasks_week_{N}; completed tasks sorted to bottom
-  - US-040: nextWeekTasks sliced to 3 from plan[week+1]; "Up Next" card with week range subtitle
-- **Learnings:** 5 stories sharing one file should be done in a single rewrite pass; useRef for interval avoids stale closure issues
----
-
-## 2026-06-15 - US-041
-- Added deleteCachedPlan(state, grassType) server action to src/actions/profile.ts
-- Profile page: added originalState tracking; on save syncs sessionStorage onboarding_state; calls deleteCachedPlan if warn=true; shows "Go to dashboard →" Link after successful save
-- **Learnings:** db cannot be imported in client components — must wrap in a server action; saveSuccess state controls link visibility separately from toast (toast auto-clears but link should persist)
+## 2026-06-15 - US-052/US-053/US-054
+- US-052: Added stateCode state var to dashboard; updated h1 to "Week N"; added subtitle "{grassName} · {stateCode} · {weekRange}"
+- US-053: Added nextWeekTotalCount state; wrapped Up Next in <></> with <hr> divider before card; added "Upcoming" label (10px uppercase tracking); changed heading to text-base; added "+ N more tasks" line when count > 3
+- US-054: Both Sun Exposure and Pets button groups now always use borderWidth: "2px" + borderStyle: "solid" — no more 1px→2px jump on selection
+- Files changed: src/app/dashboard/page.tsx, src/app/profile/page.tsx
+- **Learnings for future iterations:**
+  - Always use borderWidth + borderStyle as separate inline style props (not the `border` className) when you need consistent border width regardless of selection state
+  - When wrapping conditional JSX in a Fragment (<></>) for multiple sibling elements, the parent conditional check stays on the outer wrapper
 ---
