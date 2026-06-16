@@ -27,10 +27,42 @@
 - Claude Vision: messages array includes { type: 'image', source: { type: 'url', url: imageUrl } } image block; model claude-sonnet-4-6
 - Google Maps: use @googlemaps/js-api-loader Loader singleton; libraries: ['places', 'drawing', 'geometry']; mapTypeId: 'satellite' with tilt: 0 for flat satellite view
 - Deploy after EVERY story: run `vercel --yes` and verify on production URL before marking passes: true
-- Step5 in onboarding is imported from Step5New.tsx (NOT Step5.tsx) — page.tsx imports Step5 from './steps/Step5' but that file re-exports or is the same as Step5New
-- Onboarding has 7 steps total (Step1–Step7); Step6 is the extension resources step targeted for removal in US-013
-- Treatment history is in Step5 (imported from steps/Step5.tsx, which loads the TASKS list); Step5New.tsx is the actual implementation used
 
 # Ralph Progress Log
-Started: Sun Jun 15 2026 — UI/UX Remediation Sprint
+Started: Sun Jun 15 2026
+---
+
+## 2026-06-15 - US-055
+- Installed @clerk/nextjs package
+- Wrapped layout.tsx <html> with <ClerkProvider> (server component, no "use client" needed)
+- env.local already had Clerk placeholder keys; fixed AFTER_SIGN_UP_URL from /dashboard to /onboarding/1
+- env.local.example updated to match
+- Deployed to Vercel: https://lawncare-4qnyvhq4h-sajamills-projects.vercel.app — build passed
+- Files changed: src/app/layout.tsx, env.local.example, package.json, package-lock.json
+- **Learnings for future iterations:**
+  - ClerkProvider goes OUTSIDE the <html> tag in layout.tsx (wraps the entire return)
+  - .env.local already existed with placeholder Clerk keys from a prior setup — check before adding duplicates
+  - Vercel build with placeholder Clerk keys succeeds (Clerk SDK doesn't throw at build time for missing keys)
+---
+
+## 2026-06-15 - US-057
+- Created db/migrations/003_add_users_table.sql (migration file was already staged, just committed)
+- Created src/lib/user.ts with User interface and getOrCreateUser() upsert function (ON CONFLICT DO UPDATE SET email)
+- Build + typecheck passes (no POSTGRES_URL locally — migration runs on Vercel via npm run db:migrate after vercel env pull)
+- Files changed: db/migrations/003_add_users_table.sql, src/lib/user.ts
+- **Learnings for future iterations:**
+  - No local POSTGRES_URL in .env.local — migrations are applied against Vercel's Neon DB; run `vercel env pull` then `npm run db:migrate`
+  - User table: clerk_user_id is UNIQUE key for upsert; subscription_status defaults to 'free'
+  - getOrCreateUser uses INSERT ... ON CONFLICT DO UPDATE pattern so it's idempotent
+---
+
+## 2026-06-15 - US-056
+- Replaced NextResponse.next() passthrough with clerkMiddleware + createRouteMatcher
+- Public routes: /, /sign-in(.*), /sign-up(.*), /api/zone(.*), /onboarding(.*)
+- All other routes protected — /dashboard returns 401 without auth (browser would redirect to /sign-in)
+- Deployed: https://lawncare-f36wkn38g-sajamills-projects.vercel.app — build passed, /dashboard returns 401
+- Files changed: src/middleware.ts
+- **Learnings for future iterations:**
+  - clerkMiddleware uses async (auth, req) => {} pattern; call auth.protect() for protected routes
+  - With placeholder Clerk keys, middleware returns 401 instead of redirecting — this is fine for CI; real browser redirect needs real keys
 ---

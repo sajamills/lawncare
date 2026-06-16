@@ -12,11 +12,17 @@ function getSessionId(): string | null {
   return localStorage.getItem("lawn_session_id");
 }
 
+function isValidZip(zip: string): boolean {
+  return /^\d{5}$/.test(zip);
+}
+
 export default function ProfilePage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [toast, setToast] = useState("");
   const [warn, setWarn] = useState(false);
+  const [touchedZip, setTouchedZip] = useState(false);
+  const [touchedGrass, setTouchedGrass] = useState(false);
 
   const [zipCode, setZipCode] = useState("");
   const [state, setState] = useState("");
@@ -29,6 +35,8 @@ export default function ProfilePage() {
   const [sqFt, setSqFt] = useState<string>("");
   const [hasPets, setHasPets] = useState(false);
   const [sunExposure, setSunExposure] = useState<SunExposure>("full-sun");
+
+  const canSave = isValidZip(zipCode) && grassType !== "";
 
   useEffect(() => {
     const sessionId = getSessionId();
@@ -62,7 +70,7 @@ export default function ProfilePage() {
 
   const handleSave = async () => {
     const sessionId = getSessionId();
-    if (!sessionId) return;
+    if (!sessionId || !canSave) return;
 
     setSaving(true);
     try {
@@ -158,17 +166,25 @@ export default function ProfilePage() {
           </label>
           <input
             type="text"
+            inputMode="numeric"
+            autoComplete="postal-code"
             value={zipCode}
             onChange={(e) =>
               setZipCode(e.target.value.replace(/\D/g, "").slice(0, 5))
             }
+            onBlur={() => setTouchedZip(true)}
             className="px-4 py-2 rounded-lg border"
             style={{
               backgroundColor: "var(--color-surface)",
               color: "var(--color-text-primary)",
-              borderColor: "var(--color-border)",
+              borderColor: touchedZip && !isValidZip(zipCode) ? "var(--color-urgent)" : "var(--color-border)",
             }}
           />
+          {touchedZip && !isValidZip(zipCode) && (
+            <p className="text-xs mt-1" style={{ color: "var(--color-urgent)" }}>
+              Enter a valid 5-digit ZIP code
+            </p>
+          )}
         </div>
 
         {/* Grass type */}
@@ -181,12 +197,13 @@ export default function ProfilePage() {
           </label>
           <select
             value={grassType}
-            onChange={(e) => setGrassType(e.target.value)}
+            onChange={(e) => { setGrassType(e.target.value); setTouchedGrass(true); }}
+            onBlur={() => setTouchedGrass(true)}
             className="px-4 py-2 rounded-lg border"
             style={{
               backgroundColor: "var(--color-surface)",
               color: "var(--color-text-primary)",
-              borderColor: "var(--color-border)",
+              borderColor: touchedGrass && grassType === "" ? "var(--color-urgent)" : "var(--color-border)",
             }}
           >
             <option value="">Select grass type</option>
@@ -196,6 +213,11 @@ export default function ProfilePage() {
               </option>
             ))}
           </select>
+          {touchedGrass && grassType === "" && (
+            <p className="text-xs mt-1" style={{ color: "var(--color-urgent)" }}>
+              Select a grass type
+            </p>
+          )}
         </div>
 
         {/* Square footage */}
@@ -292,8 +314,8 @@ export default function ProfilePage() {
 
       <button
         onClick={handleSave}
-        disabled={saving}
-        className="w-full py-3 rounded-lg font-semibold text-sm disabled:opacity-50"
+        disabled={saving || !canSave}
+        className="w-full py-3 rounded-lg font-semibold text-sm disabled:opacity-50 disabled:cursor-not-allowed"
         style={{
           backgroundColor: "var(--color-primary)",
           color: "var(--color-background)",
