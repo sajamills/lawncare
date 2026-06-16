@@ -264,6 +264,11 @@ export const extensionSources: Record<string, ExtensionSource> = {
 
 // Known PDF URLs for common state+grassType combinations
 export const knownPdfUrls: Record<string, string> = {
+  "AR_bermudagrass": "https://uaex.uada.edu/publications/PDF/FSA-6121.pdf",
+  "AR_zoysia": "https://www.uaex.uada.edu/publications/pdf/FSA-6122.pdf",
+  "AR_tall-fescue": "https://uaex.uada.edu/yard-garden/lawns/default.aspx",
+  "GA_tall-fescue":
+    "https://turf.caes.uga.edu/content/dam/caes-subsite/georgiaturf/docs/pcrp2024/2024_Tall_Fescue_Calendar.pdf",
   "NC_bermudagrass":
     "https://content.ces.ncsu.edu/bermudagrass-lawn-maintenance-calendar",
   "NC_tall-fescue":

@@ -8,11 +8,13 @@ import {
   validateWeeklyPlan,
   extractPlanFromText,
 } from "@/lib/week-utils";
+import { getSeededPlan } from "@/data/seeded-plans";
 
 // Re-export types so existing importers (dashboard, calendar) keep working
 export type { WeeklyTask, WeeklyPlan };
 
 function getAnthropicClient(): Anthropic | null {
+  if (process.env.ENABLE_LIVE_PLAN_GENERATION !== "1") return null;
   if (!process.env.ANTHROPIC_API_KEY) return null;
   return new Anthropic();
 }
@@ -85,6 +87,35 @@ export async function POST(request: NextRequest) {
   } catch (err) {
     // DB not available in dev — continue without cache
     console.error(`[parse-pdf] stage=cache_read_error state=${stateKey} grass=${grassKey}`, err instanceof Error ? err.message : String(err));
+  }
+
+  const seeded = getSeededPlan(stateKey, grassKey);
+  if (seeded) {
+    try {
+      await db.query(
+        `INSERT INTO cached_plans (state, grass_type, pdf_url, parsed_plan)
+         VALUES ($1, $2, $3, $4)
+         ON CONFLICT (state, grass_type) DO UPDATE
+         SET pdf_url = EXCLUDED.pdf_url, parsed_plan = EXCLUDED.parsed_plan, created_at = NOW()`,
+        [stateKey, grassKey, seeded.sourceUrl, JSON.stringify(seeded.plan)]
+      );
+      console.log(`[parse-pdf] stage=seed_cache_write state=${stateKey} grass=${grassKey} weeks=${seeded.plan.length}`);
+    } catch (err) {
+      console.error(`[parse-pdf] stage=seed_cache_write_error state=${stateKey} grass=${grassKey}`, err instanceof Error ? err.message : String(err));
+    }
+
+    console.log(`[parse-pdf] stage=seed_hit state=${stateKey} grass=${grassKey}`);
+    return NextResponse.json({ plan: seeded.plan, cached: false, source: "seeded" });
+  }
+
+  if (process.env.ENABLE_LIVE_PLAN_GENERATION !== "1") {
+    console.error(`[parse-pdf] stage=seed_missing state=${stateKey} grass=${grassKey}`);
+    return NextResponse.json(
+      {
+        error: "No seeded plan is available for this state and grass type yet.",
+      },
+      { status: 404 }
+    );
   }
 
   // Optionally fetch PDF/HTML content if pdfUrl is provided

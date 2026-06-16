@@ -9,6 +9,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { normalizeGrassId, normalizeStateCode, validateWeeklyPlan, extractPlanFromText } from "@/lib/week-utils";
 import type { WeeklyPlan } from "@/lib/week-utils";
+import { getSeededPlan, seededPlanDefinitions } from "@/data/seeded-plans";
 import fixture from "./fixtures/ar-bermudagrass-plan.json";
 
 const validPlan = fixture as WeeklyPlan[];
@@ -56,6 +57,32 @@ describe("cached plan validation", () => {
   it("rejects plan where all weeks have empty task arrays", () => {
     const allEmpty = Array.from({ length: 52 }, (_, i) => ({ week: i + 1, tasks: [] }));
     expect(validateWeeklyPlan(allEmpty)).not.toBeNull();
+  });
+});
+
+// ── TEST: Seeded plans ───────────────────────────────────────────────────────
+
+describe("seeded cached plans", () => {
+  it("includes the Arkansas bermudagrass seed used by the no-live-AI path", () => {
+    const seeded = getSeededPlan("AR", "bermudagrass");
+    expect(seeded).not.toBeNull();
+    expect(seeded!.sourceUrl).toContain("FSA-6121.pdf");
+    expect(validateWeeklyPlan(seeded!.plan)).toBeNull();
+    expect(seeded!.plan).toHaveLength(52);
+  });
+
+  it("includes Georgia tall fescue, a common cool-season seed", () => {
+    const seeded = getSeededPlan("GA", "tall-fescue");
+    expect(seeded).not.toBeNull();
+    expect(validateWeeklyPlan(seeded!.plan)).toBeNull();
+  });
+
+  it("validates every configured seeded plan", () => {
+    for (const definition of seededPlanDefinitions) {
+      const seeded = getSeededPlan(definition.state, definition.grassType);
+      expect(seeded, `${definition.state}_${definition.grassType}`).not.toBeNull();
+      expect(validateWeeklyPlan(seeded!.plan), `${definition.state}_${definition.grassType}`).toBeNull();
+    }
   });
 });
 

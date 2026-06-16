@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "db:migrate": "npx tsx scripts/migrate.ts",
+    "db:seed-plans": "npx tsx scripts/seed-cached-plans.ts",
     "test": "vitest run",
     "test:e2e": "playwright test"
   },
