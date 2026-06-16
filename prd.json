@@ -1,222 +1,604 @@
 {
   "project": "LawnCare Planner",
-  "branchName": "ralph/design-polish",
-  "description": "Design Polish Sprint — extend the token system, replace emoji icons with SVGs, fix touch targets, add visual priority hierarchy to task cards, improve grass picker, upgrade the landing page, and eliminate all hardcoded hex values.",
+  "branchName": "ralph/platform-features",
+  "description": "Platform Features — Auth (Clerk), Stripe Pro subscriptions, Claude Vision photo diagnosis, Google Maps yard estimator, multi-lawn + household accounts",
   "userStories": [
     {
-      "id": "US-042",
-      "title": "Extend design token system with border, surface-alt, warning, and priority color variables",
-      "description": "As a developer, I want all hardcoded hex colors moved into CSS variables so the design system is consistent and every subsequent story can reference tokens instead of magic strings.",
+      "id": "US-055",
+      "title": "Install Clerk and configure environment variables",
+      "description": "As a developer, I need Clerk installed and configured so authentication can be added to the app.",
       "acceptanceCriteria": [
-        "In src/app/globals.css @theme block, add: --color-surface-alt: #132613; --color-border: #2d4a2d; --color-border-strong: #3a5a3a; --color-warning-bg: #3d3000; --color-warning-border: #6b4c00; --color-warning-text: #eab308; --color-warning-text-muted: #d4a017; --color-urgent: #ef4444; --color-routine: #eab308; --color-optional: #6b7280;",
-        "Global search-and-replace across all src/ files: #2d4a2d → var(--color-border), #3d3000 → var(--color-warning-bg), #eab308 → var(--color-warning-text), #d4a017 → var(--color-warning-text-muted), #6b4c00 → var(--color-warning-border), #1a3a1a → var(--color-surface-alt)",
-        "In dashboard/page.tsx priority badge, replace the ${PRIORITY_COLORS[...]}22 hex-opacity hack: use backgroundColor with opacity-based alternative — e.g. style={{ backgroundColor: 'var(--color-urgent)', opacity: ... }} on a wrapper, or restructure to avoid the 22 hex suffix entirely",
-        "No raw hex color literals remain in any src/ file except globals.css",
-        "Typecheck passes"
+        "Install @clerk/nextjs package",
+        "Add env vars to .env.local (placeholder values): NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY, CLERK_SECRET_KEY, NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in, NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up, NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/dashboard, NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/onboarding/1",
+        "Add <ClerkProvider> wrapping {children} in src/app/layout.tsx (import from @clerk/nextjs)",
+        "env.local.example updated with new Clerk key names (no values)",
+        "Typecheck passes",
+        "Deploy to Vercel and confirm build succeeds (Clerk keys must also be set in Vercel environment variables)"
       ],
       "priority": 1,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
-      "id": "US-043",
-      "title": "Replace emoji nav icons with inline SVG components",
-      "description": "As a user, I want the navigation to use proper icons instead of emoji so the app looks professional and not like a prototype.",
+      "id": "US-056",
+      "title": "Replace middleware passthrough with Clerk auth middleware",
+      "description": "As a developer, I need the middleware to enforce authentication on protected routes.",
       "acceptanceCriteria": [
-        "Create src/components/icons.tsx exporting three SVG icon components: HomeIcon, CalendarIcon, ProfileIcon — each accepts className?: string and renders a 20x20 viewBox SVG using currentColor",
-        "HomeIcon: house outline (roof triangle + rectangular body + door rectangle)",
-        "CalendarIcon: rounded rectangle outline with a top bar and two small vertical marks inside",
-        "ProfileIcon: circle head above a shoulder-arc outline",
-        "In src/app/ClientNav.tsx, update NAV_ITEMS so each item has an Icon property (the component, not a string) replacing the icon string",
-        "Desktop nav links: render <item.Icon className='w-4 h-4 inline-block mr-1' /> before the label text",
-        "Mobile bottom tab bar: render <item.Icon className='w-6 h-6' /> in place of the emoji <span>",
-        "Remove all emoji strings ('🏠', '📅', '👤') from ClientNav.tsx",
+        "Replace src/middleware.ts content: import clerkMiddleware and createRouteMatcher from @clerk/nextjs/server",
+        "Public routes (no auth required): /, /sign-in(.*), /sign-up(.*), /api/zone(.*), /onboarding(.*)",
+        "All other routes including /dashboard, /profile, /diagnose, /estimate require auth",
+        "Unauthenticated access to /dashboard redirects to /sign-in",
+        "matcher config exported: ['/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)','/(api|trpc)(.*)']",
         "Typecheck passes",
-        "Verify in browser using dev-browser skill"
+        "Deploy to Vercel; verify /dashboard redirects to /sign-in when logged out"
       ],
       "priority": 2,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
-      "id": "US-044",
-      "title": "Mobile bottom nav — safe-area padding and active indicator pill",
-      "description": "As a mobile user, I want the bottom nav to clear the iPhone home bar and show a clear active state indicator so I always know where I am.",
+      "id": "US-057",
+      "title": "Add users table linked to Clerk user_id",
+      "description": "As a developer, I need a users table so we can store subscription status and profile data server-side linked to real accounts.",
       "acceptanceCriteria": [
-        "In ClientNav.tsx mobile <nav>, add paddingBottom: 'env(safe-area-inset-bottom)' to its inline style so content clears the iPhone home bar",
-        "Update the <main> bottom padding when nav is shown: change 'pb-16' to a dynamic style paddingBottom: 'calc(56px + env(safe-area-inset-bottom))' so page content is not hidden behind the taller nav",
-        "In each mobile tab Link, when isActive is true render a small pill above the icon: <span style={{ width: 24, height: 3, borderRadius: 99, backgroundColor: 'var(--color-primary)', display: 'block', marginBottom: 4 }} /> — when inactive render nothing in that slot (use opacity-0 or conditional render)",
-        "Desktop nav active link: add borderBottom: '2px solid var(--color-primary)', paddingBottom: '2px' to the active link's inline style (in addition to the existing color change)",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
+        "Run migration: CREATE TABLE IF NOT EXISTS users (id SERIAL PRIMARY KEY, clerk_user_id TEXT UNIQUE NOT NULL, email TEXT, subscription_status TEXT NOT NULL DEFAULT 'free', stripe_customer_id TEXT, created_at TIMESTAMPTZ DEFAULT NOW())",
+        "Create src/lib/user.ts with getOrCreateUser(clerkUserId: string, email: string) server function — upserts into users table, returns user row",
+        "Typecheck passes"
       ],
       "priority": 3,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
-      "id": "US-045",
-      "title": "Onboarding progress bar — add 'Step N of 7' label",
-      "description": "As a user going through onboarding, I want to see which step I'm on so I know how much is left.",
+      "id": "US-058",
+      "title": "Create sign-in and sign-up pages with Clerk components",
+      "description": "As a user, I want dedicated sign-in and sign-up pages that match the app's dark theme.",
       "acceptanceCriteria": [
-        "In src/app/onboarding/[step]/page.tsx, locate the progress bar rendering section",
-        "Above the bar segments, add: <p className='text-xs text-center mb-2' style={{ color: 'var(--color-text-muted)' }}>Step {stepNum} of 7</p> where stepNum is the numeric step derived from the URL param",
-        "The existing 7 bar segment divs remain unchanged below this new label",
+        "Create src/app/sign-in/[[...sign-in]]/page.tsx — renders <SignIn /> from @clerk/nextjs centered on page with dark background",
+        "Create src/app/sign-up/[[...sign-up]]/page.tsx — renders <SignUp /> from @clerk/nextjs centered on page",
+        "Both pages use <main className='flex items-center justify-center min-h-screen'> wrapper with backgroundColor: 'var(--color-background)'",
+        "Clerk appearance prop sets dark theme: appearance={{ variables: { colorBackground: '#0d1a0d', colorInputBackground: '#1a2e1a', colorPrimary: '#4caf50', colorText: '#e8f5e9' } }}",
         "Typecheck passes",
+        "Deploy to Vercel; visit /sign-in and confirm Clerk sign-in widget renders with dark styling",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 4,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
-      "id": "US-046",
-      "title": "Task card priority — left accent border replaces priority badge",
-      "description": "As a user, I want urgent tasks to visually stand out immediately without having to read a badge, so I can scan my task list at a glance.",
+      "id": "US-059",
+      "title": "Add Sign In / Sign Up buttons to ClientNav and landing page",
+      "description": "As a visitor, I want to see sign-in and sign-up options in the navigation so I can access my account.",
       "acceptanceCriteria": [
-        "In src/app/dashboard/page.tsx, update each task card div to have a left border accent based on priority: urgent → borderLeftColor: 'var(--color-urgent)', borderLeftWidth: '4px'; routine → borderLeftColor: 'var(--color-routine)', borderLeftWidth: '4px'; optional → borderLeftWidth: '1px', borderLeftColor: 'var(--color-border)'",
-        "Keep the right/top/bottom border at 1px var(--color-border) — only the left border width changes for urgent/routine",
-        "Remove the priority badge <span> pill from the card header row (the left-border color makes it redundant)",
-        "The check button remains on the right side of the header row",
+        "In src/app/ClientNav.tsx, import SignedIn, SignedOut, UserButton from @clerk/nextjs",
+        "Desktop nav when SignedOut: show 'Sign In' link (href=/sign-in) and 'Sign Up' button (href=/sign-up, primary button styling)",
+        "Desktop nav when SignedIn: show <UserButton afterSignOutUrl='/' /> on the right side",
+        "Landing page hero section: when SignedOut, add Sign In and Sign Up links below the existing CTA button",
+        "Mobile bottom tab bar: only shown when SignedIn; SignedOut users on / see no bottom nav",
         "Typecheck passes",
-        "Verify in browser using dev-browser skill"
+        "Deploy and verify in browser using dev-browser skill"
       ],
       "priority": 5,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
-      "id": "US-047",
-      "title": "Task check button — 44px touch target",
-      "description": "As a mobile user, I want the task completion button to be easy to tap so I can check off tasks without missing.",
+      "id": "US-060",
+      "title": "Update profile actions to use Clerk user_id instead of session_id",
+      "description": "As a developer, I need profile save/load to use the real Clerk user ID so data persists across sessions.",
       "acceptanceCriteria": [
-        "In src/app/dashboard/page.tsx, update the check button: change visual circle from w-6 h-6 to w-8 h-8 (32px)",
-        "Add padding: 6px; margin: -6px to the button's inline style so the total tappable area is 44px without affecting layout (the negative margin cancels the extra padding in the flow)",
-        "The checkmark ✓ character renders centered inside the 32px circle",
-        "Typecheck passes"
+        "In src/actions/profile.ts, import auth from @clerk/nextjs/server",
+        "Update getProfile: call auth() to get userId; if no userId return null; query by clerk_user_id = userId",
+        "Update saveProfile: get userId from auth(); upsert with clerk_user_id as the key",
+        "Remove session_id parameter from both functions' signatures",
+        "Update all callers in src/app/profile/page.tsx — remove getSessionId() calls, no longer pass session_id",
+        "Typecheck passes",
+        "Deploy to Vercel; sign in, save profile, sign out, sign back in — verify profile data persisted"
       ],
       "priority": 6,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
-      "id": "US-048",
-      "title": "Grass picker — square photos, stronger selected ring, readable photo credit",
-      "description": "As a user identifying my grass type, I want the photo cards to show square crops for better texture detail, a clear selection ring, and readable attribution.",
+      "id": "US-061",
+      "title": "Migrate onboarding final step to save profile for authenticated users",
+      "description": "As an authenticated user completing onboarding, I want my profile saved to my account automatically.",
       "acceptanceCriteria": [
-        "In src/app/onboarding/[step]/steps/Step4.tsx, change the photo container from aspect-video to aspect-square",
-        "Selected card: add boxShadow: '0 0 0 3px var(--color-primary)' to the button's inline style in addition to the border color change",
-        "Non-selected card: add className prop 'hover:opacity-90' to the button for a subtle hover state",
-        "Photo credit: change font size from text-[10px] to text-xs (12px) and remove the opacity: 0.6 — use var(--color-text-muted) color at full opacity instead",
-        "Add a third trait chip for texture: grass.texture === 'soft' ? 'Soft texture' : grass.texture === 'stiff' ? 'Stiff texture' : 'Rough texture'",
+        "Create src/actions/onboarding.ts with saveOnboardingProfile(data: { zip_code, state, usda_zone, grass_type, square_footage, has_pets, sun_exposure }) server action — calls getOrCreateUser then upserts into user profile",
+        "In the onboarding done/confirmation step (Step7.tsx or equivalent final step), after plan generation succeeds: if useUser().isSignedIn, call saveOnboardingProfile with onboarding state data",
+        "If user is not signed in, still save to sessionStorage as before (no regression)",
         "Typecheck passes",
-        "Verify in browser using dev-browser skill"
+        "Deploy and test: complete onboarding while signed in, then check /profile page shows the saved data"
       ],
       "priority": 7,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
-      "id": "US-049",
-      "title": "Input focus states — visible focus ring on all form fields",
-      "description": "As a user filling out forms, I want a visible focus ring on inputs so I can navigate by keyboard and see which field is active.",
+      "id": "US-062",
+      "title": "Add sign-out button and account info to profile page",
+      "description": "As a signed-in user, I want to see my account email and sign out from the profile page.",
       "acceptanceCriteria": [
-        "In src/app/globals.css, add after the body rule: input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }",
-        "Remove the outline-none class from every <input> and <select> element in src/app/onboarding/[step]/steps/Step1.tsx",
-        "Remove the outline-none class from every <input> and <select> element in src/app/profile/page.tsx",
-        "Verify focus ring appears visually when tabbing through: ZIP input on onboarding step 1, grass type select on profile, ZIP input on profile, square footage input on profile",
+        "In src/app/profile/page.tsx, import useUser and useClerk from @clerk/nextjs",
+        "At the top of profile page above 'Edit Your Profile' heading, add account section showing user.primaryEmailAddress?.emailAddress in text-sm var(--color-text-muted)",
+        "Add 'Sign Out' button below the email — onClick calls clerk.signOut() then router.push('/')",
+        "Account section only rendered when isSignedIn is true",
         "Typecheck passes",
-        "Verify in browser using dev-browser skill"
+        "Deploy and verify in browser using dev-browser skill"
       ],
       "priority": 8,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
-      "id": "US-050",
-      "title": "Landing page — add product preview section with mock task cards",
-      "description": "As a visitor on the landing page, I want to see what the app actually looks like so I understand the product before starting onboarding.",
+      "id": "US-063",
+      "title": "Add subscription columns to users table",
+      "description": "As a developer, I need to track subscription status, Stripe customer ID, and subscription ID per user.",
       "acceptanceCriteria": [
-        "In src/app/page.tsx, add a new section between the 'Why LawnGuide?' section and the 'How it works' section",
-        "Section heading: 'Your personalized weekly plan' in text-2xl font-bold centered with color var(--color-text-primary)",
-        "Section uses var(--color-background) background (no alternating strip)",
-        "Render 2 hardcoded mock task cards inside the section using the same rounded-lg p-4 border styling as the real dashboard cards:",
-        "Mock card 1: borderLeftWidth 4px, borderLeftColor var(--color-urgent), title 'Apply pre-emergent herbicide', icon '🐛', description 'Apply before soil hits 55°F. Prevents crabgrass germination for the season.'",
-        "Mock card 2: borderLeftWidth 4px, borderLeftColor var(--color-routine), title 'Mow at 3.5 inches', icon '🌿', description 'Raise mowing height during heat season. Never remove more than 1/3 of the blade.'",
-        "Each card has the same structure: flex flex-col gap-2 rounded-lg p-4 border with var(--color-surface) background and var(--color-border) border",
-        "Below the cards: <p className='text-sm text-center mt-4' style={{ color: 'var(--color-text-muted)' }}>Your plan includes 52 weeks of tasks tailored to your grass type and climate.</p>",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
+        "Run migration: ALTER TABLE users ADD COLUMN IF NOT EXISTS stripe_subscription_id TEXT",
+        "Run migration: ALTER TABLE users ADD COLUMN IF NOT EXISTS sq_ft_source TEXT",
+        "Create src/lib/subscription.ts with getUserSubscription(clerkUserId: string): Promise<'free' | 'pro'> — queries users table, returns subscription_status cast to 'free' | 'pro'",
+        "Typecheck passes"
       ],
       "priority": 9,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
-      "id": "US-051",
-      "title": "Landing page feature cards — colored top accent bar and updated copy",
-      "description": "As a visitor, I want the feature cards to feel more visually intentional so the landing page reads as a polished product.",
+      "id": "US-064",
+      "title": "Install Stripe SDK and configure environment variables",
+      "description": "As a developer, I need Stripe configured so payment flows can be built.",
       "acceptanceCriteria": [
-        "In src/app/page.tsx, update the FEATURES array and each feature card render:",
-        "Add a 4px tall full-width colored top bar inside each card at the very top: <div style={{ height: 4, backgroundColor: 'var(--color-primary)', borderRadius: '8px 8px 0 0', margin: '-24px -24px 16px -24px' }} /> — this sits above the emoji inside the p-6 padded card",
-        "Add a small label chip below the emoji: <span className='text-xs font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full' style={{ backgroundColor: 'var(--color-surface-alt)', color: 'var(--color-primary)' }}>{feature chip label}</span>",
-        "Update feature titles and chip labels in FEATURES array: Zone-aware chip + title 'Calibrated to your growing zone and local university research'; Grass-specific chip + title 'Matched to your exact grass type and blade width'; Pet-safe chip (rename from 'Pet-friendly flags') + title 'Flags every product recommendation near your pets'",
-        "Descriptions remain unchanged",
+        "Install stripe package",
+        "Add env vars to .env.local: STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRO_PRICE_ID (placeholder values)",
+        "Update env.local.example with new Stripe key names",
+        "Create src/lib/stripe.ts exporting stripe singleton: import Stripe from 'stripe'; export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!)",
         "Typecheck passes",
-        "Verify in browser using dev-browser skill"
+        "Deploy to Vercel (Stripe test keys set in Vercel env vars)"
       ],
       "priority": 10,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
-      "id": "US-052",
-      "title": "Dashboard — personalized header showing week number, grass type, and state",
-      "description": "As a user on the dashboard, I want the header to show exactly what I'm looking at — my week, grass, and state — so the page feels personal.",
+      "id": "US-065",
+      "title": "Create Stripe checkout API route for Pro upgrade",
+      "description": "As a user, I want to click 'Upgrade to Pro' and be taken to a Stripe checkout page.",
       "acceptanceCriteria": [
-        "In src/app/dashboard/page.tsx, update the header <div>:",
-        "Change the h1 text from 'Right Now' to 'Week {currentWeek}' (e.g. 'Week 24') — still text-2xl font-bold",
-        "Add a new subtitle line below the h1: '{grassName} · {stateCode} · {weekRange}' in text-sm with color var(--color-text-muted) — e.g. 'Bermudagrass · NC · Jun 9 – Jun 15'",
-        "stateCode needs to be stored in state: add a useState<string>('') for stateCode and set it from the loaded profile (session.state or profile.state) in the existing loadData() useEffect",
-        "If grassName is empty (onboarding gate shown), the subtitle line is not rendered",
+        "Create src/app/api/stripe/checkout/route.ts — POST handler",
+        "Handler calls auth() from Clerk; returns 401 JSON if not authenticated",
+        "Calls getOrCreateUser(userId, email) to get/create the user row",
+        "Creates or retrieves Stripe customer: if stripe_customer_id exists in DB use it; else call stripe.customers.create({ email }) and save the ID back to users table",
+        "Creates Stripe Checkout session: mode 'subscription', line_items with STRIPE_PRO_PRICE_ID qty 1, success_url '/dashboard?upgraded=1', cancel_url '/profile'",
+        "Returns { url: session.url } as JSON",
         "Typecheck passes",
-        "Verify in browser using dev-browser skill"
+        "Deploy; test manually by POSTing to the endpoint (returns a Stripe checkout URL)"
       ],
       "priority": 11,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
-      "id": "US-053",
-      "title": "Dashboard 'Up Next' card — section divider, UPCOMING label, and remaining task count",
-      "description": "As a user, I want the Up Next preview to feel clearly distinct from the current week's tasks, with a count if there are more than 3.",
+      "id": "US-066",
+      "title": "Create Stripe webhook route to sync subscription status",
+      "description": "As a developer, I need a webhook handler so the DB stays in sync when Stripe subscription events occur.",
       "acceptanceCriteria": [
-        "In src/app/dashboard/page.tsx, add a useState<number>(0) for nextWeekTotalCount",
-        "In loadData(), when setting nextWeekTasks: store the full count before slicing — setNextWeekTotalCount(nextWeekPlan.tasks.length); setNextWeekTasks(nextWeekPlan.tasks.slice(0, 3))",
-        "Before the Up Next card div, add a horizontal rule: <hr style={{ borderColor: 'var(--color-border)', margin: '4px 0' }} />",
-        "At the top of the Up Next card (before the 'Up Next' heading row), add: <p className='text-[10px] font-semibold uppercase tracking-widest mb-2' style={{ color: 'var(--color-text-muted)' }}>Upcoming</p>",
-        "Change the 'Up Next' <p> from text-sm font-semibold to text-base font-semibold",
-        "After the task list inside the card, if nextWeekTotalCount > 3: add <p className='text-xs mt-1' style={{ color: 'var(--color-text-muted)' }}>+ {nextWeekTotalCount - 3} more tasks</p>",
+        "Create src/app/api/stripe/webhook/route.ts — POST handler",
+        "Use request.text() to get raw body (NOT request.json()) before constructing the Stripe event",
+        "Verify webhook signature using stripe.webhooks.constructEvent(rawBody, sig, process.env.STRIPE_WEBHOOK_SECRET!); return 400 on verification failure",
+        "Handle customer.subscription.created and customer.subscription.updated: if status === 'active', set subscription_status = 'pro' and store stripe_subscription_id in users table where stripe_customer_id matches",
+        "Handle customer.subscription.deleted: set subscription_status = 'free' in users table",
+        "Return { received: true } with status 200 on success",
         "Typecheck passes",
-        "Verify in browser using dev-browser skill"
+        "Deploy; note the production webhook URL for Stripe dashboard configuration"
       ],
       "priority": 12,
-      "passes": true,
+      "passes": false,
       "notes": ""
     },
     {
-      "id": "US-054",
-      "title": "Profile page — fix layout shift on button selection (1px → 2px border jump)",
-      "description": "As a user selecting options on the profile page, I want buttons to not jump or shift when I click them.",
+      "id": "US-067",
+      "title": "Create Stripe billing portal route for subscription management",
+      "description": "As a Pro user, I want to manage my subscription from the profile page.",
       "acceptanceCriteria": [
-        "In src/app/profile/page.tsx, update the Sun Exposure button group: all buttons always use borderWidth: '2px' (both selected and unselected); selected uses borderColor: 'var(--color-primary)'; unselected uses borderColor: 'var(--color-border)'",
-        "Apply the same fix to the Pets Yes/No button group: both buttons always use borderWidth: '2px'",
-        "No layout shift occurs when clicking between options (verify by clicking rapidly between options)",
+        "Create src/app/api/stripe/portal/route.ts — POST handler",
+        "Get clerkUserId from auth(); look up stripe_customer_id from users table; return 400 if no customer ID found",
+        "Create Stripe billing portal session: stripe.billingPortal.sessions.create({ customer: customerId, return_url: process.env.NEXT_PUBLIC_APP_URL + '/profile' })",
+        "Return { url: session.url } as JSON",
+        "Add NEXT_PUBLIC_APP_URL to .env.local and env.local.example",
         "Typecheck passes",
-        "Verify in browser using dev-browser skill"
+        "Deploy and verify endpoint returns a portal URL"
       ],
       "priority": 13,
-      "passes": true,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-068",
+      "title": "Add Pro feature gate helper and apply to future API routes",
+      "description": "As a developer, I need a reusable gate so premium API routes consistently reject free users.",
+      "acceptanceCriteria": [
+        "Create src/lib/requirePro.ts exporting async function requirePro(clerkUserId: string): Promise<boolean> — calls getUserSubscription, returns true if 'pro'",
+        "Create src/actions/subscription.ts exporting getSubscriptionStatus() server action — calls auth() to get clerkUserId, calls getUserSubscription, returns 'free' | 'pro'",
+        "Typecheck passes"
+      ],
+      "priority": 14,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-069",
+      "title": "Add 'Upgrade to Pro' banner on dashboard for free users",
+      "description": "As a free user on the dashboard, I want to see a prompt to upgrade so I know Pro features exist.",
+      "acceptanceCriteria": [
+        "In src/app/dashboard/page.tsx, add subscriptionStatus state (default 'free') fetched via getSubscriptionStatus() server action in useEffect",
+        "When subscriptionStatus === 'free', show banner above the task list: text 'Unlock Pro: photo diagnosis + yard estimator' with 'Upgrade — $4.99/mo' button",
+        "Button click: POST to /api/stripe/checkout, on success window.location.href = data.url",
+        "Banner has var(--color-surface) background, 2px var(--color-primary) left border, is dismissible via X button (sets dismissed boolean in state)",
+        "When URL has ?upgraded=1 param: show toast 'Welcome to Pro!' for 3s and hide the banner",
+        "Typecheck passes",
+        "Deploy and verify in browser using dev-browser skill"
+      ],
+      "priority": 15,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-070",
+      "title": "Add subscription section to profile page",
+      "description": "As a user, I want to see my current plan and manage my subscription from the profile page.",
+      "acceptanceCriteria": [
+        "In src/app/profile/page.tsx, add subscriptionStatus state loaded via getSubscriptionStatus() server action",
+        "Free users: show 'Free Plan' label + 'Upgrade to Pro — $4.99/mo' button (POST to /api/stripe/checkout then redirect to returned URL)",
+        "Pro users: show 'Pro Plan ✓' label in var(--color-primary) color + 'Manage Billing' button (POST to /api/stripe/portal then redirect)",
+        "Both buttons styled as outline: borderWidth 2px, borderColor var(--color-primary), color var(--color-primary), backgroundColor transparent",
+        "Plan section placed below the account info (email + sign-out) section",
+        "Typecheck passes",
+        "Deploy and verify in browser using dev-browser skill"
+      ],
+      "priority": 16,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-071",
+      "title": "Add diagnoses table to database",
+      "description": "As a developer, I need a table to store grass diagnosis history per user.",
+      "acceptanceCriteria": [
+        "Run migration: CREATE TABLE IF NOT EXISTS diagnoses (id SERIAL PRIMARY KEY, clerk_user_id TEXT NOT NULL, image_url TEXT NOT NULL, grass_type TEXT, health_score INTEGER, issues JSONB, recommendations JSONB, raw_response TEXT, created_at TIMESTAMPTZ DEFAULT NOW())",
+        "Create src/lib/diagnoses.ts with saveDiagnosis({ clerkUserId, imageUrl, grassType, healthScore, issues, recommendations }) and getDiagnoses(clerkUserId: string, limit?: number) functions",
+        "Typecheck passes"
+      ],
+      "priority": 17,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-072",
+      "title": "Create photo upload endpoint using Vercel Blob",
+      "description": "As a developer, I need an endpoint that accepts an image file, stores it in Vercel Blob, and returns the URL.",
+      "acceptanceCriteria": [
+        "Install @vercel/blob package",
+        "Add BLOB_READ_WRITE_TOKEN to env.local.example",
+        "Create src/app/api/diagnose/upload/route.ts — POST handler accepting multipart/form-data with a 'file' field",
+        "Validate file is image/jpeg or image/png; return 400 with { error: 'Invalid file type' } for other types",
+        "Require Clerk auth (auth() check); return 401 if not authenticated",
+        "Require Pro subscription (requirePro()); return 403 with { error: 'pro_required' } if free user",
+        "Call put(filename, file, { access: 'public' }) from @vercel/blob",
+        "Return { url: blobUrl } as JSON",
+        "Typecheck passes",
+        "Deploy to Vercel (BLOB_READ_WRITE_TOKEN set in Vercel env vars)"
+      ],
+      "priority": 18,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-073",
+      "title": "Create grass diagnosis API route using Claude Vision",
+      "description": "As a developer, I need an API route that takes an image URL and returns Claude's analysis of the grass.",
+      "acceptanceCriteria": [
+        "Create src/app/api/diagnose/route.ts — POST handler accepting { imageUrl: string }",
+        "Require Clerk auth and Pro subscription; return 401/403 respectively if checks fail",
+        "Call Anthropic SDK (import Anthropic from 'anthropic'; use process.env.ANTHROPIC_API_KEY) with model claude-sonnet-4-6",
+        "Message structure: user message with image block { type: 'image', source: { type: 'url', url: imageUrl } } followed by text block with prompt asking for JSON: { grassType, healthScore (0-100), issues: string[], recommendations: string[] }",
+        "System prompt: 'You are a lawn care expert. Analyze this lawn photo and respond with valid JSON only, no markdown. Schema: { grassType: string, healthScore: number, issues: string[], recommendations: string[] }'",
+        "Parse response as JSON; if parsing fails return { error: 'Could not analyze image' } with status 422",
+        "Save result to diagnoses table via saveDiagnosis()",
+        "Return { grassType, healthScore, issues, recommendations } as JSON",
+        "Typecheck passes",
+        "Deploy and verify endpoint returns valid JSON for a test lawn image URL"
+      ],
+      "priority": 19,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-074",
+      "title": "Create /diagnose page with photo upload UI",
+      "description": "As a Pro user, I want to upload a photo of my lawn and see diagnosis results.",
+      "acceptanceCriteria": [
+        "Create src/app/diagnose/page.tsx as a 'use client' component",
+        "Page heading 'Diagnose Your Lawn', subheading 'Upload a photo and get instant AI analysis'",
+        "Upload area: dashed border box (border-dashed, 2px, var(--color-border)), centered text 'Tap to upload or drag & drop', clicking opens file picker (accepts image/*)",
+        "On file select: show image preview via URL.createObjectURL, show 'Analyzing...' spinner overlay",
+        "Upload flow: POST file to /api/diagnose/upload → receive { url } → POST { imageUrl: url } to /api/diagnose → receive diagnosis",
+        "If /api/diagnose returns 403 with pro_required: show 'This feature requires Pro' message with 'Upgrade to Pro' button linking to /profile",
+        "On success: render diagnosis results (see US-075 for results card shape)",
+        "Typecheck passes",
+        "Deploy and verify in browser using dev-browser skill"
+      ],
+      "priority": 20,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-075",
+      "title": "Show diagnosis results card on /diagnose page",
+      "description": "As a user, I want to see clear diagnosis results — grass type, health score, issues, and recommendations.",
+      "acceptanceCriteria": [
+        "After diagnosis API returns success, render a results card below the upload area",
+        "Grass type row: 'Identified: {grassType}' in var(--color-primary) font-semibold",
+        "Health score bar: label 'Health Score {healthScore}/100', full-width track (var(--color-border) bg), filled portion (width: healthScore%, color: var(--color-primary) if >=70, var(--color-routine) if 40-69, var(--color-urgent) if <40), height 8px rounded-full",
+        "Issues section: heading 'Issues Found', bulleted list of issues[]; if empty show 'No issues detected ✓' in var(--color-primary)",
+        "Recommendations section: heading 'Recommendations', numbered list of recommendations[]",
+        "Results card: var(--color-surface) bg, var(--color-border) border, rounded-xl p-5, flex flex-col gap-4",
+        "'Diagnose Another' button below card resets state to show upload UI again",
+        "Typecheck passes",
+        "Deploy and verify in browser using dev-browser skill"
+      ],
+      "priority": 21,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-076",
+      "title": "Add diagnosis history section to /diagnose page",
+      "description": "As a user, I want to see my last 5 diagnoses so I can track changes over time.",
+      "acceptanceCriteria": [
+        "Create getRecentDiagnoses() server action in src/actions/diagnose.ts — calls auth(), then getDiagnoses(clerkUserId, 5), returns array",
+        "At the bottom of /diagnose page, add 'Recent Diagnoses' section heading",
+        "Load diagnoses via the server action in a useEffect; store in state",
+        "Each history item: flex row with 40x40 rounded thumbnail (next/image or img with objectFit cover), grass_type text, health_score/100, date formatted as 'Jun 15'",
+        "If no diagnoses: show 'No diagnoses yet — upload your first photo above' in var(--color-text-muted)",
+        "After each new successful diagnosis, refetch the list",
+        "Typecheck passes",
+        "Deploy and verify in browser using dev-browser skill"
+      ],
+      "priority": 22,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-077",
+      "title": "Add CameraIcon and Diagnose nav item to ClientNav",
+      "description": "As a user, I want easy access to the diagnosis tool from the main navigation.",
+      "acceptanceCriteria": [
+        "Add CameraIcon to src/components/icons.tsx: 20x20 viewBox SVG, camera body as rounded-rect, lens as circle, flash notch as small polygon on top — stroke='currentColor' fill='none'",
+        "Add fourth nav item to NAV_ITEMS in src/app/ClientNav.tsx: { label: 'Diagnose', href: '/diagnose', Icon: CameraIcon }",
+        "Mobile bottom tab bar now shows 4 items: Home, Calendar, Diagnose, Profile — each column is flex-1",
+        "Desktop nav shows all 4 links in the same order",
+        "Nav hidden on / and /onboarding/* as before",
+        "Typecheck passes",
+        "Deploy and verify in browser using dev-browser skill"
+      ],
+      "priority": 23,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-078",
+      "title": "Install Google Maps JS API loader and configure env",
+      "description": "As a developer, I need the Google Maps SDK available so the yard estimator can use satellite imagery and drawing tools.",
+      "acceptanceCriteria": [
+        "Install @googlemaps/js-api-loader package",
+        "Add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY to .env.local (placeholder) and env.local.example",
+        "Create src/lib/maps.ts exporting loadGoogleMaps(): Promise<typeof google> — uses Loader from @googlemaps/js-api-loader with apiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY!, libraries: ['places', 'drawing', 'geometry']",
+        "Loader is a singleton — only calls load() once; subsequent calls return the same promise",
+        "Typecheck passes",
+        "Deploy to Vercel (real API key set in Vercel env vars with Maps JavaScript API, Places API, Drawing Library, Geometry Library enabled in Google Cloud Console)"
+      ],
+      "priority": 24,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-079",
+      "title": "Create /estimate page with address autocomplete and Pro gate",
+      "description": "As a user, I want to type my address and have the map jump to my property.",
+      "acceptanceCriteria": [
+        "Create src/app/estimate/page.tsx as a 'use client' component",
+        "Page heading 'Estimate Your Yard Size', subheading 'Draw your yard on the map to calculate square footage'",
+        "Address input: <input type='text' placeholder='Enter your address...' /> styled with var(--color-surface) bg, var(--color-border) border, var(--color-text-primary) text, px-4 py-3 rounded-lg w-full",
+        "On mount: call loadGoogleMaps() then attach google.maps.places.Autocomplete to the input ref, restricted to types: ['address']",
+        "On place selection: extract lat/lng from place.geometry.location and store in state as { lat: number, lng: number } | null",
+        "Pro gate check: load subscriptionStatus via getSubscriptionStatus(); if 'free', show overlay div covering the map area with 'Pro feature — upgrade to access the yard estimator' and 'Upgrade to Pro' button linking to /profile",
+        "Typecheck passes",
+        "Deploy and verify in browser using dev-browser skill"
+      ],
+      "priority": 25,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-080",
+      "title": "Load Google Maps satellite view centered on selected address",
+      "description": "As a user, I want to see a satellite view of my property after entering my address.",
+      "acceptanceCriteria": [
+        "In src/app/estimate/page.tsx, add mapRef = useRef<HTMLDivElement>(null) and mapInstance = useRef<google.maps.Map | null>(null)",
+        "Map container: <div ref={mapRef} style={{ width: '100%', height: 400 }} className='rounded-xl overflow-hidden' />",
+        "When lat/lng state changes (address selected), initialize new google.maps.Map(mapRef.current, { center: { lat, lng }, zoom: 19, mapTypeId: 'satellite', tilt: 0, zoomControl: true, mapTypeControl: false, streetViewControl: false, fullscreenControl: false })",
+        "If map already initialized, call mapInstance.current.setCenter({ lat, lng }) instead of reinitializing",
+        "Before address selection, show placeholder div with 'Enter an address above to load the map' text in var(--color-text-muted) text-center py-16",
+        "Typecheck passes",
+        "Deploy and verify in browser using dev-browser skill"
+      ],
+      "priority": 26,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-081",
+      "title": "Add polygon drawing tool to the yard estimator map",
+      "description": "As a user, I want to draw the outline of my yard on the satellite map.",
+      "acceptanceCriteria": [
+        "After map initializes, create google.maps.drawing.DrawingManager({ drawingMode: null, drawingControl: false, polygonOptions: { fillColor: '#4caf50', fillOpacity: 0.25, strokeColor: '#4caf50', strokeWeight: 2, editable: true } }) and call drawingManager.setMap(mapInstance.current)",
+        "Add 'Draw Yard' button below the map container — on click: remove existing polygon from map if any, call drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYGON)",
+        "On polygoncomplete event: store polygon in useRef, call drawingManager.setDrawingMode(null), compute and display area (see US-082)",
+        "Add 'Clear' button (only shown when a polygon exists) — on click: polygon.setMap(null), reset area result state, reset polygonRef to null",
+        "Typecheck passes",
+        "Deploy and verify in browser using dev-browser skill"
+      ],
+      "priority": 27,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-082",
+      "title": "Calculate polygon area and display square footage result",
+      "description": "As a user, I want to see the calculated square footage after drawing my yard polygon.",
+      "acceptanceCriteria": [
+        "In the polygoncomplete handler, calculate area: const sqMeters = google.maps.geometry.spherical.computeArea(polygon.getPath()); const sqFt = Math.round(sqMeters * 10.7639 / 10) * 10",
+        "Store sqFt in useState<number | null>(null)",
+        "When sqFt is set, display below the map: <p>Estimated yard size: <strong>{sqFt.toLocaleString()} sq ft</strong></p> in text-xl var(--color-text-primary)",
+        "Show 'Use this estimate →' button when sqFt is set (see US-083)",
+        "If user clears and redraws polygon, area updates to new value",
+        "Typecheck passes",
+        "Deploy and verify in browser using dev-browser skill"
+      ],
+      "priority": 28,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-083",
+      "title": "'Use this estimate' saves sq ft to profile and redirects",
+      "description": "As a user, I want to save my estimated yard size to my profile in one click.",
+      "acceptanceCriteria": [
+        "Create saveYardEstimate(sqFt: number) server action in src/actions/profile.ts",
+        "saveYardEstimate: gets clerkUserId from auth(), updates square_footage and sq_ft_source = 'maps_estimate' in users table WHERE clerk_user_id = clerkUserId",
+        "'Use this estimate →' button in /estimate page: calls saveYardEstimate(sqFt) then router.push('/profile?estimated=1')",
+        "Button shows 'Saving...' text while the action is in flight (use useState for loading)",
+        "Typecheck passes",
+        "Deploy and verify: click 'Use this estimate', confirm redirect to /profile with ?estimated=1 param"
+      ],
+      "priority": 29,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-084",
+      "title": "Show 'Estimated from map' badge and Re-estimate link on profile",
+      "description": "As a user, I want to see when my yard size came from the map estimator and easily re-run it.",
+      "acceptanceCriteria": [
+        "In src/app/profile/page.tsx, add sqFtSource state loaded from profile data (sq_ft_source column)",
+        "Below the Lawn Size input, when sqFtSource === 'maps_estimate': show <p>📍 Estimated from Google Maps</p> in text-xs var(--color-text-muted) + a 'Re-estimate →' link (href=/estimate) in text-xs var(--color-primary)",
+        "When user manually edits sqFt and saves, saveProfile sets sq_ft_source = 'manual' in the update",
+        "On /profile page with ?estimated=1 in URL, show toast 'Yard size saved from map estimate' for 3s then clear",
+        "Typecheck passes",
+        "Deploy and verify in browser using dev-browser skill"
+      ],
+      "priority": 30,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-085",
+      "title": "Add lawns table and lawn CRUD functions",
+      "description": "As a developer, I need a lawns table so each user can have multiple named properties.",
+      "acceptanceCriteria": [
+        "Run migration: CREATE TABLE IF NOT EXISTS lawns (id SERIAL PRIMARY KEY, clerk_user_id TEXT NOT NULL, name TEXT NOT NULL DEFAULT 'My Lawn', grass_type TEXT, state TEXT, zip_code TEXT, sq_ft INTEGER, sun_exposure TEXT, has_pets BOOLEAN DEFAULT false, created_at TIMESTAMPTZ DEFAULT NOW())",
+        "Run migration: ALTER TABLE weekly_plans ADD COLUMN IF NOT EXISTS lawn_id INTEGER",
+        "Create src/lib/lawns.ts exporting: getLawns(clerkUserId: string), getLawn(id: number), createLawn(data: { clerkUserId, name, grassType, state, zipCode, sqFt?, sunExposure?, hasPets? }), updateLawn(id: number, data: Partial<LawnData>) — all query the lawns table",
+        "Typecheck passes"
+      ],
+      "priority": 31,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-086",
+      "title": "Add lawn selector dropdown to dashboard header",
+      "description": "As a user with multiple lawns, I want to switch between them from the dashboard.",
+      "acceptanceCriteria": [
+        "In src/app/dashboard/page.tsx, add lawns state (Lawn[] default []) and selectedLawnId state (number | null) loaded via getLawns() server action",
+        "Create src/actions/lawns.ts exporting getUserLawns() server action — calls auth(), then getLawns(clerkUserId)",
+        "In the dashboard header row (next to 'Week N' heading): if lawns.length > 1, show <select> with options for each lawn name; if lawns.length === 1 show lawn name as static <span>; if lawns.length === 0 show 'Set up your lawn →' link to /lawns/new",
+        "<select> styled: var(--color-surface) bg, var(--color-border) border, var(--color-text-primary) text, rounded-lg px-2 py-1 text-sm",
+        "onChange: setSelectedLawnId(Number(e.target.value)) — triggers plan reload for that lawn (existing loadData logic reads from selectedLawnId)",
+        "Typecheck passes",
+        "Deploy and verify in browser using dev-browser skill"
+      ],
+      "priority": 32,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-087",
+      "title": "Create /lawns/new page to add a named lawn",
+      "description": "As a user, I want to add multiple lawns so I can manage them separately.",
+      "acceptanceCriteria": [
+        "Create src/app/lawns/new/page.tsx as a 'use client' component",
+        "Form fields: Lawn Name (text input, required, placeholder 'e.g. Front Yard'), ZIP Code (calls /api/zone on submit, shows zone result), Grass Type (same <select> as profile using grassTypes data), Sq Ft (number input, optional), Sun Exposure (Full Sun / Partial Shade / Full Shade button group), Has Pets (Yes / No button group)",
+        "All inputs use same styling as profile page (var(--color-surface) bg, var(--color-border) border, 2px borderWidth on button groups)",
+        "Create addLawn(data) server action in src/actions/lawns.ts — calls auth(), then createLawn({ ...data, clerkUserId })",
+        "'Save Lawn' button calls addLawn(formData) then router.push('/dashboard')",
+        "'← Back to Dashboard' link at top of page",
+        "Typecheck passes",
+        "Deploy and verify in browser using dev-browser skill"
+      ],
+      "priority": 33,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-088",
+      "title": "Add household_code to users table and invite/join API routes",
+      "description": "As a developer, I need household invite infrastructure so users can share lawn access.",
+      "acceptanceCriteria": [
+        "Run migration: ALTER TABLE users ADD COLUMN IF NOT EXISTS household_code TEXT",
+        "Run migration: CREATE UNIQUE INDEX IF NOT EXISTS users_household_code_idx ON users(household_code) WHERE household_code IS NOT NULL",
+        "Create src/app/api/household/invite/route.ts — POST handler: get clerkUserId from auth(), if user already has household_code return it; else generate random 8-char alphanumeric code (Math.random().toString(36).slice(2,10).toUpperCase()), save to users table, return { code, inviteUrl: process.env.NEXT_PUBLIC_APP_URL + '/join/' + code }",
+        "Create src/app/api/household/join/route.ts — POST handler accepting { code: string }: find user with that household_code; if not found return 404; set the requesting user's household_code to the same value; return { success: true }",
+        "Update getLawns in src/lib/lawns.ts: also return lawns from users who share the same household_code (JOIN users ON lawns.clerk_user_id = users.clerk_user_id WHERE users.household_code = (SELECT household_code FROM users WHERE clerk_user_id = $1))",
+        "Typecheck passes",
+        "Deploy to Vercel"
+      ],
+      "priority": 34,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-089",
+      "title": "Add household sharing UI to profile page",
+      "description": "As a user, I want to invite household members from the profile page.",
+      "acceptanceCriteria": [
+        "In src/app/profile/page.tsx, add 'Household' section below the Plan section",
+        "'Share with household' button: on click POST to /api/household/invite, store returned inviteUrl in state",
+        "When inviteUrl is set: show <input readOnly value={inviteUrl} /> styled with var(--color-surface) bg + 'Copy Link' button that calls navigator.clipboard.writeText(inviteUrl) and shows 'Copied!' toast for 2s",
+        "Create src/app/join/[code]/page.tsx: client component that on mount POSTs { code } to /api/household/join, on success calls router.push('/dashboard?joined=1'), on 404 shows 'Invalid invite link' message",
+        "On /dashboard with ?joined=1 param, show toast 'You've joined the household — shared lawns are now visible' for 3s",
+        "Typecheck passes",
+        "Deploy and verify in browser using dev-browser skill"
+      ],
+      "priority": 35,
+      "passes": false,
+      "notes": ""
+    },
+    {
+      "id": "US-090",
+      "title": "Add /estimate link to navigation and profile quick-actions",
+      "description": "As a user, I want easy access to the yard estimator from navigation and profile.",
+      "acceptanceCriteria": [
+        "Add 'Map' or 'Estimate' entry to the bottom nav as a fifth item — OR add it as a sub-link only visible on /profile under the lawn size field (preferred to avoid overcrowding the 4-item bottom nav)",
+        "On /profile page, below the Lawn Size input (next to the 'Estimated from map' badge if present, or as a standalone link if sq_ft_source is not 'maps_estimate'): show 'Estimate with Google Maps →' link (href=/estimate) in text-sm var(--color-primary)",
+        "In the landing page 'Why LawnGuide?' features section or 'How it works' section: add a mention of the yard estimator as a feature (update one card or step to reference it)",
+        "Typecheck passes",
+        "Deploy and verify in browser using dev-browser skill"
+      ],
+      "priority": 36,
+      "passes": false,
       "notes": ""
     }
   ]

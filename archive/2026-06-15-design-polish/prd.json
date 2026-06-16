@@ -1,0 +1,223 @@
+{
+  "project": "LawnCare Planner",
+  "branchName": "ralph/design-polish",
+  "description": "Design Polish Sprint — extend the token system, replace emoji icons with SVGs, fix touch targets, add visual priority hierarchy to task cards, improve grass picker, upgrade the landing page, and eliminate all hardcoded hex values.",
+  "userStories": [
+    {
+      "id": "US-042",
+      "title": "Extend design token system with border, surface-alt, warning, and priority color variables",
+      "description": "As a developer, I want all hardcoded hex colors moved into CSS variables so the design system is consistent and every subsequent story can reference tokens instead of magic strings.",
+      "acceptanceCriteria": [
+        "In src/app/globals.css @theme block, add: --color-surface-alt: #132613; --color-border: #2d4a2d; --color-border-strong: #3a5a3a; --color-warning-bg: #3d3000; --color-warning-border: #6b4c00; --color-warning-text: #eab308; --color-warning-text-muted: #d4a017; --color-urgent: #ef4444; --color-routine: #eab308; --color-optional: #6b7280;",
+        "Global search-and-replace across all src/ files: #2d4a2d → var(--color-border), #3d3000 → var(--color-warning-bg), #eab308 → var(--color-warning-text), #d4a017 → var(--color-warning-text-muted), #6b4c00 → var(--color-warning-border), #1a3a1a → var(--color-surface-alt)",
+        "In dashboard/page.tsx priority badge, replace the ${PRIORITY_COLORS[...]}22 hex-opacity hack: use backgroundColor with opacity-based alternative — e.g. style={{ backgroundColor: 'var(--color-urgent)', opacity: ... }} on a wrapper, or restructure to avoid the 22 hex suffix entirely",
+        "No raw hex color literals remain in any src/ file except globals.css",
+        "Typecheck passes"
+      ],
+      "priority": 1,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-043",
+      "title": "Replace emoji nav icons with inline SVG components",
+      "description": "As a user, I want the navigation to use proper icons instead of emoji so the app looks professional and not like a prototype.",
+      "acceptanceCriteria": [
+        "Create src/components/icons.tsx exporting three SVG icon components: HomeIcon, CalendarIcon, ProfileIcon — each accepts className?: string and renders a 20x20 viewBox SVG using currentColor",
+        "HomeIcon: house outline (roof triangle + rectangular body + door rectangle)",
+        "CalendarIcon: rounded rectangle outline with a top bar and two small vertical marks inside",
+        "ProfileIcon: circle head above a shoulder-arc outline",
+        "In src/app/ClientNav.tsx, update NAV_ITEMS so each item has an Icon property (the component, not a string) replacing the icon string",
+        "Desktop nav links: render <item.Icon className='w-4 h-4 inline-block mr-1' /> before the label text",
+        "Mobile bottom tab bar: render <item.Icon className='w-6 h-6' /> in place of the emoji <span>",
+        "Remove all emoji strings ('🏠', '📅', '👤') from ClientNav.tsx",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 2,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-044",
+      "title": "Mobile bottom nav — safe-area padding and active indicator pill",
+      "description": "As a mobile user, I want the bottom nav to clear the iPhone home bar and show a clear active state indicator so I always know where I am.",
+      "acceptanceCriteria": [
+        "In ClientNav.tsx mobile <nav>, add paddingBottom: 'env(safe-area-inset-bottom)' to its inline style so content clears the iPhone home bar",
+        "Update the <main> bottom padding when nav is shown: change 'pb-16' to a dynamic style paddingBottom: 'calc(56px + env(safe-area-inset-bottom))' so page content is not hidden behind the taller nav",
+        "In each mobile tab Link, when isActive is true render a small pill above the icon: <span style={{ width: 24, height: 3, borderRadius: 99, backgroundColor: 'var(--color-primary)', display: 'block', marginBottom: 4 }} /> — when inactive render nothing in that slot (use opacity-0 or conditional render)",
+        "Desktop nav active link: add borderBottom: '2px solid var(--color-primary)', paddingBottom: '2px' to the active link's inline style (in addition to the existing color change)",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 3,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-045",
+      "title": "Onboarding progress bar — add 'Step N of 7' label",
+      "description": "As a user going through onboarding, I want to see which step I'm on so I know how much is left.",
+      "acceptanceCriteria": [
+        "In src/app/onboarding/[step]/page.tsx, locate the progress bar rendering section",
+        "Above the bar segments, add: <p className='text-xs text-center mb-2' style={{ color: 'var(--color-text-muted)' }}>Step {stepNum} of 7</p> where stepNum is the numeric step derived from the URL param",
+        "The existing 7 bar segment divs remain unchanged below this new label",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 4,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-046",
+      "title": "Task card priority — left accent border replaces priority badge",
+      "description": "As a user, I want urgent tasks to visually stand out immediately without having to read a badge, so I can scan my task list at a glance.",
+      "acceptanceCriteria": [
+        "In src/app/dashboard/page.tsx, update each task card div to have a left border accent based on priority: urgent → borderLeftColor: 'var(--color-urgent)', borderLeftWidth: '4px'; routine → borderLeftColor: 'var(--color-routine)', borderLeftWidth: '4px'; optional → borderLeftWidth: '1px', borderLeftColor: 'var(--color-border)'",
+        "Keep the right/top/bottom border at 1px var(--color-border) — only the left border width changes for urgent/routine",
+        "Remove the priority badge <span> pill from the card header row (the left-border color makes it redundant)",
+        "The check button remains on the right side of the header row",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 5,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-047",
+      "title": "Task check button — 44px touch target",
+      "description": "As a mobile user, I want the task completion button to be easy to tap so I can check off tasks without missing.",
+      "acceptanceCriteria": [
+        "In src/app/dashboard/page.tsx, update the check button: change visual circle from w-6 h-6 to w-8 h-8 (32px)",
+        "Add padding: 6px; margin: -6px to the button's inline style so the total tappable area is 44px without affecting layout (the negative margin cancels the extra padding in the flow)",
+        "The checkmark ✓ character renders centered inside the 32px circle",
+        "Typecheck passes"
+      ],
+      "priority": 6,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-048",
+      "title": "Grass picker — square photos, stronger selected ring, readable photo credit",
+      "description": "As a user identifying my grass type, I want the photo cards to show square crops for better texture detail, a clear selection ring, and readable attribution.",
+      "acceptanceCriteria": [
+        "In src/app/onboarding/[step]/steps/Step4.tsx, change the photo container from aspect-video to aspect-square",
+        "Selected card: add boxShadow: '0 0 0 3px var(--color-primary)' to the button's inline style in addition to the border color change",
+        "Non-selected card: add className prop 'hover:opacity-90' to the button for a subtle hover state",
+        "Photo credit: change font size from text-[10px] to text-xs (12px) and remove the opacity: 0.6 — use var(--color-text-muted) color at full opacity instead",
+        "Add a third trait chip for texture: grass.texture === 'soft' ? 'Soft texture' : grass.texture === 'stiff' ? 'Stiff texture' : 'Rough texture'",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 7,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-049",
+      "title": "Input focus states — visible focus ring on all form fields",
+      "description": "As a user filling out forms, I want a visible focus ring on inputs so I can navigate by keyboard and see which field is active.",
+      "acceptanceCriteria": [
+        "In src/app/globals.css, add after the body rule: input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--color-primary); outline-offset: 2px; }",
+        "Remove the outline-none class from every <input> and <select> element in src/app/onboarding/[step]/steps/Step1.tsx",
+        "Remove the outline-none class from every <input> and <select> element in src/app/profile/page.tsx",
+        "Verify focus ring appears visually when tabbing through: ZIP input on onboarding step 1, grass type select on profile, ZIP input on profile, square footage input on profile",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 8,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-050",
+      "title": "Landing page — add product preview section with mock task cards",
+      "description": "As a visitor on the landing page, I want to see what the app actually looks like so I understand the product before starting onboarding.",
+      "acceptanceCriteria": [
+        "In src/app/page.tsx, add a new section between the 'Why LawnGuide?' section and the 'How it works' section",
+        "Section heading: 'Your personalized weekly plan' in text-2xl font-bold centered with color var(--color-text-primary)",
+        "Section uses var(--color-background) background (no alternating strip)",
+        "Render 2 hardcoded mock task cards inside the section using the same rounded-lg p-4 border styling as the real dashboard cards:",
+        "Mock card 1: borderLeftWidth 4px, borderLeftColor var(--color-urgent), title 'Apply pre-emergent herbicide', icon '🐛', description 'Apply before soil hits 55°F. Prevents crabgrass germination for the season.'",
+        "Mock card 2: borderLeftWidth 4px, borderLeftColor var(--color-routine), title 'Mow at 3.5 inches', icon '🌿', description 'Raise mowing height during heat season. Never remove more than 1/3 of the blade.'",
+        "Each card has the same structure: flex flex-col gap-2 rounded-lg p-4 border with var(--color-surface) background and var(--color-border) border",
+        "Below the cards: <p className='text-sm text-center mt-4' style={{ color: 'var(--color-text-muted)' }}>Your plan includes 52 weeks of tasks tailored to your grass type and climate.</p>",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 9,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-051",
+      "title": "Landing page feature cards — colored top accent bar and updated copy",
+      "description": "As a visitor, I want the feature cards to feel more visually intentional so the landing page reads as a polished product.",
+      "acceptanceCriteria": [
+        "In src/app/page.tsx, update the FEATURES array and each feature card render:",
+        "Add a 4px tall full-width colored top bar inside each card at the very top: <div style={{ height: 4, backgroundColor: 'var(--color-primary)', borderRadius: '8px 8px 0 0', margin: '-24px -24px 16px -24px' }} /> — this sits above the emoji inside the p-6 padded card",
+        "Add a small label chip below the emoji: <span className='text-xs font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full' style={{ backgroundColor: 'var(--color-surface-alt)', color: 'var(--color-primary)' }}>{feature chip label}</span>",
+        "Update feature titles and chip labels in FEATURES array: Zone-aware chip + title 'Calibrated to your growing zone and local university research'; Grass-specific chip + title 'Matched to your exact grass type and blade width'; Pet-safe chip (rename from 'Pet-friendly flags') + title 'Flags every product recommendation near your pets'",
+        "Descriptions remain unchanged",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 10,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-052",
+      "title": "Dashboard — personalized header showing week number, grass type, and state",
+      "description": "As a user on the dashboard, I want the header to show exactly what I'm looking at — my week, grass, and state — so the page feels personal.",
+      "acceptanceCriteria": [
+        "In src/app/dashboard/page.tsx, update the header <div>:",
+        "Change the h1 text from 'Right Now' to 'Week {currentWeek}' (e.g. 'Week 24') — still text-2xl font-bold",
+        "Add a new subtitle line below the h1: '{grassName} · {stateCode} · {weekRange}' in text-sm with color var(--color-text-muted) — e.g. 'Bermudagrass · NC · Jun 9 – Jun 15'",
+        "stateCode needs to be stored in state: add a useState<string>('') for stateCode and set it from the loaded profile (session.state or profile.state) in the existing loadData() useEffect",
+        "If grassName is empty (onboarding gate shown), the subtitle line is not rendered",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 11,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-053",
+      "title": "Dashboard 'Up Next' card — section divider, UPCOMING label, and remaining task count",
+      "description": "As a user, I want the Up Next preview to feel clearly distinct from the current week's tasks, with a count if there are more than 3.",
+      "acceptanceCriteria": [
+        "In src/app/dashboard/page.tsx, add a useState<number>(0) for nextWeekTotalCount",
+        "In loadData(), when setting nextWeekTasks: store the full count before slicing — setNextWeekTotalCount(nextWeekPlan.tasks.length); setNextWeekTasks(nextWeekPlan.tasks.slice(0, 3))",
+        "Before the Up Next card div, add a horizontal rule: <hr style={{ borderColor: 'var(--color-border)', margin: '4px 0' }} />",
+        "At the top of the Up Next card (before the 'Up Next' heading row), add: <p className='text-[10px] font-semibold uppercase tracking-widest mb-2' style={{ color: 'var(--color-text-muted)' }}>Upcoming</p>",
+        "Change the 'Up Next' <p> from text-sm font-semibold to text-base font-semibold",
+        "After the task list inside the card, if nextWeekTotalCount > 3: add <p className='text-xs mt-1' style={{ color: 'var(--color-text-muted)' }}>+ {nextWeekTotalCount - 3} more tasks</p>",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 12,
+      "passes": true,
+      "notes": ""
+    },
+    {
+      "id": "US-054",
+      "title": "Profile page — fix layout shift on button selection (1px → 2px border jump)",
+      "description": "As a user selecting options on the profile page, I want buttons to not jump or shift when I click them.",
+      "acceptanceCriteria": [
+        "In src/app/profile/page.tsx, update the Sun Exposure button group: all buttons always use borderWidth: '2px' (both selected and unselected); selected uses borderColor: 'var(--color-primary)'; unselected uses borderColor: 'var(--color-border)'",
+        "Apply the same fix to the Pets Yes/No button group: both buttons always use borderWidth: '2px'",
+        "No layout shift occurs when clicking between options (verify by clicking rapidly between options)",
+        "Typecheck passes",
+        "Verify in browser using dev-browser skill"
+      ],
+      "priority": 13,
+      "passes": true,
+      "notes": ""
+    }
+  ]
+}

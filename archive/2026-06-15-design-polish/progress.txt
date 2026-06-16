@@ -5,11 +5,10 @@
 - Use `var(--color-<name>)` in inline styles for semantic color tokens defined in `@theme`
 - TypeScript strict mode enabled via tsconfig.json
 - .gitignore blocks `.env*` — commit example env files as `env.local.example` (no leading dot)
-- Clerk auth: @clerk/nextjs package; server actions use auth() from @clerk/nextjs/server; client components use useUser()/useClerk() hooks; ClerkProvider wraps layout
+- Clerk auth: currently in demo/bypass mode — middleware is a passthrough NextResponse.next()
 - Onboarding state persisted in sessionStorage under key `onboarding_state`; session UUID in localStorage under `lawn_session_id`
 - All onboarding step components take `{ onNext: () => void }` prop; routing handled by `src/app/onboarding/[step]/page.tsx`
 - DB uses `@vercel/postgres` (createPool); works with any `POSTGRES_URL` env var; createPool() is LAZY (only called on first query) to avoid module-load crash in dev without POSTGRES_URL
-- All DB migrations use IF NOT EXISTS — safe to re-run
 - grassTypes data in `src/data/grass-types.ts`; each entry has id, name, description, traits[], photoUrl, photoCredit, bladeWidth, texture, activeSeason
 - Pre-emergent windows in `src/data/preemergent-windows.ts`; getPreemergentWindow(state) returns spring/fall date ranges
 - `/api/parse-pdf` route: accepts { state, grassType, pdfUrl? }; checks DB cache first; calls Claude claude-sonnet-4-6; returns WeeklyPlan[] (52 entries); WeeklyPlan and WeeklyTask types exported from that route file
@@ -18,16 +17,20 @@
 - next.config.ts has PWA wrapper in prod — add config changes to base nextConfig object before the PWA wrap
 - Bracket paths require quoting in git add: git add "src/app/onboarding/[step]/..."
 - Layout: src/app/layout.tsx is a SERVER component (exports metadata); client nav is in src/app/ClientNav.tsx ("use client", usePathname, nav rendering)
-- Design tokens in globals.css @theme: --color-background, --color-surface, --color-primary, --color-secondary, --color-text-primary, --color-text-muted, --color-surface-alt, --color-border, --color-warning-*, --color-urgent, --color-routine, --color-optional
+- Design tokens in globals.css @theme: --color-background, --color-surface, --color-primary, --color-secondary, --color-text-primary, --color-text-muted + (after US-042) --color-surface-alt, --color-border, --color-warning-*, --color-urgent, --color-routine, --color-optional
 - Hardcoded hex colors to AVOID (use CSS vars instead): #2d4a2d → var(--color-border), #3d3000 → var(--color-warning-bg), #eab308 → var(--color-warning-text), #1a3a1a → var(--color-surface-alt)
-- SVG icon components: src/components/icons.tsx exports HomeIcon, CalendarIcon, ProfileIcon
-- Always use borderWidth + borderStyle as separate inline style props when you need consistent border width regardless of selection state (avoids layout shift)
-- Stripe webhooks: MUST use request.text() for raw body (NOT request.json()) before calling stripe.webhooks.constructEvent()
-- Vercel Blob: requires BLOB_READ_WRITE_TOKEN; use put(pathname, body, { access: 'public' }) from @vercel/blob
-- Claude Vision: messages array includes { type: 'image', source: { type: 'url', url: imageUrl } } image block; model claude-sonnet-4-6
-- Google Maps: use @googlemaps/js-api-loader Loader singleton; libraries: ['places', 'drawing', 'geometry']; mapTypeId: 'satellite' with tilt: 0 for flat satellite view
-- Deploy after EVERY story: run `vercel --yes` and verify on production URL before marking passes: true
+- SVG icon components: src/components/icons.tsx exports HomeIcon, CalendarIcon, ProfileIcon (after US-043)
 
 # Ralph Progress Log
 Started: Sun Jun 15 2026
+---
+
+## 2026-06-15 - US-052/US-053/US-054
+- US-052: Added stateCode state var to dashboard; updated h1 to "Week N"; added subtitle "{grassName} · {stateCode} · {weekRange}"
+- US-053: Added nextWeekTotalCount state; wrapped Up Next in <></> with <hr> divider before card; added "Upcoming" label (10px uppercase tracking); changed heading to text-base; added "+ N more tasks" line when count > 3
+- US-054: Both Sun Exposure and Pets button groups now always use borderWidth: "2px" + borderStyle: "solid" — no more 1px→2px jump on selection
+- Files changed: src/app/dashboard/page.tsx, src/app/profile/page.tsx
+- **Learnings for future iterations:**
+  - Always use borderWidth + borderStyle as separate inline style props (not the `border` className) when you need consistent border width regardless of selection state
+  - When wrapping conditional JSX in a Fragment (<></>) for multiple sibling elements, the parent conditional check stays on the outer wrapper
 ---
