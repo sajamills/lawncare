@@ -80,7 +80,7 @@ export default function Step5New({ onNext }: { onNext: () => void }) {
         <button
           type="button"
           onClick={() => toggle(NONE_ID)}
-          className="w-full px-4 py-4 rounded-lg text-left border transition-all flex flex-col"
+          className="w-full px-4 py-4 rounded-lg text-left border transition-all flex items-center gap-3"
           style={{
             backgroundColor: "var(--color-surface)",
             borderColor: selected.has(NONE_ID) ? "var(--color-primary)" : "var(--color-border)",
@@ -88,12 +88,27 @@ export default function Step5New({ onNext }: { onNext: () => void }) {
             color: "var(--color-text-primary)",
           }}
         >
-          <span className="text-sm font-medium">
-            None — I&apos;m just getting started
-          </span>
-          <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>
-            Skip ahead to get your plan
-          </span>
+          <div className="flex flex-col">
+            <span className="text-sm font-medium">
+              None — I&apos;m just getting started
+            </span>
+            <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>
+              Skip ahead to get your plan
+            </span>
+          </div>
+          {selected.has(NONE_ID) ? (
+            <span
+              className="ml-auto w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+              style={{ backgroundColor: "var(--color-primary)", color: "var(--color-background)" }}
+            >
+              ✓
+            </span>
+          ) : (
+            <span
+              className="ml-auto w-5 h-5 rounded-full border shrink-0"
+              style={{ borderColor: "var(--color-border)" }}
+            />
+          )}
         </button>
 
         {TASKS.map((task) => {
@@ -103,7 +118,7 @@ export default function Step5New({ onNext }: { onNext: () => void }) {
               key={task.id}
               type="button"
               onClick={() => toggle(task.id)}
-              className="w-full px-4 py-3 rounded-lg text-left border transition-all"
+              className="w-full px-4 py-3 rounded-lg text-left border transition-all flex items-center gap-3"
               style={{
                 backgroundColor: "var(--color-surface)",
                 borderColor: isSelected ? "var(--color-primary)" : "var(--color-border)",
@@ -112,6 +127,19 @@ export default function Step5New({ onNext }: { onNext: () => void }) {
               }}
             >
               <span className="text-sm font-medium">{task.label}</span>
+              {isSelected ? (
+                <span
+                  className="ml-auto w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold shrink-0"
+                  style={{ backgroundColor: "var(--color-primary)", color: "var(--color-background)" }}
+                >
+                  ✓
+                </span>
+              ) : (
+                <span
+                  className="ml-auto w-5 h-5 rounded-full border shrink-0"
+                  style={{ borderColor: "var(--color-border)" }}
+                />
+              )}
             </button>
           );
         })}

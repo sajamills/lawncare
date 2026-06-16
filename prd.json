@@ -233,8 +233,8 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 13,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "In steps/Step5.tsx, changed every selectable button (the None row and all 10 TASKS rows) to flex items-center gap-3, adding a w-5 h-5 rounded-full check indicator on the right: filled with var(--color-primary) background and a checkmark glyph when selected, an empty bordered circle otherwise. Wrapped the None button's label+subtitle in a div so the check span could sit as a sibling flex item. Added a scoped Playwright test toggling 'Applied fertilizer' and asserting the checkmark glyph appears/disappears. Visually verified at 414x896 via screenshot with two items selected."
     },
     {
       "id": "US-013",

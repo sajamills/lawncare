@@ -196,3 +196,11 @@ Started: Sun Jun 15 2026 — UI/UX Remediation Sprint
   - steps/Step5New.tsx is a byte-for-byte duplicate of steps/Step5.tsx that nothing imports — page.tsx wires up steps/Step5.tsx (whose exported function happens to be misnamed `Step5New`). Future treatment-history stories (e.g. US-012) should edit steps/Step5.tsx only; don't waste time mirroring the dead duplicate file.
   - No onboarding e2e coverage existed before this story — added e2e/onboarding-step5.spec.ts as the first one, following the one-spec-per-route pattern from calendar/clerk-auth/profile.
 ---
+
+## 2026-06-16 - US-012
+- Added a visible checkmark-circle indicator to every selectable button in the onboarding treatment-history step (steps/Step5.tsx), including the "None" row: filled green circle with a checkmark when selected, empty bordered circle otherwise.
+- Buttons changed from text-left blocks to flex items-center gap-3 with the indicator pinned to the right via ml-auto.
+- Files changed: src/app/onboarding/[step]/steps/Step5.tsx, e2e/onboarding-step5.spec.ts, prd.json, progress.txt. Screenshot: e2e/screenshots/onboarding-step5-checkmarks-414x896.png.
+- **Learnings for future iterations:**
+  - When a button needs a stacked label+subtitle AND a trailing indicator, wrap the stacked text in its own flex-col div so it can sit as a single flex item alongside the indicator span in the button's flex row.
+---
