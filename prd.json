@@ -216,8 +216,8 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 12,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "page.tsx imports Step5 from './steps/Step5' \u2014 that file's exported function is confusingly named Step5New (a stale leftover from a prior rename), and there is a byte-for-byte duplicate, unused file at steps/Step5New.tsx that nothing imports. Edited only steps/Step5.tsx (the active component). Moved the NONE_ID button to the top of the rendered list, relabeled it to 'None \u2014 I'm just getting started' with a subtitle 'Skip ahead to get your plan', stacked label/subtitle in flex-col, and increased its padding to py-4 to look visually distinct from the py-3 task rows. Existing toggle()/handleContinue() logic already cleared other selections when NONE_ID is picked, so no behavior change was needed there. Added e2e/onboarding-step5.spec.ts (new) verifying the None option's position, label, subtitle, and selection-clearing behavior. Visually verified at 414x896 via screenshot."
     },
     {
       "id": "US-012",

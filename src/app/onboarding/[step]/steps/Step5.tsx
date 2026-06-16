@@ -77,6 +77,25 @@ export default function Step5New({ onNext }: { onNext: () => void }) {
       </div>
 
       <div className="flex flex-col gap-2">
+        <button
+          type="button"
+          onClick={() => toggle(NONE_ID)}
+          className="w-full px-4 py-4 rounded-lg text-left border transition-all flex flex-col"
+          style={{
+            backgroundColor: "var(--color-surface)",
+            borderColor: selected.has(NONE_ID) ? "var(--color-primary)" : "var(--color-border)",
+            borderWidth: selected.has(NONE_ID) ? "2px" : "1px",
+            color: "var(--color-text-primary)",
+          }}
+        >
+          <span className="text-sm font-medium">
+            None — I&apos;m just getting started
+          </span>
+          <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>
+            Skip ahead to get your plan
+          </span>
+        </button>
+
         {TASKS.map((task) => {
           const isSelected = selected.has(task.id);
           return (
@@ -96,22 +115,6 @@ export default function Step5New({ onNext }: { onNext: () => void }) {
             </button>
           );
         })}
-
-        <button
-          type="button"
-          onClick={() => toggle(NONE_ID)}
-          className="w-full px-4 py-3 rounded-lg text-left border transition-all mt-1"
-          style={{
-            backgroundColor: "var(--color-surface)",
-            borderColor: selected.has(NONE_ID) ? "var(--color-primary)" : "var(--color-border)",
-            borderWidth: selected.has(NONE_ID) ? "2px" : "1px",
-            color: "var(--color-text-muted)",
-          }}
-        >
-          <span className="text-sm font-medium">
-            None yet — it&apos;s early in the season
-          </span>
-        </button>
       </div>
 
       <button

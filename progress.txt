@@ -187,3 +187,12 @@ Started: Sun Jun 15 2026 — UI/UX Remediation Sprint
   - When a screenshot looks visually tight/clipped at small scale, verify with a Playwright boundingBox() check before assuming a layout bug — in this case the description text fit comfortably and the screenshot just renders small.
   - profile.spec.ts is the right home for all /profile UI assertions going forward; keep adding test.describe blocks per field rather than new files.
 ---
+
+## 2026-06-16 - US-011
+- Added a prominent "None — I'm just getting started" option at the top of the onboarding treatment-history step (steps/Step5.tsx), replacing the bottom-anchored "None yet — it's early in the season" option.
+- The button is now taller (py-4) and stacks the label with a "Skip ahead to get your plan" subtitle, visually distinct from the other py-3 task rows.
+- Files changed: src/app/onboarding/[step]/steps/Step5.tsx, e2e/onboarding-step5.spec.ts (new), prd.json, progress.txt. Screenshot: e2e/screenshots/onboarding-step5-414x896.png.
+- **Learnings for future iterations:**
+  - steps/Step5New.tsx is a byte-for-byte duplicate of steps/Step5.tsx that nothing imports — page.tsx wires up steps/Step5.tsx (whose exported function happens to be misnamed `Step5New`). Future treatment-history stories (e.g. US-012) should edit steps/Step5.tsx only; don't waste time mirroring the dead duplicate file.
+  - No onboarding e2e coverage existed before this story — added e2e/onboarding-step5.spec.ts as the first one, following the one-spec-per-route pattern from calendar/clerk-auth/profile.
+---
