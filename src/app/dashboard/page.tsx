@@ -128,9 +128,11 @@ export default function DashboardPage() {
   const [tasks, setTasks] = useState<WeeklyTask[]>([]);
   const [nextWeekTasks, setNextWeekTasks] = useState<WeeklyTask[]>([]);
   const [nextWeekRange, setNextWeekRange] = useState("");
+  const [nextWeekTotalCount, setNextWeekTotalCount] = useState(0);
   const [hasPets, setHasPets] = useState(false);
   const [sqFt, setSqFt] = useState<number | null>(null);
   const [grassName, setGrassName] = useState("");
+  const [stateCode, setStateCode] = useState("");
   const [weekRange, setWeekRange] = useState("");
   const [loading, setLoading] = useState(true);
   const [generatingPlan, setGeneratingPlan] = useState(false);
@@ -184,6 +186,7 @@ export default function DashboardPage() {
 
       setHasPets(pets);
       setSqFt(sqFtVal);
+      setStateCode(stateCode ?? "");
 
       if (grassType) {
         const grass = grassTypes.find((g) => g.id === grassType);
@@ -232,6 +235,7 @@ export default function DashboardPage() {
 
           const nextWeekPlan = plan?.find((w) => w.week === week + 1);
           if (nextWeekPlan && nextWeekPlan.tasks.length > 0) {
+            setNextWeekTotalCount(nextWeekPlan.tasks.length);
             setNextWeekTasks(nextWeekPlan.tasks.slice(0, 3));
           }
         }
@@ -305,11 +309,11 @@ export default function DashboardPage() {
 
       <div>
         <h1 className="text-2xl font-bold mb-1" style={{ color: "var(--color-text-primary)" }}>
-          Right Now
+          {currentWeek > 0 ? `Week ${currentWeek}` : "Right Now"}
         </h1>
         {grassName && (
-          <p style={{ color: "var(--color-text-muted)" }}>
-            Your lawn: {grassName}{weekRange && ` • ${weekRange}`}
+          <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>
+            {grassName}{stateCode ? ` · ${stateCode}` : ""}{weekRange ? ` · ${weekRange}` : ""}
           </p>
         )}
       </div>
@@ -412,20 +416,28 @@ export default function DashboardPage() {
 
           {/* Up Next */}
           {nextWeekTasks.length > 0 && (
-            <div className="rounded-lg p-4 border" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)" }}>
-              <div className="flex items-baseline gap-1 mb-3">
-                <p className="text-sm font-semibold" style={{ color: "var(--color-text-primary)" }}>Up Next</p>
-                <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>· {nextWeekRange}</span>
+            <>
+              <hr style={{ borderColor: "var(--color-border)", margin: "4px 0" }} />
+              <div className="rounded-lg p-4 border" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)" }}>
+                <p className="text-[10px] font-semibold uppercase tracking-widest mb-2" style={{ color: "var(--color-text-muted)" }}>Upcoming</p>
+                <div className="flex items-baseline gap-1 mb-3">
+                  <p className="text-base font-semibold" style={{ color: "var(--color-text-primary)" }}>Up Next</p>
+                  <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>· {nextWeekRange}</span>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  {nextWeekTasks.map((task, i) => (
+                    <p key={i} className="text-sm" style={{ color: "var(--color-text-muted)" }}>
+                      {CATEGORY_ICONS[task.category as TaskCategory] ?? "📋"} {task.title}
+                    </p>
+                  ))}
+                  {nextWeekTotalCount > 3 && (
+                    <p className="text-xs mt-1" style={{ color: "var(--color-text-muted)" }}>
+                      + {nextWeekTotalCount - 3} more tasks
+                    </p>
+                  )}
+                </div>
               </div>
-              <div className="flex flex-col gap-1.5">
-                {nextWeekTasks.map((task, i) => (
-                  <p key={i} className="text-sm" style={{ color: "var(--color-text-muted)" }}>
-                    {CATEGORY_ICONS[task.category as TaskCategory] ?? "📋"} {task.title}
-                  </p>
-                ))}
-                {/* "N more" shown by parent since we already sliced to 3 in state */}
-              </div>
-            </div>
+            </>
           )}
         </>
       )}

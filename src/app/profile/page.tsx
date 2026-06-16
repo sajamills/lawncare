@@ -236,7 +236,7 @@ export default function ProfilePage() {
                 <button
                   key={opt}
                   onClick={() => setHasPets(val)}
-                  className="flex-1 py-2 rounded-lg font-medium text-sm border"
+                  className="flex-1 py-2 rounded-lg font-medium text-sm"
                   style={{
                     backgroundColor: selected
                       ? "var(--color-primary)"
@@ -244,6 +244,8 @@ export default function ProfilePage() {
                     color: selected
                       ? "var(--color-background)"
                       : "var(--color-text-primary)",
+                    borderWidth: "2px",
+                    borderStyle: "solid",
                     borderColor: selected ? "var(--color-primary)" : "var(--color-border)",
                   }}
                 >
@@ -269,14 +271,15 @@ export default function ProfilePage() {
                 <button
                   key={opt.value}
                   onClick={() => setSunExposure(opt.value)}
-                  className="flex-1 py-2 rounded-lg text-sm border"
+                  className="flex-1 py-2 rounded-lg text-sm"
                   style={{
                     backgroundColor: "var(--color-surface)",
                     color: selected
                       ? "var(--color-primary)"
                       : "var(--color-text-primary)",
+                    borderWidth: "2px",
+                    borderStyle: "solid",
                     borderColor: selected ? "var(--color-primary)" : "var(--color-border)",
-                    borderWidth: selected ? "2px" : "1px",
                   }}
                 >
                   {opt.label}
