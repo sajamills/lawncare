@@ -220,3 +220,12 @@ Started: Sun Jun 15 2026 — UI/UX Remediation Sprint
   - To seed sessionStorage before a Playwright page navigates (so client components read it on first render), use page.addInitScript(() => sessionStorage.setItem(...)) before page.goto() — setting it after goto() is too late for state read during the initial render.
   - grass_type in onboarding_state is always the grass id (set directly in Step4, or indirectly via the quiz's scored results which Step4 then lets the user pick from) — resolve display names through the shared grassTypes array from @/data/grass-types, same as profile/page.tsx does.
 ---
+
+## 2026-06-16 - US-015
+- Created /faq (src/app/faq/page.tsx) as a server component using native <details>/<summary> accordions for 8 common questions — no client JS needed for the expand/collapse behavior.
+- Added a simple footer to the landing page (src/app/page.tsx) with a link to /faq, since no footer existed anywhere in the app yet.
+- Files changed: src/app/faq/page.tsx (new), src/app/page.tsx, e2e/faq.spec.ts (new), prd.json, progress.txt. Screenshots: e2e/screenshots/faq-414x896.png, faq-expanded-414x896.png, landing-footer-414x896.png.
+- **Learnings for future iterations:**
+  - Native <details>/<summary> is the right tool for simple accordions in a server component — avoids needing "use client" or any JS state just to expand/collapse text.
+  - The landing page (src/app/page.tsx) had no footer before this story; if a later story needs more footer links (e.g. privacy, terms), extend the <footer> block added here rather than creating a new one.
+---

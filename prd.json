@@ -287,8 +287,8 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 16,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Created src/app/faq/page.tsx as a server component (no 'use client') rendering the title and 8 Q&A items as native <details>/<summary> accordions, no JS needed. The 'How is my plan saved?' answer uses the exact text specified; the other 7 answers were authored to fit the product (grass-type/lawn-size optionality, USDA zones, pre-emergent timing, free pricing, pet/child safety, university extension sourcing) since the story only mandated exact wording for that one item. Added a simple footer to the landing page (src/app/page.tsx) with a single 'FAQ' link to /faq, since no footer existed yet. Added e2e/faq.spec.ts verifying all 8 questions render, the saved-plan answer is hidden until expanded, and the landing footer links to /faq. Visually verified collapsed/expanded states and the landing footer via screenshots."
     },
     {
       "id": "US-018",

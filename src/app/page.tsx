@@ -272,6 +272,19 @@ export default function Home() {
         </h2>
         <CtaButton />
       </section>
+
+      <footer
+        className="px-6 py-8 flex justify-center"
+        style={{ backgroundColor: "var(--color-surface)" }}
+      >
+        <Link
+          href="/faq"
+          className="text-sm underline"
+          style={{ color: "var(--color-text-muted)" }}
+        >
+          FAQ
+        </Link>
+      </footer>
     </main>
   );
 }
