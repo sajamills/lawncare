@@ -358,7 +358,17 @@ export default function DashboardPage() {
                   <div
                     key={i}
                     className="rounded-lg p-4 border flex flex-col gap-2"
-                    style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", opacity: done ? 0.6 : 1 }}
+                    style={{
+                      backgroundColor: "var(--color-surface)",
+                      borderColor: "var(--color-border)",
+                      borderLeftColor: task.priority === "urgent"
+                        ? "var(--color-urgent)"
+                        : task.priority === "routine"
+                        ? "var(--color-routine)"
+                        : "var(--color-border)",
+                      borderLeftWidth: task.priority === "optional" ? "1px" : "4px",
+                      opacity: done ? 0.6 : 1,
+                    }}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -367,18 +377,14 @@ export default function DashboardPage() {
                           {task.title}
                         </p>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <span
-                          className="text-xs px-2 py-0.5 rounded-full font-medium"
-                          style={{ backgroundColor: PRIORITY_COLORS[task.priority as TaskPriority].bg, color: PRIORITY_COLORS[task.priority as TaskPriority].text }}
-                        >
-                          {task.priority}
-                        </span>
+                      <div className="flex items-center shrink-0">
                         <button
                           type="button"
                           onClick={() => toggleTask(task.title)}
-                          className="w-6 h-6 rounded-full border flex items-center justify-center text-xs font-bold shrink-0"
+                          className="w-8 h-8 rounded-full border flex items-center justify-center text-xs font-bold shrink-0"
                           style={{
+                            padding: "6px",
+                            margin: "-6px",
                             borderColor: done ? "var(--color-primary)" : "var(--color-border)",
                             backgroundColor: done ? "var(--color-primary)" : "transparent",
                             color: done ? "var(--color-background)" : "transparent",
