@@ -54,12 +54,23 @@ function getOnboardingState(): Record<string, unknown> {
 
 type ViewMode = "calendar" | "list";
 
+const VIEW_MODE_STORAGE_KEY = "calendar_view_mode";
+
 export default function CalendarPage() {
   const [plan, setPlan] = useState<WeeklyPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedMonth, setExpandedMonth] = useState<number | null>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>("calendar");
+  const [viewMode, setViewMode] = useState<ViewMode>(() => {
+    if (typeof window === "undefined") return "calendar";
+    const stored = window.localStorage.getItem(VIEW_MODE_STORAGE_KEY);
+    if (stored === "calendar" || stored === "list") return stored;
+    return window.innerWidth < 768 ? "list" : "calendar";
+  });
   const currentMonth = new Date().getMonth() + 1;
+
+  useEffect(() => {
+    window.localStorage.setItem(VIEW_MODE_STORAGE_KEY, viewMode);
+  }, [viewMode]);
 
   useEffect(() => {
     async function loadPlan() {

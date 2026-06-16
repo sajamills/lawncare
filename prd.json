@@ -120,8 +120,8 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 6,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "viewMode now initializes via a lazy useState initializer: reads localStorage key 'calendar_view_mode' first, falls back to window.innerWidth < 768 ? 'list' : 'calendar' if nothing stored. A separate useEffect persists viewMode to that key on every change, so the Calendar/List toggle buttons (unchanged) keep working and the choice survives reload. Updated existing e2e/calendar.spec.ts: the 320/375/414px overflow tests now explicitly switch to calendar view first (since those widths default to list view per this story) before asserting on the grid; added 3 new tests covering mobile-default-list, desktop-default-calendar, and localStorage persistence across reload. No visual/layout change to either view itself, so no new screenshots beyond what the existing test already captures. Full suite at the end: tsc clean, vitest 47/47, full+scoped eslint clean (only pre-existing unrelated profile/page.tsx failures from US-001), playwright 24/24."
     },
     {
       "id": "US-006",

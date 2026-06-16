@@ -136,3 +136,11 @@ Started: Sun Jun 15 2026 — UI/UX Remediation Sprint
   - Per updated workflow guidance: during implementation, run only the scoped test/lint/typecheck relevant to the changed file(s); run the full vitest/lint/tsc/playwright suite once at the end of the story, not after every edit. For pure copy/text changes with no layout/responsive/color/typography impact, skip capturing new screenshots.
   - Do not reinstall or reconfigure Playwright/Vitest infra per story — reuse what already exists (e2e/calendar.spec.ts, playwright.config.ts) unless the story needs new capability.
 ---
+
+## 2026-06-16 - US-005
+- viewMode now defaults to "list" below 768px and "calendar" at/above it, but only when localStorage has no stored preference yet (read via a lazy useState initializer); a useEffect persists every viewMode change to localStorage key "calendar_view_mode" so the choice survives reload/revisit. Toggle buttons unchanged.
+- Had to update the existing e2e/calendar.spec.ts overflow tests: the 320/375/414px cases previously assumed calendar-grid was visible immediately on load, which broke once those widths started defaulting to list view — added an explicit click on view-toggle-calendar before the grid assertions at those widths. Added 3 new tests: mobile defaults to list, desktop defaults to calendar, and view choice persists across page.reload() (also asserted the literal localStorage value).
+- Files changed: src/app/dashboard/calendar/page.tsx, e2e/calendar.spec.ts
+- **Learnings for future iterations:**
+  - When a story changes default UI state based on viewport/localStorage, check whether existing e2e tests assumed the old default — they may need a same-story update (not scope creep) rather than a separate story, since the test is directly verifying the changed behavior.
+---

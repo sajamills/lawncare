@@ -17,6 +17,12 @@ for (const vp of viewports) {
     await page.setViewportSize({ width: vp.width, height: vp.height });
     await page.goto("/dashboard/calendar");
 
+    // Below 768px the calendar now defaults to list view (US-005); switch to
+    // calendar view explicitly since these tests verify the grid layout itself.
+    if (vp.width < 768) {
+      await page.getByTestId("view-toggle-calendar").click();
+    }
+
     const grid = page.getByTestId("calendar-grid");
     await expect(grid).toBeVisible();
 
@@ -60,3 +66,26 @@ for (const vp of viewports) {
     }
   });
 }
+
+test("defaults to list view on mobile width with no stored preference", async ({ page }) => {
+  await page.setViewportSize({ width: 375, height: 812 });
+  await page.goto("/dashboard/calendar");
+  await expect(page.getByTestId("calendar-grid")).toBeHidden();
+});
+
+test("defaults to calendar view on desktop width with no stored preference", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/dashboard/calendar");
+  await expect(page.getByTestId("calendar-grid")).toBeVisible();
+});
+
+test("remembers the selected view mode across reloads via localStorage", async ({ page }) => {
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto("/dashboard/calendar");
+  await page.getByTestId("view-toggle-list").click();
+  await expect(page.getByTestId("calendar-grid")).toBeHidden();
+
+  await page.reload();
+  await expect(page.getByTestId("calendar-grid")).toBeHidden();
+  expect(await page.evaluate(() => localStorage.getItem("calendar_view_mode"))).toBe("list");
+});
