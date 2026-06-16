@@ -1,0 +1,129 @@
+[
+  { "week": 1,  "tasks": [] },
+  { "week": 2,  "tasks": [] },
+  { "week": 3,  "tasks": [] },
+  { "week": 4,  "tasks": [] },
+  { "week": 5,  "tasks": [] },
+  { "week": 6,  "tasks": [] },
+  { "week": 7,  "tasks": [] },
+  { "week": 8,  "tasks": [] },
+  { "week": 9,  "tasks": [] },
+  { "week": 10, "tasks": [] },
+  { "week": 11, "tasks": [
+    { "title": "Apply pre-emergent herbicide", "description": "Apply a pre-emergent herbicide when soil temperatures reach 50°F (typically mid-March in Arkansas). Target crabgrass and annual weeds before they germinate.", "category": "pest-weed", "priority": "urgent", "petSafetyNote": "Keep pets off treated areas until dry, typically 24 hours." }
+  ]},
+  { "week": 12, "tasks": [
+    { "title": "First spring fertilization", "description": "Apply a slow-release nitrogen fertilizer (1 lb N per 1,000 sq ft) after the lawn fully greens up. Avoid fertilizing too early — bermudagrass should be actively growing.", "category": "fertilize", "priority": "routine", "petSafetyNote": "Allow fertilizer to water in before pets use the lawn." }
+  ]},
+  { "week": 13, "tasks": [
+    { "title": "Begin regular mowing", "description": "Start mowing when bermudagrass reaches 2 inches. Set blade to 1–1.5 inches. Remove no more than one-third of the blade in a single mowing.", "category": "mow", "priority": "routine", "petSafetyNote": "" }
+  ]},
+  { "week": 14, "tasks": [
+    { "title": "Mow weekly", "description": "Maintain weekly mowing at 1–1.5 inches. Bermudagrass is entering active growth in late March/early April in Arkansas.", "category": "mow", "priority": "routine", "petSafetyNote": "" }
+  ]},
+  { "week": 15, "tasks": [
+    { "title": "Mow weekly", "description": "Continue weekly mowing at 1–1.5 inches.", "category": "mow", "priority": "routine", "petSafetyNote": "" },
+    { "title": "Check irrigation system", "description": "Test all sprinkler heads and drip lines before summer heat. Repair any broken heads.", "category": "water", "priority": "optional", "petSafetyNote": "" }
+  ]},
+  { "week": 16, "tasks": [
+    { "title": "Mow weekly", "description": "Continue weekly mowing.", "category": "mow", "priority": "routine", "petSafetyNote": "" }
+  ]},
+  { "week": 17, "tasks": [
+    { "title": "Mow weekly", "description": "Mow at 1–1.5 inches, removing clippings only if they mat.", "category": "mow", "priority": "routine", "petSafetyNote": "" },
+    { "title": "Summer fertilization", "description": "Apply 1 lb N per 1,000 sq ft using a balanced fertilizer. Bermudagrass is in peak growth and will respond well.", "category": "fertilize", "priority": "routine", "petSafetyNote": "" }
+  ]},
+  { "week": 18, "tasks": [
+    { "title": "Mow weekly", "description": "Continue weekly mowing.", "category": "mow", "priority": "routine", "petSafetyNote": "" }
+  ]},
+  { "week": 19, "tasks": [
+    { "title": "Mow weekly", "description": "Mow at 1–1.5 inches.", "category": "mow", "priority": "routine", "petSafetyNote": "" },
+    { "title": "Water deeply 2–3 times per week", "description": "Apply 1 inch of water per week in two or three deep sessions rather than daily shallow watering. Water early morning to reduce evaporation.", "category": "water", "priority": "routine", "petSafetyNote": "" }
+  ]},
+  { "week": 20, "tasks": [
+    { "title": "Mow weekly", "description": "Continue weekly mowing.", "category": "mow", "priority": "routine", "petSafetyNote": "" },
+    { "title": "Water 1 inch per week", "description": "Continue deep, infrequent watering. Bermudagrass is drought-tolerant but performs best with consistent moisture in heat.", "category": "water", "priority": "routine", "petSafetyNote": "" }
+  ]},
+  { "week": 21, "tasks": [
+    { "title": "Mow weekly", "description": "Maintain 1–1.5 inch height.", "category": "mow", "priority": "routine", "petSafetyNote": "" },
+    { "title": "Spot-treat weeds", "description": "Apply post-emergent herbicide to any broadleaf weeds. Avoid spraying in temperatures above 90°F to prevent turf damage.", "category": "pest-weed", "priority": "optional", "petSafetyNote": "Keep pets off treated lawn for 24 hours after application." }
+  ]},
+  { "week": 22, "tasks": [
+    { "title": "Mow weekly", "description": "Continue mowing at 1–1.5 inches.", "category": "mow", "priority": "routine", "petSafetyNote": "" },
+    { "title": "Water 1 inch per week", "description": "Continue consistent watering schedule.", "category": "water", "priority": "routine", "petSafetyNote": "" }
+  ]},
+  { "week": 23, "tasks": [
+    { "title": "Mow weekly", "description": "Mow at 1–1.5 inches in peak summer heat.", "category": "mow", "priority": "routine", "petSafetyNote": "" },
+    { "title": "Water deeply 2–3 times per week", "description": "Arkansas summers are hot and humid. Water 1 inch per week in deep sessions.", "category": "water", "priority": "routine", "petSafetyNote": "" }
+  ]},
+  { "week": 24, "tasks": [
+    { "title": "Mow weekly", "description": "Continue weekly mowing.", "category": "mow", "priority": "routine", "petSafetyNote": "" },
+    { "title": "Second summer fertilization", "description": "Apply 1 lb N per 1,000 sq ft to support continued growth through peak summer. Use a slow-release formula.", "category": "fertilize", "priority": "routine", "petSafetyNote": "" }
+  ]},
+  { "week": 25, "tasks": [
+    { "title": "Mow weekly", "description": "Mow bermudagrass at 1–1.5 inches. In mid-June Arkansas heat, mow in the early morning or evening.", "category": "mow", "priority": "routine", "petSafetyNote": "" },
+    { "title": "Water 1 inch per week", "description": "Apply 1 inch of water per week in 2–3 deep sessions. Water before 9am to minimize evaporation and fungal risk.", "category": "water", "priority": "routine", "petSafetyNote": "" }
+  ]},
+  { "week": 26, "tasks": [
+    { "title": "Mow weekly", "description": "Continue mowing at 1–1.5 inches.", "category": "mow", "priority": "routine", "petSafetyNote": "" },
+    { "title": "Water deeply", "description": "Continue 1 inch per week deep watering schedule.", "category": "water", "priority": "routine", "petSafetyNote": "" }
+  ]},
+  { "week": 27, "tasks": [
+    { "title": "Mow weekly", "description": "Maintain 1–1.5 inch height through July.", "category": "mow", "priority": "routine", "petSafetyNote": "" }
+  ]},
+  { "week": 28, "tasks": [
+    { "title": "Mow weekly", "description": "Continue mowing.", "category": "mow", "priority": "routine", "petSafetyNote": "" },
+    { "title": "Water deeply", "description": "Continue 1 inch per week deep irrigation.", "category": "water", "priority": "routine", "petSafetyNote": "" }
+  ]},
+  { "week": 29, "tasks": [
+    { "title": "Mow weekly", "description": "Mow at 1–1.5 inches.", "category": "mow", "priority": "routine", "petSafetyNote": "" }
+  ]},
+  { "week": 30, "tasks": [
+    { "title": "Mow weekly", "description": "Continue mowing through peak summer.", "category": "mow", "priority": "routine", "petSafetyNote": "" },
+    { "title": "Water deeply", "description": "Maintain 1 inch per week watering through August heat.", "category": "water", "priority": "routine", "petSafetyNote": "" }
+  ]},
+  { "week": 31, "tasks": [
+    { "title": "Mow weekly", "description": "Continue weekly mowing at 1–1.5 inches.", "category": "mow", "priority": "routine", "petSafetyNote": "" },
+    { "title": "Late summer fertilization", "description": "Apply 1 lb N per 1,000 sq ft no later than 6 weeks before expected first frost. In Arkansas, last fertilization is typically early August.", "category": "fertilize", "priority": "urgent", "petSafetyNote": "" }
+  ]},
+  { "week": 32, "tasks": [
+    { "title": "Mow weekly", "description": "Continue mowing.", "category": "mow", "priority": "routine", "petSafetyNote": "" }
+  ]},
+  { "week": 33, "tasks": [
+    { "title": "Mow weekly", "description": "Mow at 1–1.5 inches.", "category": "mow", "priority": "routine", "petSafetyNote": "" },
+    { "title": "Aerate if soil is compacted", "description": "Late August is a good time to aerate bermudagrass in Arkansas — the grass recovers quickly during warm weather. Core aerate to 3 inches depth.", "category": "aerate", "priority": "optional", "petSafetyNote": "" }
+  ]},
+  { "week": 34, "tasks": [
+    { "title": "Mow weekly", "description": "Continue mowing.", "category": "mow", "priority": "routine", "petSafetyNote": "" }
+  ]},
+  { "week": 35, "tasks": [
+    { "title": "Mow weekly", "description": "Bermudagrass growth slows in early September.", "category": "mow", "priority": "routine", "petSafetyNote": "" },
+    { "title": "Fall pre-emergent application", "description": "Apply pre-emergent herbicide in early September when soil temperatures drop below 70°F to prevent winter annual weeds like annual bluegrass.", "category": "pest-weed", "priority": "urgent", "petSafetyNote": "Keep pets off treated areas for 24 hours." }
+  ]},
+  { "week": 36, "tasks": [
+    { "title": "Mow weekly", "description": "Continue mowing at 1–1.5 inches.", "category": "mow", "priority": "routine", "petSafetyNote": "" }
+  ]},
+  { "week": 37, "tasks": [
+    { "title": "Reduce mowing frequency", "description": "Begin mowing every 10–14 days as bermudagrass growth slows in mid-September.", "category": "mow", "priority": "routine", "petSafetyNote": "" }
+  ]},
+  { "week": 38, "tasks": [
+    { "title": "Reduce watering", "description": "As temperatures cool, reduce watering to 0.5 inch per week or less. Monitor for wilting before watering.", "category": "water", "priority": "routine", "petSafetyNote": "" }
+  ]},
+  { "week": 39, "tasks": [
+    { "title": "Final mow before dormancy", "description": "Mow one last time at 1.5 inches as bermudagrass begins to slow significantly. Do not mow below 1 inch heading into winter.", "category": "mow", "priority": "routine", "petSafetyNote": "" }
+  ]},
+  { "week": 40, "tasks": [] },
+  { "week": 41, "tasks": [] },
+  { "week": 42, "tasks": [] },
+  { "week": 43, "tasks": [
+    { "title": "Winterization check", "description": "Blow out or drain irrigation lines before first hard freeze in Arkansas (typically late October to November). Disconnect hoses.", "category": "other", "priority": "optional", "petSafetyNote": "" }
+  ]},
+  { "week": 44, "tasks": [] },
+  { "week": 45, "tasks": [] },
+  { "week": 46, "tasks": [] },
+  { "week": 47, "tasks": [] },
+  { "week": 48, "tasks": [] },
+  { "week": 49, "tasks": [] },
+  { "week": 50, "tasks": [] },
+  { "week": 51, "tasks": [] },
+  { "week": 52, "tasks": [] }
+]

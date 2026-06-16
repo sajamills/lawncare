@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { db } from "@/lib/db";
+import { normalizeGrassId, normalizeStateCode } from "@/lib/week-utils";
 
 const client = new Anthropic();
 
@@ -22,7 +23,7 @@ export interface WeeklyPlan {
 
 const SYSTEM_PROMPT = `You are a lawn care expert. Generate a week-by-week care plan for the specified grass type and US state.
 
-Return ONLY a valid JSON array with exactly 52 entries (weeks 1–52, where week 1 = first week of January). Each entry must have:
+Return ONLY a valid JSON array with exactly 52 entries, one per ISO 8601 week (weeks 1–52). Use ISO 8601 week numbering: week 1 is the week containing January 4 (Monday–Sunday). This matches JavaScript's standard ISO week calculation. Week 25 falls in mid-June for most years. Each entry must have:
 {
   "week": <1-52>,
   "tasks": [
@@ -37,7 +38,7 @@ Return ONLY a valid JSON array with exactly 52 entries (weeks 1–52, where week
 }
 
 Guidelines:
-- Use your expert knowledge of the grass type and state's climate to assign tasks to the correct weeks
+- Use your expert knowledge of the grass type and state's climate to assign tasks to the correct ISO weeks
 - Most weeks will have 1-3 tasks; some off-season weeks may have zero tasks (use empty tasks array)
 - Tasks like pre-emergent herbicide, fertilizer applications, aeration, and overseeding must be timed precisely to the correct week windows for that state and grass type
 - Mowing tasks should appear during the active growing season weeks only
@@ -52,40 +53,43 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
   }
 
-  const { pdfUrl, state, grassType } = body as {
-    pdfUrl?: string;
-    state?: string;
-    grassType?: string;
-  };
+  const raw = body as { pdfUrl?: string; state?: string; grassType?: string };
 
-  if (!state || !grassType) {
+  if (!raw.state || !raw.grassType) {
     return NextResponse.json(
       { error: "state and grassType are required" },
       { status: 400 }
     );
   }
 
+  const stateKey = normalizeStateCode(raw.state);
+  const grassKey = normalizeGrassId(raw.grassType);
+  const pdfUrl = raw.pdfUrl;
+
   // Check cache first
   try {
     const cached = await db.query(
       "SELECT parsed_plan FROM cached_plans WHERE state = $1 AND grass_type = $2",
-      [state.toUpperCase(), grassType]
+      [stateKey, grassKey]
     );
     if (cached.rows.length > 0) {
       const cachedPlan = cached.rows[0].parsed_plan as Array<Record<string, unknown>>;
       // Detect stale 12-month format (entries have 'month' not 'week')
       const isStale = Array.isArray(cachedPlan) && cachedPlan.length > 0 && !("week" in cachedPlan[0]);
       if (!isStale) {
+        console.log(`[parse-pdf] stage=cache_hit state=${stateKey} grass=${grassKey}`);
         return NextResponse.json({ plan: cachedPlan, cached: true });
       }
       // Stale format — delete and regenerate
+      console.log(`[parse-pdf] stage=cache_stale state=${stateKey} grass=${grassKey} — deleting and regenerating`);
       await db.query(
         "DELETE FROM cached_plans WHERE state = $1 AND grass_type = $2",
-        [state.toUpperCase(), grassType]
+        [stateKey, grassKey]
       );
     }
-  } catch {
+  } catch (err) {
     // DB not available in dev — continue without cache
+    console.error(`[parse-pdf] stage=cache_read_error state=${stateKey} grass=${grassKey}`, err instanceof Error ? err.message : String(err));
   }
 
   // Optionally fetch PDF/HTML content if pdfUrl is provided
@@ -118,9 +122,10 @@ export async function POST(request: NextRequest) {
 
   // Call Claude API
   let plan: WeeklyPlan[];
+  console.log(`[parse-pdf] stage=claude_call state=${stateKey} grass=${grassKey}`);
   try {
     let message: Anthropic.Message;
-    const userPrompt = `Generate a 52-week lawn care plan for ${grassType} grass in ${state}. Return only the JSON array.`;
+    const userPrompt = `Generate a 52-week ISO 8601 lawn care plan for ${grassKey} grass in ${stateKey}. Return only the JSON array.`;
 
     if (pdfBuffer && mediaType) {
       message = await client.messages.create({
@@ -174,9 +179,21 @@ export async function POST(request: NextRequest) {
       message.content[0].type === "text" ? message.content[0].text : "";
     const jsonMatch = rawText.match(/\[[\s\S]*\]/);
     if (!jsonMatch) {
+      console.error(`[parse-pdf] stage=json_extract_failed state=${stateKey} grass=${grassKey} — no JSON array in response`);
       throw new Error("No JSON array found in Claude response");
     }
-    plan = JSON.parse(jsonMatch[0]) as WeeklyPlan[];
+    let parsed: WeeklyPlan[];
+    try {
+      parsed = JSON.parse(jsonMatch[0]) as WeeklyPlan[];
+    } catch (parseErr) {
+      console.error(`[parse-pdf] stage=json_parse_failed state=${stateKey} grass=${grassKey}`, parseErr instanceof Error ? parseErr.message : String(parseErr));
+      throw new Error(`JSON.parse failed: ${parseErr instanceof Error ? parseErr.message : String(parseErr)}`);
+    }
+    if (!Array.isArray(parsed) || parsed.length === 0) {
+      console.error(`[parse-pdf] stage=empty_plan state=${stateKey} grass=${grassKey} — Claude returned empty or non-array`);
+      throw new Error("Claude returned an empty plan array");
+    }
+    plan = parsed;
   } catch (err) {
     return NextResponse.json(
       {
@@ -192,10 +209,12 @@ export async function POST(request: NextRequest) {
       `INSERT INTO cached_plans (state, grass_type, pdf_url, parsed_plan)
        VALUES ($1, $2, $3, $4)
        ON CONFLICT (state, grass_type) DO UPDATE SET parsed_plan = EXCLUDED.parsed_plan, created_at = NOW()`,
-      [state.toUpperCase(), grassType, pdfUrl ?? "", JSON.stringify(plan)]
+      [stateKey, grassKey, pdfUrl ?? "", JSON.stringify(plan)]
     );
-  } catch {
+    console.log(`[parse-pdf] stage=cache_write state=${stateKey} grass=${grassKey} weeks=${plan.length}`);
+  } catch (err) {
     // DB not available in dev — return plan anyway
+    console.error(`[parse-pdf] stage=cache_write_error state=${stateKey} grass=${grassKey}`, err instanceof Error ? err.message : String(err));
   }
 
   return NextResponse.json({ plan, cached: false });

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { grassTypes } from "@/data/grass-types";
 import { getPreemergentWindow } from "@/data/preemergent-windows";
 import type { WeeklyPlan, WeeklyTask } from "@/app/api/parse-pdf/route";
+import { getISOWeek, getWeekDateRange, findNextTaskWeek } from "@/lib/week-utils";
 
 type TaskCategory = "mow" | "fertilize" | "water" | "aerate" | "seed" | "pest-weed" | "other";
 type TaskPriority = "urgent" | "routine" | "optional";
@@ -31,28 +32,6 @@ const LOADING_MESSAGES = [
   "Building your 52-week care calendar…",
   "Almost there — personalizing your plan…",
 ];
-
-// ── ISO week utilities ──────────────────────────────────────────────────────
-
-function getISOWeek(date: Date): number {
-  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
-  const dayNum = d.getUTCDay() || 7;
-  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
-  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
-  return Math.ceil((((d.getTime() - yearStart.getTime()) / 86400000) + 1) / 7);
-}
-
-function getWeekDateRange(week: number, year: number): string {
-  const jan4 = new Date(Date.UTC(year, 0, 4));
-  const dayOfWeek = jan4.getUTCDay() || 7;
-  const monday = new Date(jan4);
-  monday.setUTCDate(jan4.getUTCDate() - (dayOfWeek - 1) + (week - 1) * 7);
-  const sunday = new Date(monday);
-  sunday.setUTCDate(monday.getUTCDate() + 6);
-  const fmt = (d: Date) =>
-    d.toLocaleDateString("default", { month: "short", day: "numeric", timeZone: "UTC" });
-  return `${fmt(monday)} – ${fmt(sunday)}`;
-}
 
 // ── Pre-emergent banner ─────────────────────────────────────────────────────
 
@@ -142,9 +121,15 @@ export default function DashboardPage() {
   const [showOnboardingGate, setShowOnboardingGate] = useState(false);
   const [completedTitles, setCompletedTitles] = useState<Set<string>>(new Set());
   const [currentWeek, setCurrentWeek] = useState(0);
+  const [planError, setPlanError] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+  const [nextRealTask, setNextRealTask] = useState<{ week: number; title: string } | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
+    setPlanError(false);
+    setNextRealTask(null);
+
     async function loadData() {
       let stateCode: string | undefined;
       let grassType: string | undefined;
@@ -222,15 +207,25 @@ export default function DashboardPage() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ state: stateCode, grassType }),
         });
-        if (res.ok) {
+        if (!res.ok) {
+          console.error(`[dashboard] plan fetch failed status=${res.status}`);
+          setPlanError(true);
+        } else {
           const { plan } = await res.json() as { plan: WeeklyPlan[] };
           const PRIORITY_ORDER: Record<TaskPriority, number> = { urgent: 0, routine: 1, optional: 2 };
 
           const weekPlan = plan?.find((w) => w.week === week);
-          if (weekPlan) {
+          if (weekPlan && weekPlan.tasks.length > 0) {
             setTasks([...weekPlan.tasks].sort(
               (a, b) => PRIORITY_ORDER[a.priority as TaskPriority] - PRIORITY_ORDER[b.priority as TaskPriority]
             ));
+          } else if (plan?.length > 0) {
+            // Current week is quiet — find next future task
+            const next = findNextTaskWeek(plan, week);
+            if (next) setNextRealTask({ week: next.week, title: next.task.title });
+          } else {
+            console.error(`[dashboard] plan returned but is empty week=${week}`);
+            setPlanError(true);
           }
 
           const nextWeekPlan = plan?.find((w) => w.week === week + 1);
@@ -239,8 +234,9 @@ export default function DashboardPage() {
             setNextWeekTasks(nextWeekPlan.tasks.slice(0, 3));
           }
         }
-      } catch {
-        // Best-effort
+      } catch (err) {
+        console.error("[dashboard] plan fetch threw", err instanceof Error ? err.message : String(err));
+        setPlanError(true);
       } finally {
         if (intervalRef.current) clearInterval(intervalRef.current);
         setGeneratingPlan(false);
@@ -251,11 +247,18 @@ export default function DashboardPage() {
 
     loadData();
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, []);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [retryCount]);
 
   const dismissBanner = () => {
     sessionStorage.setItem(BANNER_DISMISSED_KEY, "true");
     setBannerDismissed(true);
+  };
+
+  const retryPlan = () => {
+    setTasks([]);
+    setLoading(true);
+    setRetryCount((c) => c + 1);
   };
 
   const toggleTask = (title: string) => {
@@ -344,15 +347,56 @@ export default function DashboardPage() {
       {/* Task list */}
       {!showOnboardingGate && !generatingPlan && (
         <>
-          {sortedTasks.length === 0 ? (
-            <div className="rounded-lg p-6 text-center border" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)" }}>
-              <p style={{ color: "var(--color-text-muted)" }}>
-                Nothing urgent this week — check back soon or{" "}
-                <Link href="/dashboard/calendar" className="underline" style={{ color: "var(--color-primary)" }}>
-                  view your full annual calendar
+          {planError ? (
+            <div className="rounded-lg p-6 border flex flex-col gap-4" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)" }}>
+              <div>
+                <p className="font-bold text-base mb-1" style={{ color: "var(--color-text-primary)" }}>
+                  We could not build your plan
+                </p>
+                <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>
+                  Something went wrong generating your recommendations.
+                </p>
+              </div>
+              <div className="flex flex-col gap-2">
+                <button
+                  type="button"
+                  onClick={retryPlan}
+                  className="w-full py-3 rounded-lg font-semibold text-sm"
+                  style={{ backgroundColor: "var(--color-primary)", color: "var(--color-background)" }}
+                >
+                  Retry
+                </button>
+                <Link
+                  href="/profile"
+                  className="w-full py-3 rounded-lg font-semibold text-sm text-center border"
+                  style={{ borderColor: "var(--color-border)", color: "var(--color-text-muted)" }}
+                >
+                  Check your lawn details
                 </Link>
-                .
-              </p>
+              </div>
+            </div>
+          ) : sortedTasks.length === 0 ? (
+            <div className="rounded-lg p-6 text-center border" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)" }}>
+              {nextRealTask ? (
+                <p style={{ color: "var(--color-text-muted)" }}>
+                  Nothing due this week.{" "}
+                  <span style={{ color: "var(--color-text-primary)" }}>
+                    Up next: {nextRealTask.title} — Week {nextRealTask.week}.
+                  </span>{" "}
+                  <Link href="/dashboard/calendar" className="underline" style={{ color: "var(--color-primary)" }}>
+                    View full calendar
+                  </Link>
+                  .
+                </p>
+              ) : (
+                <p style={{ color: "var(--color-text-muted)" }}>
+                  Nothing due this week.{" "}
+                  <Link href="/dashboard/calendar" className="underline" style={{ color: "var(--color-primary)" }}>
+                    View your full annual calendar
+                  </Link>
+                  .
+                </p>
+              )}
             </div>
           ) : (
             <div className="flex flex-col gap-3">
