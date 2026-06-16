@@ -75,3 +75,14 @@ Started: Sun Jun 15 2026 — UI/UX Remediation Sprint
 - Client-side console.error removed from dashboard; all stage logging server-side only
 - 47 tests across plan-utils.test.ts and api-plan-processing.test.ts (no live services)
 ---
+
+## 2026-06-16 - US-003
+- Replaced overflow-x-auto + flex gap-2 min-w-max calendar strip with a responsive CSS grid: grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-12 gap-2
+- Removed fixed w-28 shrink-0 from each month card; added w-full to outer div and button; added minHeight: 80px to the month button for breathing room
+- Category dot legend below the calendar left unchanged
+- Files changed: src/app/dashboard/calendar/page.tsx
+- **Learnings for future iterations:**
+  - No browser automation tool (no MCP playwright/puppeteer, no dev-browser skill) is wired up in this environment — UI stories can only be verified via typecheck/lint/test + manual code review unless the user adds one. Note this explicitly in progress reports rather than claiming visual verification was done.
+  - /dashboard/* routes are gated by Clerk middleware (proxy.ts) — curl without a session returns 404, not the page content. This is expected auth behavior, not a bug.
+  - Separately fixed (outside PRD scope): .env.local had literal placeholder Clerk keys (pk_test_placeholder/sk_test_placeholder) causing a "Publishable key not valid" runtime error. Replaced with real keys provided by the user and restarted the dev server.
+---

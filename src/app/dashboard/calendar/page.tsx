@@ -255,63 +255,62 @@ export default function CalendarPage() {
       </div>
 
       {viewMode === "calendar" ? (
-        <div className="overflow-x-auto">
-          <div className="flex gap-2 min-w-max">
-            {MONTH_NAMES.map((name, idx) => {
-              const monthNum = idx + 1;
-              const isCurrentMonth = monthNum === currentMonth;
-              const isExpanded = expandedMonth === monthNum;
-              const categories = getMonthCategories(monthNum);
+        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-12 gap-2">
+          {MONTH_NAMES.map((name, idx) => {
+            const monthNum = idx + 1;
+            const isCurrentMonth = monthNum === currentMonth;
+            const isExpanded = expandedMonth === monthNum;
+            const categories = getMonthCategories(monthNum);
 
-              return (
-                <div key={name} className="flex flex-col gap-2 w-28 shrink-0">
-                  <button
-                    onClick={() => setExpandedMonth(isExpanded ? null : monthNum)}
-                    className="rounded-lg p-3 border text-left"
+            return (
+              <div key={name} className="flex flex-col gap-2 w-full">
+                <button
+                  onClick={() => setExpandedMonth(isExpanded ? null : monthNum)}
+                  className="rounded-lg p-3 border text-left w-full"
+                  style={{
+                    backgroundColor: "var(--color-surface)",
+                    borderColor: isCurrentMonth ? "var(--color-primary)" : "var(--color-border)",
+                    borderWidth: isCurrentMonth ? "2px" : "1px",
+                    minHeight: "80px",
+                  }}
+                >
+                  <p
+                    className="text-sm font-semibold mb-2"
                     style={{
-                      backgroundColor: "var(--color-surface)",
-                      borderColor: isCurrentMonth ? "var(--color-primary)" : "var(--color-border)",
-                      borderWidth: isCurrentMonth ? "2px" : "1px",
+                      color: isCurrentMonth ? "var(--color-primary)" : "var(--color-text-primary)",
                     }}
                   >
-                    <p
-                      className="text-sm font-semibold mb-2"
-                      style={{
-                        color: isCurrentMonth ? "var(--color-primary)" : "var(--color-text-primary)",
-                      }}
-                    >
-                      {name}
-                    </p>
-                    <div className="flex flex-wrap gap-1">
-                      {categories.length === 0 ? (
-                        <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>
-                          —
-                        </span>
-                      ) : (
-                        categories.map((cat) => (
-                          <span
-                            key={cat}
-                            className="w-3 h-3 rounded-full"
-                            style={{ backgroundColor: CATEGORY_COLORS[cat] }}
-                            title={cat}
-                          />
-                        ))
-                      )}
-                    </div>
-                  </button>
+                    {name}
+                  </p>
+                  <div className="flex flex-wrap gap-1">
+                    {categories.length === 0 ? (
+                      <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>
+                        —
+                      </span>
+                    ) : (
+                      categories.map((cat) => (
+                        <span
+                          key={cat}
+                          className="w-3 h-3 rounded-full"
+                          style={{ backgroundColor: CATEGORY_COLORS[cat] }}
+                          title={cat}
+                        />
+                      ))
+                    )}
+                  </div>
+                </button>
 
-                  {isExpanded && (
-                    <div
-                      className="rounded-lg p-3 border"
-                      style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)" }}
-                    >
-                      <MonthTaskList monthNum={monthNum} />
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+                {isExpanded && (
+                  <div
+                    className="rounded-lg p-3 border w-full"
+                    style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)" }}
+                  >
+                    <MonthTaskList monthNum={monthNum} />
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
       ) : (
         <div className="flex flex-col gap-6">
