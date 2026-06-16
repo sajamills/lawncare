@@ -26,17 +26,23 @@
       "title": "Diagnose and fix empty generated lawn plans",
       "description": "As a developer, I need to understand why a valid Bermudagrass / Arkansas profile may produce zero tasks on the dashboard and annual calendar, and fix the root cause so the core product promise is delivered.",
       "acceptanceCriteria": [
-        "Trace the full plan-generation flow: sessionStorage onboarding_state → /api/parse-pdf → Claude response → WeeklyPlan[] parsing → weekPlan lookup by ISO week → task rendering in dashboard",
-        "Confirm whether a Bermudagrass / Arkansas (state='AR') profile should produce tasks for the current ISO week (week ~24, June 2026) according to the existing plan data",
-        "Identify the root cause of any zero-task result: check for grass-id mismatch (e.g. 'bermudagrass' vs 'bermuda'), state-code mismatch, week-number off-by-one, Claude returning empty JSON, PDF source missing for AR, or rendering filter dropping all tasks",
-        "Add console.error logging (server-side only, not exposed to users) when plan returns zero tasks for a profile that should have tasks",
-        "Write a Jest or integration test that POSTs { state: 'AR', grassType: '<correct-id>' } to /api/parse-pdf and asserts the response contains at least one task for week 24",
-        "Fix the identified root cause — do not add generic mowing, watering, fertilizer, or herbicide recommendations unless they come from the Claude-generated plan data",
-        "Treat an unexpected zero-task result as an error state: dashboard shows 'We could not generate your plan. Try again or check your lawn details.' with a Retry button and a link to /profile",
-        "Preserve the legitimate quiet-week path: if the plan IS generated but genuinely has no tasks for this specific week, show the next real task from the annual plan with its actual week label (e.g. 'Up next: Week 26 — Apply post-emergent herbicide')",
+        "INVESTIGATE — Week convention: read getISOWeek() in src/app/dashboard/page.tsx and confirm exactly what week number it returns for June 15 2026 under the app's own logic before writing any test fixture. Do not assume ISO week 25 without verifying.",
+        "INVESTIGATE — Trace the full plan-generation path: sessionStorage onboarding_state → POST /api/parse-pdf → Anthropic SDK call → raw text → JSON parse → WeeklyPlan[] → find(w => w.week === currentWeek) → setTasks(). Read src/app/api/parse-pdf/route.ts in full.",
+        "INVESTIGATE — Identify the failure stage: (a) grass-id mismatch between grassTypes[].id and what Claude's prompt sends; (b) state/region key mismatch in extension-sources data; (c) week-number produced by getISOWeek() not matching week values in WeeklyPlan[]; (d) Claude returning malformed JSON; (e) JSON.parse throwing and being silently swallowed; (f) /api/parse-pdf 4xx/5xx swallowed by the dashboard's catch block.",
+        "TESTS — All tests must use deterministic in-process fixtures. Do NOT call Claude, Anthropic, or any external PDF service from tests.",
+        "TEST 1 — A fixture WeeklyPlan[] for AR + Bermudagrass containing tasks in multiple weeks is stored as a JSON file in __tests__/fixtures/ar-bermudagrass-plan.json.",
+        "TEST 2 — Given the fixture, the lookup getWeekPlan(plan, knownWeek) returns the correct WeeklyTask[] for that week (tests the week-lookup logic in isolation).",
+        "TEST 3 — Given the fixture and a week that has no tasks, the 'next real task' finder returns the nearest future week entry with tasks (not a hardcoded message).",
+        "TEST 4 — A malformed AI response (empty string, '{', '[]', null) is caught and results in a plan-generation error, not a zero-task success.",
+        "TEST 5 — A failed generation attempt does not overwrite a previously valid cached plan in the DB (test the cache-read-before-write logic in the API route).",
+        "TEST 6 — Grass IDs and state codes are normalized to lowercase + trimmed before lookup so 'Bermuda ' and 'BERMUDA' both match the canonical id.",
+        "LOGGING — Add server-side console.error (never client-side) at each failure stage: JSON parse failure, empty-plan result for a profile that reached Claude, week-lookup miss. Log the stage name and input values (state, grassType, week) but never user PII.",
+        "FIX — Fix the identified root cause without adding any generic advice (mowing, watering, fertilizer) that does not come from the Claude-generated plan data.",
+        "EMPTY PLAN ERROR STATE — When /api/parse-pdf returns an empty plan or the dashboard's fetch fails, show: heading 'We could not build your plan' with body 'Something went wrong generating your recommendations.' plus a Retry button (re-calls loadData) and a link to /profile labeled 'Check your lawn details'.",
+        "QUIET WEEK STATE — When the annual plan IS populated but the current week has no tasks, show the next real future task from the plan: 'Nothing due this week. Up next: [task.title] — Week [week].' with a link to the calendar. No hardcoded advice.",
         "Typecheck passes",
         "Tests pass",
-        "Verify in browser using dev-browser skill"
+        "Verify in browser using dev-browser skill — confirm a Bermudagrass / AR profile either shows real tasks or the correct quiet-week or error state"
       ],
       "priority": 2,
       "passes": false,
@@ -259,38 +265,6 @@
       "notes": ""
     },
     {
-      "id": "US-016",
-      "title": "⚠️ BLOCKED — Create /about page and add footer to landing page",
-      "description": "As a Facebook visitor, I want to find out who built LawnGuide and why, so I can decide whether to trust it with my lawn.",
-      "acceptanceCriteria": [
-        "Create src/app/about/page.tsx as a server component",
-        "Content: heading 'About LawnGuide', then 3 short sections: (1) 'What is LawnGuide?' — explain it provides personalized lawn care plans based on USDA zone, grass type, and university extension guidance; (2) 'How recommendations are generated' — explain the plan uses state extension publications and seasonal timing rules for each grass type; (3) 'Contact' — 'Questions or feedback? Email us at [contact email placeholder].' wrapped in a <p>",
-        "Max-width container: max-w-2xl mx-auto px-6 py-12",
-        "Add a simple footer to src/app/page.tsx (the landing page) just before the closing </main>: <footer className='px-6 py-8 border-t text-center text-sm flex flex-wrap justify-center gap-4' style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-muted)' }}> with links to /faq (FAQ), /about (About), /privacy (Privacy)</footer>",
-        "Each footer link: style={{ color: 'var(--color-text-muted)' }} hover:underline",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
-      ],
-      "priority": 16,
-      "passes": false,
-      "notes": "⚠️ BLOCKED: 'Contact' section contains '[contact email placeholder]' — fabricated contact info must not ship. Do not implement until a real address is provided by the product owner. The footer portion (FAQ/About/Privacy links) may be implemented separately once the About page is unblocked."
-    },
-    {
-      "id": "US-017",
-      "title": "⚠️ BLOCKED — Create /privacy page explaining data storage",
-      "description": "As a user, I want to understand what data LawnGuide stores and where so I can make an informed decision before entering my ZIP and lawn details.",
-      "acceptanceCriteria": [
-        "Create src/app/privacy/page.tsx as a server component",
-        "Heading: 'Privacy Policy' in text-3xl font-bold",
-        "Sections: (1) 'What we collect' — ZIP code, state, grass type, lawn size, pet ownership, sun exposure, and treatment history you provide during onboarding; (2) 'Where it's stored' — 'Your lawn profile is stored in your browser's local and session storage. It is not transmitted to our servers or shared with third parties except as needed to generate your plan (see below).'; (3) 'Plan generation' — 'To generate your plan, we send your state and grass type to our plan service. No personally identifying information is sent.'; (4) 'Analytics' — 'We may use anonymous usage analytics to understand how the product is used. No personally identifying data is included.'; (5) 'Deleting your data' — 'To delete your data, clear your browser's site data for this domain. There is no account to delete.'",
-        "Max-width container: max-w-2xl mx-auto px-6 py-12; each section heading text-xl font-semibold mb-2 mt-6; body text-base leading-relaxed var(--color-text-muted)",
-        "Typecheck passes"
-      ],
-      "priority": 17,
-      "passes": false,
-      "notes": "⚠️ BLOCKED: Privacy page language ('stored in your browser', 'no account to delete') conflicts with Clerk authentication and the server-side users table (clerk_user_id, email, subscription_status) already implemented in US-057. The actual storage model is now server-side. This page must be rewritten to accurately describe Clerk auth, server-side profile storage, and the user's right to request deletion — not just local browser storage. Do not implement until the accurate data model is confirmed."
-    },
-    {
       "id": "US-018",
       "title": "Add Open Graph meta tags for Facebook link previews",
       "description": "As a marketer, I want Facebook to show a proper preview image, title, and description when the link is shared, so more people click through.",
@@ -341,24 +315,6 @@
       "notes": ""
     },
     {
-      "id": "US-021",
-      "title": "⚠️ BLOCKED — Add 'See a sample plan' link on landing page",
-      "description": "As a first-time visitor, I want to see what a real plan looks like before entering my information so I know the product is worth my time.",
-      "acceptanceCriteria": [
-        "Create src/app/sample/page.tsx as a server component showing a hardcoded sample plan",
-        "Page heading: 'Sample Lawn Plan — Bermudagrass, Georgia (Zone 8a)' in text-2xl font-bold",
-        "Add a note: <p className='text-sm mb-6' style={{ color: 'var(--color-text-muted)' }}>This is an example plan. Build your own free plan below.</p> followed by a Link to /onboarding/1 with the 'Build my free lawn plan →' CTA",
-        "Render 3 hardcoded sample task cards using the same markup as dashboard task cards (rounded-lg p-4 border with left border), one urgent (Apply pre-emergent herbicide), one routine (Mow at 1.5 inches), one optional (Aerate if compaction is visible)",
-        "Each sample card includes: timing label, title, description with a rate, and a source note: <p className='text-xs mt-1' style={{ color: 'var(--color-text-muted)' }}>Source: University of Georgia Extension, Bermudagrass Lawn Care Calendar</p>",
-        "On src/app/page.tsx, add below the main CtaButton in the hero: <Link href='/sample' className='text-sm underline' style={{ color: 'var(--color-text-muted)' }}>See a sample plan first</Link>",
-        "Typecheck passes",
-        "Verify in browser using dev-browser skill"
-      ],
-      "priority": 21,
-      "passes": false,
-      "notes": "⚠️ BLOCKED — two issues: (1) Hardcoded treatment recommendations (pre-emergent herbicide, mow at 1.5 inches, aerate) are not verified plan data — they must come from real Claude-generated output or be labeled clearly as illustrative only; (2) 'Source: University of Georgia Extension, Bermudagrass Lawn Care Calendar' is an unverified citation — the actual URL and publication title must be confirmed before display. Implement after US-002 (plan diagnosis) resolves what real plan data looks like, then use a real generated excerpt or clearly mock data with no source attribution."
-    },
-    {
       "id": "US-022",
       "title": "Show quantity calculation breakdown on task cards",
       "description": "As a user, I want to see how my fertilizer quantity was calculated (rate × my lawn size = total) so I know the recommendation is based on my actual yard.",
@@ -407,19 +363,17 @@
     },
     {
       "id": "US-025",
-      "title": "Add hero image placeholder and improve above-fold layout",
-      "description": "As a visitor, I want the hero section to feel less like an empty dark screen and more like a credible product page, so I'm more likely to start onboarding.",
+      "title": "Reduce hero top padding",
+      "description": "As a visitor on mobile, I want the headline and CTA visible without scrolling through an empty dark band.",
       "acceptanceCriteria": [
-        "In src/app/page.tsx hero section, add a visual element between the headline/CTA and the Features section: a rounded-xl div with var(--color-surface) background, var(--color-border) border, p-6, max-w-lg mx-auto, showing the two MOCK_TASKS already defined in the file — render them as mini-cards (same markup as the Product preview section below but with compact padding p-3)",
-        "Add a caption below the mini-cards: <p className='text-xs text-center mt-3' style={{ color: 'var(--color-text-muted)' }}>Example tasks from a Bermudagrass plan in Georgia</p>",
-        "Reduce hero top padding from pt-20 to pt-12 to tighten the empty band above the headline",
-        "The Features section and everything below remain unchanged",
+        "In src/app/page.tsx, change the hero section top padding from pt-20 to pt-12",
+        "No mock task cards added to the hero — that portion of the original story is deferred to tasks/deferred-ui-stories.md pending US-002 diagnosis",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 25,
       "passes": false,
-      "notes": "⚠️ REVIEW REQUIRED: MOCK_TASKS include 'Apply pre-emergent herbicide' and 'Mow at 3.5 inches' — hardcoded treatment recommendations displayed to visitors. These are labeled 'Example tasks' which mitigates but does not eliminate risk. The product preview section below the hero already shows the same mock tasks. Adding them again in the hero doubles hardcoded advice content. Implement the padding reduction (pt-20 → pt-12) which is safe, but hold the mock-card duplication until after US-002 confirms what real plan output looks like — at that point, prefer a real plan excerpt over duplicated mock content."
+      "notes": ""
     }
   ]
 }
