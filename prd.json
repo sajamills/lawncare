@@ -1,6 +1,6 @@
 {
   "project": "LawnGuide",
-  "branchName": "ralph/platform-features",
+  "branchName": "ralph/ui-ux-remediation",
   "description": "UI/UX Remediation — fix core product promise, responsive layout, onboarding clarity, copy quality, and trust/conversion for Facebook-sourced mobile users (Gen X, Boomers, early Millennials)",
   "userStories": [
     {
@@ -23,15 +23,19 @@
     },
     {
       "id": "US-002",
-      "title": "Replace empty dashboard 'Nothing urgent' copy with useful content",
-      "description": "As a user, I want to see what comes next when no special treatment is due this week, so I always have a clear next action.",
+      "title": "Diagnose and fix empty generated lawn plans",
+      "description": "As a developer, I need to understand why a valid Bermudagrass / Arkansas profile may produce zero tasks on the dashboard and annual calendar, and fix the root cause so the core product promise is delivered.",
       "acceptanceCriteria": [
-        "In src/app/dashboard/page.tsx, find the empty tasks state block (currently shows 'Nothing urgent this week — check back soon')",
-        "Replace with: heading 'Your lawn is on track.' in font-semibold var(--color-text-primary), followed by body 'No special treatments are due this week. Continue routine care — mow at the right height, water when needed, and watch for early weed growth.' in text-sm var(--color-text-muted)",
-        "Below the body text, add a Link to /dashboard/calendar styled as a text link: 'See what's coming up this season →' in var(--color-primary) text-sm",
-        "When nextWeekTasks is also empty (no upcoming tasks), add a second line: 'Your next seasonal task will appear here when timing is right based on your location and grass type.'",
-        "The surrounding card keeps its existing rounded-lg p-6 border styling",
+        "Trace the full plan-generation flow: sessionStorage onboarding_state → /api/parse-pdf → Claude response → WeeklyPlan[] parsing → weekPlan lookup by ISO week → task rendering in dashboard",
+        "Confirm whether a Bermudagrass / Arkansas (state='AR') profile should produce tasks for the current ISO week (week ~24, June 2026) according to the existing plan data",
+        "Identify the root cause of any zero-task result: check for grass-id mismatch (e.g. 'bermudagrass' vs 'bermuda'), state-code mismatch, week-number off-by-one, Claude returning empty JSON, PDF source missing for AR, or rendering filter dropping all tasks",
+        "Add console.error logging (server-side only, not exposed to users) when plan returns zero tasks for a profile that should have tasks",
+        "Write a Jest or integration test that POSTs { state: 'AR', grassType: '<correct-id>' } to /api/parse-pdf and asserts the response contains at least one task for week 24",
+        "Fix the identified root cause — do not add generic mowing, watering, fertilizer, or herbicide recommendations unless they come from the Claude-generated plan data",
+        "Treat an unexpected zero-task result as an error state: dashboard shows 'We could not generate your plan. Try again or check your lawn details.' with a Retry button and a link to /profile",
+        "Preserve the legitimate quiet-week path: if the plan IS generated but genuinely has no tasks for this specific week, show the next real task from the annual plan with its actual week label (e.g. 'Up next: Week 26 — Apply post-emergent herbicide')",
         "Typecheck passes",
+        "Tests pass",
         "Verify in browser using dev-browser skill"
       ],
       "priority": 2,
@@ -256,7 +260,7 @@
     },
     {
       "id": "US-016",
-      "title": "Create /about page and add footer to landing page",
+      "title": "⚠️ BLOCKED — Create /about page and add footer to landing page",
       "description": "As a Facebook visitor, I want to find out who built LawnGuide and why, so I can decide whether to trust it with my lawn.",
       "acceptanceCriteria": [
         "Create src/app/about/page.tsx as a server component",
@@ -269,11 +273,11 @@
       ],
       "priority": 16,
       "passes": false,
-      "notes": ""
+      "notes": "⚠️ BLOCKED: 'Contact' section contains '[contact email placeholder]' — fabricated contact info must not ship. Do not implement until a real address is provided by the product owner. The footer portion (FAQ/About/Privacy links) may be implemented separately once the About page is unblocked."
     },
     {
       "id": "US-017",
-      "title": "Create /privacy page explaining data storage",
+      "title": "⚠️ BLOCKED — Create /privacy page explaining data storage",
       "description": "As a user, I want to understand what data LawnGuide stores and where so I can make an informed decision before entering my ZIP and lawn details.",
       "acceptanceCriteria": [
         "Create src/app/privacy/page.tsx as a server component",
@@ -284,7 +288,7 @@
       ],
       "priority": 17,
       "passes": false,
-      "notes": ""
+      "notes": "⚠️ BLOCKED: Privacy page language ('stored in your browser', 'no account to delete') conflicts with Clerk authentication and the server-side users table (clerk_user_id, email, subscription_status) already implemented in US-057. The actual storage model is now server-side. This page must be rewritten to accurately describe Clerk auth, server-side profile storage, and the user's right to request deletion — not just local browser storage. Do not implement until the accurate data model is confirmed."
     },
     {
       "id": "US-018",
@@ -338,7 +342,7 @@
     },
     {
       "id": "US-021",
-      "title": "Add 'See a sample plan' link on landing page",
+      "title": "⚠️ BLOCKED — Add 'See a sample plan' link on landing page",
       "description": "As a first-time visitor, I want to see what a real plan looks like before entering my information so I know the product is worth my time.",
       "acceptanceCriteria": [
         "Create src/app/sample/page.tsx as a server component showing a hardcoded sample plan",
@@ -352,7 +356,7 @@
       ],
       "priority": 21,
       "passes": false,
-      "notes": ""
+      "notes": "⚠️ BLOCKED — two issues: (1) Hardcoded treatment recommendations (pre-emergent herbicide, mow at 1.5 inches, aerate) are not verified plan data — they must come from real Claude-generated output or be labeled clearly as illustrative only; (2) 'Source: University of Georgia Extension, Bermudagrass Lawn Care Calendar' is an unverified citation — the actual URL and publication title must be confirmed before display. Implement after US-002 (plan diagnosis) resolves what real plan data looks like, then use a real generated excerpt or clearly mock data with no source attribution."
     },
     {
       "id": "US-022",
@@ -415,7 +419,7 @@
       ],
       "priority": 25,
       "passes": false,
-      "notes": ""
+      "notes": "⚠️ REVIEW REQUIRED: MOCK_TASKS include 'Apply pre-emergent herbicide' and 'Mow at 3.5 inches' — hardcoded treatment recommendations displayed to visitors. These are labeled 'Example tasks' which mitigates but does not eliminate risk. The product preview section below the hero already shows the same mock tasks. Adding them again in the hero doubles hardcoded advice content. Implement the padding reduction (pt-20 → pt-12) which is safe, but hold the mock-card duplication until after US-002 confirms what real plan output looks like — at that point, prefer a real plan excerpt over duplicated mock content."
     }
   ]
 }
