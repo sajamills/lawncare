@@ -67,6 +67,32 @@
       "notes": "Corrected after reopen: grid changed to grid-cols-1 sm:2 md:3 lg:4 xl:6 (was lg:12, too narrow). Month cards: w-full, no fixed width, text wraps (break-words), minHeight 96px, visible focus-visible ring, current month marked with text label \"Now\" (not color alone), expanded/selected month marked with a chevron icon + surface-alt background (not color alone). Added Playwright (@playwright/test) with e2e/calendar.spec.ts covering all 7 required viewports (320x800 through 1920x1080): asserts no document- or grid-level horizontal overflow, Jan/Dec cards present and within viewport bounds, zero .overflow-x-auto elements, and list/calendar toggle remains functional. Screenshots captured at 375/768/1440px under e2e/screenshots/ (gitignored). Added a non-production, env-var-gated auth bypass in middleware.ts (PLAYWRIGHT_TEST_BYPASS_AUTH=1) solely so Playwright can render protected /dashboard/calendar without real Clerk credentials; disabled whenever NODE_ENV===production. Verified git grep for sk_test_/pk_test_ returns zero tracked-file matches (placeholder strings in env.local.example were reworded to your-clerk-publishable-key/your-clerk-secret-key to fully clear the literal grep check); confirmed .env.local remains gitignored and the real key values are absent from all tracked files. All gates pass: npm test (47), npx tsc --noEmit, eslint (clean on all files touched by this story; a pre-existing unrelated lint failure in src/app/profile/page.tsx from US-001 is out of scope), npx playwright test (7/7)."
     },
     {
+      "id": "US-CLERK-CSS",
+      "title": "Fix Clerk sign-in and sign-up component styling",
+      "description": "As a user, I want the Clerk authentication screens to match LawnGuide's theme and remain fully readable, so I can sign in or create an account without low-contrast text, overlapping layers, or broken third-party component styles.",
+      "acceptanceCriteria": [
+        "Inspect the Clerk SignIn and SignUp appearance configuration and identify why headings, labels, divider text, footer text, and provider buttons render with near-black text on dark green surfaces.",
+        "Ensure all Clerk text is readable against its background, including headings, subheadings, labels, links, divider text, validation messages, footer text, and development-mode messaging.",
+        "Ensure the Google authentication button has a readable label, visible border, and clear hover and focus states.",
+        "Ensure email inputs, password inputs, verification inputs, and their placeholders use LawnGuide-compatible foreground, background, border, error, focus, and disabled colors.",
+        "Ensure primary Clerk buttons meet contrast requirements and use readable text in default, hover, focus, active, loading, and disabled states.",
+        "Ensure secondary links such as 'Sign up', 'Sign in', 'Forgot password', and Clerk footer links remain visible and are not obscured by surrounding containers.",
+        "Remove any unintended dark overlay, opacity, inherited text color, mix-blend behavior, or parent styling that dims the Clerk card contents.",
+        "The Clerk card must not appear as a translucent dark layer over another card unless that treatment is intentional and all content remains readable.",
+        "Match the auth card width, border radius, spacing, and page alignment to the LawnGuide design system without using brittle selectors tied to generated Clerk class names.",
+        "Use Clerk's supported appearance API, elements configuration, CSS variables, or documented customization hooks rather than global CSS overrides that could break after a Clerk update.",
+        "Keep Clerk's Development mode indicator visible in local development, but ensure it does not overlap controls or make surrounding text unreadable.",
+        "Verify both /sign-in and /sign-up, including email flow, Google flow, verification screens, password reset, validation errors, loading states, and account-switching states.",
+        "Verify at 320, 375, 414, 768, and 1440 CSS pixel widths with no clipping, overflow, or hidden controls.",
+        "Verify keyboard focus is clearly visible and the complete auth flow can be navigated without a mouse.",
+        "Add screenshots or visual regression coverage for sign-in and sign-up at representative mobile and desktop widths.",
+        "Run typecheck, lint, tests, and browser verification."
+      ],
+      "priority": 4,
+      "passes": false,
+      "notes": "Observed issue: Clerk card content is rendered extremely low contrast on the dark green LawnGuide background. Most headings, labels, divider text, footer text, and the Google button label are nearly unreadable, while the white email input and green Continue button remain visible. Investigate both Clerk appearance settings and inherited/global CSS."
+    },
+    {
       "id": "US-004",
       "title": "Replace calendar month dashes with descriptive no-task text",
       "description": "As a user, I want months with no special tasks to show a helpful message instead of a dash, so the calendar doesn't look empty or broken.",
@@ -77,7 +103,7 @@
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
-      "priority": 4,
+      "priority": 5,
       "passes": false,
       "notes": ""
     },
@@ -93,7 +119,7 @@
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
-      "priority": 5,
+      "priority": 6,
       "passes": false,
       "notes": ""
     },
@@ -109,7 +135,7 @@
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
-      "priority": 6,
+      "priority": 7,
       "passes": false,
       "notes": ""
     },
@@ -124,7 +150,7 @@
         "Search all .tsx files in src/ for the string 'science-backed' and replace with 'based on university extension guidance' using a grep: grep -r 'science-backed' src/ to find all occurrences",
         "Typecheck passes"
       ],
-      "priority": 7,
+      "priority": 8,
       "passes": false,
       "notes": ""
     },
@@ -139,7 +165,7 @@
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
-      "priority": 8,
+      "priority": 9,
       "passes": false,
       "notes": ""
     },
@@ -156,7 +182,7 @@
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
-      "priority": 9,
+      "priority": 10,
       "passes": false,
       "notes": ""
     },
@@ -172,7 +198,7 @@
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
-      "priority": 10,
+      "priority": 11,
       "passes": false,
       "notes": ""
     },
@@ -189,7 +215,7 @@
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
-      "priority": 11,
+      "priority": 12,
       "passes": false,
       "notes": ""
     },
@@ -206,7 +232,7 @@
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
-      "priority": 12,
+      "priority": 13,
       "passes": false,
       "notes": ""
     },
@@ -224,7 +250,7 @@
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
-      "priority": 13,
+      "priority": 14,
       "passes": false,
       "notes": ""
     },
@@ -242,7 +268,7 @@
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
-      "priority": 14,
+      "priority": 15,
       "passes": false,
       "notes": ""
     },
@@ -260,7 +286,7 @@
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
-      "priority": 15,
+      "priority": 16,
       "passes": false,
       "notes": ""
     },
@@ -276,7 +302,7 @@
         "Verify the metadata export compiles with no TypeScript errors",
         "Typecheck passes"
       ],
-      "priority": 18,
+      "priority": 19,
       "passes": false,
       "notes": ""
     },
@@ -294,7 +320,7 @@
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
-      "priority": 19,
+      "priority": 20,
       "passes": false,
       "notes": ""
     },
@@ -310,7 +336,7 @@
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
-      "priority": 20,
+      "priority": 21,
       "passes": false,
       "notes": ""
     },
@@ -327,7 +353,7 @@
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
-      "priority": 22,
+      "priority": 23,
       "passes": false,
       "notes": ""
     },
@@ -342,7 +368,7 @@
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
-      "priority": 23,
+      "priority": 24,
       "passes": false,
       "notes": ""
     },
@@ -357,7 +383,7 @@
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
-      "priority": 24,
+      "priority": 25,
       "passes": false,
       "notes": ""
     },
@@ -371,7 +397,7 @@
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
-      "priority": 25,
+      "priority": 26,
       "passes": false,
       "notes": ""
     }
