@@ -74,7 +74,7 @@ function CtaButton() {
         color: "var(--color-background)",
       }}
     >
-      Get my free lawn plan →
+      Build my free lawn plan →
     </Link>
   );
 }
@@ -97,14 +97,14 @@ export default function Home() {
           className="text-4xl font-bold leading-tight max-w-xl"
           style={{ color: "var(--color-text-primary)" }}
         >
-          The lawn plan built for your yard, your grass, and your zone.
+          A lawn-care plan for your grass and your location
         </h1>
         <p
           className="text-lg max-w-md"
           style={{ color: "var(--color-text-muted)" }}
         >
-          Answer a few questions and get a science-backed care calendar — free,
-          no account required.
+          Answer a few questions and see what to do this week, what is coming
+          next, and the university guidance behind every recommendation.
         </p>
         <div className="flex flex-col items-center gap-2">
           <CtaButton />
@@ -265,7 +265,7 @@ export default function Home() {
           className="text-2xl font-bold text-center"
           style={{ color: "var(--color-text-primary)" }}
         >
-          Ready to get started?
+          Your plan is free and ready in 2 minutes.
         </h2>
         <CtaButton />
       </section>

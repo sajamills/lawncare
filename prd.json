@@ -136,8 +136,8 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 7,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "All four copy changes applied in src/app/page.tsx: CtaButton label (single shared component used in both the hero and bottom CTA section, so updating it once covers both), h1, hero sub-copy, and the bottom section heading. Pure text change, no layout/responsive/color impact, no e2e/vitest tests referenced the old copy. Full suite at the end: tsc clean, vitest 47/47, eslint clean (only pre-existing unrelated profile/page.tsx failures from US-001), playwright 24/24."
     },
     {
       "id": "US-007",

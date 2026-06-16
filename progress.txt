@@ -144,3 +144,10 @@ Started: Sun Jun 15 2026 — UI/UX Remediation Sprint
 - **Learnings for future iterations:**
   - When a story changes default UI state based on viewport/localStorage, check whether existing e2e tests assumed the old default — they may need a same-story update (not scope creep) rather than a separate story, since the test is directly verifying the changed behavior.
 ---
+
+## 2026-06-16 - US-006
+- Updated landing page copy in src/app/page.tsx: CtaButton label ("Build my free lawn plan →", shared component rendered in both the hero and bottom CTA section so one edit covers both), hero h1 ("A lawn-care plan for your grass and your location"), hero sub-copy, and bottom section heading ("Your plan is free and ready in 2 minutes.").
+- Files changed: src/app/page.tsx
+- **Learnings for future iterations:**
+  - Landing page CTA text lives in a single shared CtaButton() component in src/app/page.tsx, reused for both the hero and the bottom-of-page CTA — copy edits there propagate to both locations automatically.
+---
