@@ -45,7 +45,7 @@
         "Verify in browser using dev-browser skill — confirm a Bermudagrass / AR profile either shows real tasks or the correct quiet-week or error state"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {

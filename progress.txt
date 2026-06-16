@@ -13,7 +13,11 @@
 - grassTypes data in `src/data/grass-types.ts`; each entry has id, name, description, traits[], photoUrl, photoCredit, bladeWidth, texture, activeSeason
 - Pre-emergent windows in `src/data/preemergent-windows.ts`; getPreemergentWindow(state) returns spring/fall date ranges
 - `/api/parse-pdf` route: accepts { state, grassType, pdfUrl? }; checks DB cache first; calls Claude claude-sonnet-4-6; returns WeeklyPlan[] (52 entries); WeeklyPlan and WeeklyTask types exported from that route file
-- ISO week utility getISOWeek(date): uses UTC math; week 1 = week containing Jan 4
+- ISO week utility getISOWeek(date): uses UTC math; week 1 = week containing Jan 4. June 15 2026 = ISO week 25 (verified). Now lives in src/lib/week-utils.ts (shared between dashboard and tests)
+- Shared week/plan utilities in src/lib/week-utils.ts: getISOWeek, getWeekDateRange, normalizeGrassId, normalizeStateCode, getWeekPlan, findNextTaskWeek
+- Test fixtures in __tests__/fixtures/ — use deterministic JSON, never call Claude/external APIs from tests
+- vitest installed; npm test runs __tests__/plan-utils.test.ts (16 tests)
+- grassType and state MUST be normalized before cache lookup: normalizeGrassId (lowercase+trim), normalizeStateCode (uppercase+trim)
 - Pexels CDN URL format: https://images.pexels.com/photos/[ID]/pexels-photo-[ID].jpeg?auto=compress&cs=tinysrgb&w=640 — ALWAYS verify photo ID returns 200 before using
 - next.config.ts has PWA wrapper in prod — add config changes to base nextConfig object before the PWA wrap
 - Bracket paths require quoting in git add: git add "src/app/onboarding/[step]/..."
@@ -45,4 +49,20 @@ Started: Sun Jun 15 2026 — UI/UX Remediation Sprint
 - **Learnings for future iterations:**
   - Profile page uses getSessionId() from localStorage for DB queries — Clerk user_id migration is in platform-features PRD (US-060), not yet done
   - canSave must be derived at render time (not inside handleSave) so button disabled state is reactive
+---
+
+## 2026-06-15 - US-002
+- Root causes diagnosed (multiple, all fixed):
+  1. SYSTEM_PROMPT said "week 1 = first week of January" without ISO 8601 spec — Claude's week numbering could drift from getISOWeek(). Fixed: SYSTEM_PROMPT now explicitly specifies ISO 8601 week numbering
+  2. Claude returning '[]' was silently treated as success (valid JSON, passes JSON.parse) — Fixed: added post-parse check that throws if plan.length === 0
+  3. grassType not normalized before cache lookup — 'Bermudagrass' missed cache keyed as 'bermudagrass'. Fixed: normalizeGrassId() applied before all lookups
+  4. Dashboard swallowed fetch errors silently with catch{}; !res.ok path never set error state. Fixed: planError state + error card UI
+  5. Quiet-week state showed generic copy not derived from plan data. Fixed: findNextTaskWeek() finds real next task
+- Files changed: src/app/api/parse-pdf/route.ts, src/app/dashboard/page.tsx
+- New files: src/lib/week-utils.ts, __tests__/fixtures/ar-bermudagrass-plan.json, __tests__/plan-utils.test.ts, vitest.config.ts
+- **Learnings for future iterations:**
+  - getISOWeek(June 15 2026) = 25 (verified by UTC math and by test)
+  - Empty array [] from LLM is a common failure mode — always check plan.length > 0 after JSON.parse
+  - Dashboard retryCount state pattern: increment to re-run useEffect without page refresh
+  - All plan utility functions (getISOWeek, findNextTaskWeek, etc.) live in src/lib/week-utils.ts — import from there, not dashboard.tsx
 ---
