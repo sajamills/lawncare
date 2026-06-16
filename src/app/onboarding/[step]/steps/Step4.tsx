@@ -47,7 +47,7 @@ function TraitChip({ label }: { label: string }) {
   return (
     <span
       className="text-xs px-2 py-0.5 rounded-full"
-      style={{ backgroundColor: "#1a3a1a", color: "var(--color-text-muted)" }}
+      style={{ backgroundColor: "var(--color-surface-alt)", color: "var(--color-text-muted)" }}
     >
       {label}
     </span>
@@ -67,15 +67,16 @@ function GrassCard({
     <button
       type="button"
       onClick={onSelect}
-      className="rounded-lg border text-left overflow-hidden transition-all flex flex-col"
+      className="rounded-lg border text-left overflow-hidden transition-all flex flex-col hover:opacity-90"
       style={{
         backgroundColor: "var(--color-surface)",
-        borderColor: isSelected ? "var(--color-primary)" : "#2d4a2d",
-        borderWidth: isSelected ? "2px" : "1px",
+        borderColor: isSelected ? "var(--color-primary)" : "var(--color-border)",
+        borderWidth: "2px",
+        boxShadow: isSelected ? "0 0 0 3px var(--color-primary)" : "none",
       }}
     >
       {/* Photo */}
-      <div className="relative w-full aspect-video bg-[#1a3a1a]">
+      <div className="relative w-full aspect-square bg-[var(--color-surface-alt)]">
         <Image
           src={grass.photoUrl}
           alt={`${grass.name} grass`}
@@ -107,10 +108,19 @@ function GrassCard({
           <TraitChip
             label={grass.activeSeason === "warm" ? "Warm season" : "Cool season"}
           />
+          <TraitChip
+            label={
+              grass.texture === "soft"
+                ? "Soft texture"
+                : grass.texture === "stiff"
+                ? "Stiff texture"
+                : "Rough texture"
+            }
+          />
         </div>
         <p
-          className="text-[10px] leading-tight mt-0.5"
-          style={{ color: "var(--color-text-muted)", opacity: 0.6 }}
+          className="text-xs leading-tight mt-0.5"
+          style={{ color: "var(--color-text-muted)" }}
         >
           {grass.photoCredit}
         </p>

@@ -99,7 +99,7 @@ export default function Step1({ onNext }: { onNext: () => void }) {
             setError("");
           }}
           placeholder="e.g. 27513"
-          className="w-full px-4 py-3 rounded-lg text-lg outline-none border"
+          className="w-full px-4 py-3 rounded-lg text-lg border"
           style={{
             backgroundColor: "var(--color-surface)",
             color: "var(--color-text-primary)",

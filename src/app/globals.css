@@ -23,3 +23,10 @@ body {
   background-color: var(--color-background);
   color: var(--color-text-primary);
 }
+
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}

@@ -162,7 +162,7 @@ export default function ProfilePage() {
             onChange={(e) =>
               setZipCode(e.target.value.replace(/\D/g, "").slice(0, 5))
             }
-            className="px-4 py-2 rounded-lg border outline-none"
+            className="px-4 py-2 rounded-lg border"
             style={{
               backgroundColor: "var(--color-surface)",
               color: "var(--color-text-primary)",
@@ -182,7 +182,7 @@ export default function ProfilePage() {
           <select
             value={grassType}
             onChange={(e) => setGrassType(e.target.value)}
-            className="px-4 py-2 rounded-lg border outline-none"
+            className="px-4 py-2 rounded-lg border"
             style={{
               backgroundColor: "var(--color-surface)",
               color: "var(--color-text-primary)",
@@ -211,7 +211,7 @@ export default function ProfilePage() {
             min="0"
             value={sqFt}
             onChange={(e) => setSqFt(e.target.value)}
-            className="px-4 py-2 rounded-lg border outline-none"
+            className="px-4 py-2 rounded-lg border"
             style={{
               backgroundColor: "var(--color-surface)",
               color: "var(--color-text-primary)",
