@@ -12,7 +12,10 @@ import {
 // Re-export types so existing importers (dashboard, calendar) keep working
 export type { WeeklyTask, WeeklyPlan };
 
-const client = new Anthropic();
+function getAnthropicClient(): Anthropic | null {
+  if (!process.env.ANTHROPIC_API_KEY) return null;
+  return new Anthropic();
+}
 
 const SYSTEM_PROMPT = `You are a lawn care expert. Generate a week-by-week care plan for the specified grass type and US state.
 
@@ -114,6 +117,15 @@ export async function POST(request: NextRequest) {
 
   // Call Claude API
   console.log(`[parse-pdf] stage=claude_call state=${stateKey} grass=${grassKey}`);
+  const client = getAnthropicClient();
+  if (!client) {
+    console.error(`[parse-pdf] stage=missing_anthropic_key state=${stateKey} grass=${grassKey}`);
+    return NextResponse.json(
+      { error: "Plan generation is not configured. Missing ANTHROPIC_API_KEY." },
+      { status: 500 }
+    );
+  }
+
   let plan: WeeklyPlan[];
   try {
     let message: Anthropic.Message;
