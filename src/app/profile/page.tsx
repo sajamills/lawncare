@@ -138,9 +138,9 @@ export default function ProfilePage() {
         <div
           className="rounded-lg px-4 py-3 text-sm border"
           style={{
-            backgroundColor: "#3d2000",
-            borderColor: "#854d0e",
-            color: "#fbbf24",
+            backgroundColor: "var(--color-warning-bg)",
+            borderColor: "var(--color-warning-border)",
+            color: "var(--color-warning-text)",
           }}
         >
           ⚠️ Changing your grass type or ZIP code will regenerate your plan.
@@ -166,7 +166,7 @@ export default function ProfilePage() {
             style={{
               backgroundColor: "var(--color-surface)",
               color: "var(--color-text-primary)",
-              borderColor: "#2d4a2d",
+              borderColor: "var(--color-border)",
             }}
           />
         </div>
@@ -186,7 +186,7 @@ export default function ProfilePage() {
             style={{
               backgroundColor: "var(--color-surface)",
               color: "var(--color-text-primary)",
-              borderColor: "#2d4a2d",
+              borderColor: "var(--color-border)",
             }}
           >
             <option value="">Select grass type</option>
@@ -215,7 +215,7 @@ export default function ProfilePage() {
             style={{
               backgroundColor: "var(--color-surface)",
               color: "var(--color-text-primary)",
-              borderColor: "#2d4a2d",
+              borderColor: "var(--color-border)",
             }}
           />
         </div>
@@ -244,7 +244,7 @@ export default function ProfilePage() {
                     color: selected
                       ? "var(--color-background)"
                       : "var(--color-text-primary)",
-                    borderColor: selected ? "var(--color-primary)" : "#2d4a2d",
+                    borderColor: selected ? "var(--color-primary)" : "var(--color-border)",
                   }}
                 >
                   {opt}
@@ -275,7 +275,7 @@ export default function ProfilePage() {
                     color: selected
                       ? "var(--color-primary)"
                       : "var(--color-text-primary)",
-                    borderColor: selected ? "var(--color-primary)" : "#2d4a2d",
+                    borderColor: selected ? "var(--color-primary)" : "var(--color-border)",
                     borderWidth: selected ? "2px" : "1px",
                   }}
                 >

@@ -103,7 +103,7 @@ export default function Step1({ onNext }: { onNext: () => void }) {
           style={{
             backgroundColor: "var(--color-surface)",
             color: "var(--color-text-primary)",
-            borderColor: error ? "#ef4444" : "#2d4a2d",
+            borderColor: error ? "var(--color-urgent)" : "var(--color-border)",
           }}
         />
 
@@ -121,7 +121,7 @@ export default function Step1({ onNext }: { onNext: () => void }) {
       </form>
 
       {error && (
-        <p className="text-sm" style={{ color: "#ef4444" }}>
+        <p className="text-sm" style={{ color: "var(--color-urgent)" }}>
           {error}
         </p>
       )}

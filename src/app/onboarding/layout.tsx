@@ -34,8 +34,8 @@ export default function OnboardingLayout({
                     backgroundColor: isActive
                       ? "var(--color-primary)"
                       : isCompleted
-                      ? "#2d5a2d"
-                      : "#1a2e1a",
+                      ? "var(--color-border-strong)"
+                      : "var(--color-surface)",
                   }}
                 />
               );

@@ -111,7 +111,7 @@ export default function Home() {
                 className="flex flex-col gap-3 p-6 rounded-xl border"
                 style={{
                   backgroundColor: "var(--color-background)",
-                  borderColor: "#2d4a2d",
+                  borderColor: "var(--color-border)",
                 }}
               >
                 <span className="text-3xl">{f.icon}</span>

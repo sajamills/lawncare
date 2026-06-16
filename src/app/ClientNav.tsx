@@ -17,7 +17,7 @@ export default function ClientNav({ children }: { children: React.ReactNode }) {
     <>
       <nav
         style={{ backgroundColor: "var(--color-surface)" }}
-        className="w-full px-6 py-4 flex items-center justify-between border-b border-[#2d4a2d]"
+        className="w-full px-6 py-4 flex items-center justify-between border-b border-[var(--color-border)]"
       >
         <Link
           href="/"
@@ -60,7 +60,7 @@ export default function ClientNav({ children }: { children: React.ReactNode }) {
           className="fixed bottom-0 left-0 right-0 flex md:hidden border-t z-50"
           style={{
             backgroundColor: "var(--color-surface)",
-            borderColor: "#2d4a2d",
+            borderColor: "var(--color-border)",
             height: "56px",
           }}
         >

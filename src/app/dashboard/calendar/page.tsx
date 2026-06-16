@@ -13,12 +13,12 @@ const MONTH_NAMES = [
 
 const CATEGORY_COLORS: Record<TaskCategory, string> = {
   mow: "#4caf50",
-  fertilize: "#eab308",
+  fertilize: "var(--color-warning-text)",
   water: "#3b82f6",
   aerate: "#f97316",
   seed: "#84cc16",
-  "pest-weed": "#ef4444",
-  other: "#6b7280",
+  "pest-weed": "var(--color-urgent)",
+  other: "var(--color-optional)",
 };
 
 const CATEGORY_ICONS: Record<TaskCategory, string> = {
@@ -31,11 +31,13 @@ const CATEGORY_ICONS: Record<TaskCategory, string> = {
   other: "📋",
 };
 
-const PRIORITY_COLORS: Record<TaskPriority, string> = {
-  urgent: "#ef4444",
-  routine: "#eab308",
-  optional: "#6b7280",
+const PRIORITY_COLORS: Record<TaskPriority, { bg: string; text: string }> = {
+  urgent: { bg: "rgba(239,68,68,0.13)", text: "var(--color-urgent)" },
+  routine: { bg: "rgba(234,179,8,0.13)", text: "var(--color-routine)" },
+  optional: { bg: "rgba(107,114,128,0.13)", text: "var(--color-optional)" },
 };
+
+const DEFAULT_PRIORITY = { bg: "rgba(107,114,128,0.13)", text: "var(--color-optional)" };
 
 function weekToMonth(week: number): number {
   return Math.min(Math.ceil(week / (52 / 12)), 12);
@@ -142,7 +144,7 @@ export default function CalendarPage() {
                   className="rounded-lg p-3 border flex flex-col gap-1 mb-2"
                   style={{
                     backgroundColor: "var(--color-surface)",
-                    borderColor: "#2d4a2d",
+                    borderColor: "var(--color-border)",
                   }}
                 >
                   <div className="flex items-center justify-between gap-2">
@@ -160,8 +162,8 @@ export default function CalendarPage() {
                     <span
                       className="text-xs px-1.5 py-0.5 rounded-full shrink-0"
                       style={{
-                        backgroundColor: `${PRIORITY_COLORS[task.priority as TaskPriority] ?? "#6b7280"}22`,
-                        color: PRIORITY_COLORS[task.priority as TaskPriority] ?? "#6b7280",
+                        backgroundColor: (PRIORITY_COLORS[task.priority as TaskPriority] ?? DEFAULT_PRIORITY).bg,
+                        color: (PRIORITY_COLORS[task.priority as TaskPriority] ?? DEFAULT_PRIORITY).text,
                       }}
                     >
                       {task.priority}
@@ -193,7 +195,7 @@ export default function CalendarPage() {
           <div
             key={i}
             className="rounded-lg p-3 border flex flex-col gap-1"
-            style={{ backgroundColor: "var(--color-surface)", borderColor: "#2d4a2d" }}
+            style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)" }}
           >
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-1.5">
@@ -210,8 +212,8 @@ export default function CalendarPage() {
               <span
                 className="text-xs px-1.5 py-0.5 rounded-full shrink-0"
                 style={{
-                  backgroundColor: `${PRIORITY_COLORS[task.priority as TaskPriority] ?? "#6b7280"}22`,
-                  color: PRIORITY_COLORS[task.priority as TaskPriority] ?? "#6b7280",
+                  backgroundColor: (PRIORITY_COLORS[task.priority as TaskPriority] ?? DEFAULT_PRIORITY).bg,
+                  color: (PRIORITY_COLORS[task.priority as TaskPriority] ?? DEFAULT_PRIORITY).text,
                 }}
               >
                 {task.priority}
@@ -234,7 +236,7 @@ export default function CalendarPage() {
         </h1>
         <div
           className="flex rounded-lg overflow-hidden border text-sm"
-          style={{ borderColor: "#2d4a2d" }}
+          style={{ borderColor: "var(--color-border)" }}
         >
           {(["calendar", "list"] as ViewMode[]).map((mode) => (
             <button
@@ -268,7 +270,7 @@ export default function CalendarPage() {
                     className="rounded-lg p-3 border text-left"
                     style={{
                       backgroundColor: "var(--color-surface)",
-                      borderColor: isCurrentMonth ? "var(--color-primary)" : "#2d4a2d",
+                      borderColor: isCurrentMonth ? "var(--color-primary)" : "var(--color-border)",
                       borderWidth: isCurrentMonth ? "2px" : "1px",
                     }}
                   >
@@ -301,7 +303,7 @@ export default function CalendarPage() {
                   {isExpanded && (
                     <div
                       className="rounded-lg p-3 border"
-                      style={{ backgroundColor: "var(--color-surface)", borderColor: "#2d4a2d" }}
+                      style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)" }}
                     >
                       <MonthTaskList monthNum={monthNum} />
                     </div>

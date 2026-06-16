@@ -3,10 +3,20 @@
 @theme {
   --color-background: #0d1a0d;
   --color-surface: #1a2e1a;
+  --color-surface-alt: #132613;
   --color-primary: #4caf50;
   --color-secondary: #a5d6a7;
   --color-text-primary: #e8f5e9;
   --color-text-muted: #81c784;
+  --color-border: #2d4a2d;
+  --color-border-strong: #3a5a3a;
+  --color-warning-bg: #3d3000;
+  --color-warning-border: #6b4c00;
+  --color-warning-text: #eab308;
+  --color-warning-text-muted: #d4a017;
+  --color-urgent: #ef4444;
+  --color-routine: #eab308;
+  --color-optional: #6b7280;
 }
 
 body {

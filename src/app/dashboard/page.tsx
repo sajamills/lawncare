@@ -19,10 +19,10 @@ const CATEGORY_ICONS: Record<TaskCategory, string> = {
   other: "📋",
 };
 
-const PRIORITY_COLORS: Record<TaskPriority, string> = {
-  urgent: "#ef4444",
-  routine: "#eab308",
-  optional: "#6b7280",
+const PRIORITY_COLORS: Record<TaskPriority, { bg: string; text: string }> = {
+  urgent: { bg: "rgba(239,68,68,0.13)", text: "var(--color-urgent)" },
+  routine: { bg: "rgba(234,179,8,0.13)", text: "var(--color-routine)" },
+  optional: { bg: "rgba(107,114,128,0.13)", text: "var(--color-optional)" },
 };
 
 const LOADING_MESSAGES = [
@@ -286,20 +286,20 @@ export default function DashboardPage() {
       {alert && !bannerDismissed && (
         <div
           className="flex items-start gap-3 rounded-lg px-4 py-3 border"
-          style={{ backgroundColor: "#3d3000", borderColor: "#6b4c00" }}
+          style={{ backgroundColor: "var(--color-warning-bg)", borderColor: "var(--color-warning-border)" }}
         >
           <span className="text-lg shrink-0">{alert.season === "spring" ? "🌱" : "🍂"}</span>
           <div className="flex flex-col gap-0.5 flex-1">
-            <p className="font-semibold text-sm" style={{ color: "#eab308" }}>
+            <p className="font-semibold text-sm" style={{ color: "var(--color-warning-text)" }}>
               {alert.weeksAway === null
                 ? "Pre-Emergent Window: Active Now"
                 : `Pre-Emergent Window: ${alert.weeksAway} week${alert.weeksAway === 1 ? "" : "s"} away`}
             </p>
-            <p className="text-xs leading-snug" style={{ color: "#d4a017" }}>
+            <p className="text-xs leading-snug" style={{ color: "var(--color-warning-text-muted)" }}>
               Apply when soil temp reaches {alert.season === "spring" ? "50°F (spring)" : "70°F (fall)"}. Typical window: {alert.startLabel} – {alert.endLabel}
             </p>
           </div>
-          <button type="button" onClick={dismissBanner} className="text-sm shrink-0 mt-0.5" style={{ color: "#eab308" }} aria-label="Dismiss banner">×</button>
+          <button type="button" onClick={dismissBanner} className="text-sm shrink-0 mt-0.5" style={{ color: "var(--color-warning-text)" }} aria-label="Dismiss banner">×</button>
         </div>
       )}
 
@@ -316,7 +316,7 @@ export default function DashboardPage() {
 
       {/* Onboarding gate */}
       {showOnboardingGate && (
-        <div className="rounded-lg p-6 border flex flex-col gap-4" style={{ backgroundColor: "var(--color-surface)", borderColor: "#2d4a2d" }}>
+        <div className="rounded-lg p-6 border flex flex-col gap-4" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)" }}>
           <div>
             <p className="font-bold text-lg mb-1" style={{ color: "var(--color-text-primary)" }}>Set up your lawn profile</p>
             <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>Answer a few quick questions to get your personalized 52-week care plan.</p>
@@ -341,7 +341,7 @@ export default function DashboardPage() {
       {!showOnboardingGate && !generatingPlan && (
         <>
           {sortedTasks.length === 0 ? (
-            <div className="rounded-lg p-6 text-center border" style={{ backgroundColor: "var(--color-surface)", borderColor: "#2d4a2d" }}>
+            <div className="rounded-lg p-6 text-center border" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)" }}>
               <p style={{ color: "var(--color-text-muted)" }}>
                 Nothing urgent this week — check back soon or{" "}
                 <Link href="/dashboard/calendar" className="underline" style={{ color: "var(--color-primary)" }}>
@@ -358,7 +358,7 @@ export default function DashboardPage() {
                   <div
                     key={i}
                     className="rounded-lg p-4 border flex flex-col gap-2"
-                    style={{ backgroundColor: "var(--color-surface)", borderColor: "#2d4a2d", opacity: done ? 0.6 : 1 }}
+                    style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)", opacity: done ? 0.6 : 1 }}
                   >
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2 flex-1 min-w-0">
@@ -370,7 +370,7 @@ export default function DashboardPage() {
                       <div className="flex items-center gap-2 shrink-0">
                         <span
                           className="text-xs px-2 py-0.5 rounded-full font-medium"
-                          style={{ backgroundColor: `${PRIORITY_COLORS[task.priority as TaskPriority]}22`, color: PRIORITY_COLORS[task.priority as TaskPriority] }}
+                          style={{ backgroundColor: PRIORITY_COLORS[task.priority as TaskPriority].bg, color: PRIORITY_COLORS[task.priority as TaskPriority].text }}
                         >
                           {task.priority}
                         </span>
@@ -379,7 +379,7 @@ export default function DashboardPage() {
                           onClick={() => toggleTask(task.title)}
                           className="w-6 h-6 rounded-full border flex items-center justify-center text-xs font-bold shrink-0"
                           style={{
-                            borderColor: done ? "var(--color-primary)" : "#2d4a2d",
+                            borderColor: done ? "var(--color-primary)" : "var(--color-border)",
                             backgroundColor: done ? "var(--color-primary)" : "transparent",
                             color: done ? "var(--color-background)" : "transparent",
                           }}
@@ -393,7 +393,7 @@ export default function DashboardPage() {
                       {scaleQuantity(task.description, sqFt)}
                     </p>
                     {hasPets && task.petSafetyNote && (
-                      <div className="flex items-start gap-2 text-xs px-3 py-2 rounded-md" style={{ backgroundColor: "#3d3000", color: "#eab308" }}>
+                      <div className="flex items-start gap-2 text-xs px-3 py-2 rounded-md" style={{ backgroundColor: "var(--color-warning-bg)", color: "var(--color-warning-text)" }}>
                         <span>⚠️</span>
                         <span>{task.petSafetyNote}</span>
                       </div>
@@ -406,7 +406,7 @@ export default function DashboardPage() {
 
           {/* Up Next */}
           {nextWeekTasks.length > 0 && (
-            <div className="rounded-lg p-4 border" style={{ backgroundColor: "var(--color-surface)", borderColor: "#2d4a2d" }}>
+            <div className="rounded-lg p-4 border" style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)" }}>
               <div className="flex items-baseline gap-1 mb-3">
                 <p className="text-sm font-semibold" style={{ color: "var(--color-text-primary)" }}>Up Next</p>
                 <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>· {nextWeekRange}</span>
