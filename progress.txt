@@ -126,3 +126,13 @@ Started: Sun Jun 15 2026 — UI/UX Remediation Sprint
   - One shared `clerkAppearance` object exported from `src/lib/clerk-appearance.ts` and imported by both SignIn/SignUp pages keeps the two forms visually consistent and avoids duplicating the (long) variables/elements config.
   - Running the full Playwright suite (calendar.spec.ts + clerk-auth.spec.ts, 21 tests) with the default 4 workers intermittently hit Clerk's dev-instance API rate limit ("too_many_requests"), failing only the later /sign-up tests in that worker batch — not a bug in the appearance fix. Mitigated in playwright.config.ts with `workers: 2` and `retries: 1`; reran 3x afterward with 21/21 passing each time.
 ---
+
+## 2026-06-16 - US-004
+- Replaced the empty-state dash/text in the calendar's three no-task render paths with more descriptive copy.
+- Calendar-view month card: when categories.length === 0, now shows "Routine care only" instead of "—".
+- MonthTaskList (expanded month panel) and MonthTaskListFlat (list view): "No tasks this month." replaced with "No seasonal treatments this month. Continue regular mowing and watering." in both.
+- Files changed: src/app/dashboard/calendar/page.tsx
+- **Learnings for future iterations:**
+  - Per updated workflow guidance: during implementation, run only the scoped test/lint/typecheck relevant to the changed file(s); run the full vitest/lint/tsc/playwright suite once at the end of the story, not after every edit. For pure copy/text changes with no layout/responsive/color/typography impact, skip capturing new screenshots.
+  - Do not reinstall or reconfigure Playwright/Vitest infra per story — reuse what already exists (e2e/calendar.spec.ts, playwright.config.ts) unless the story needs new capability.
+---

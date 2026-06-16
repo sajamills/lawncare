@@ -121,7 +121,7 @@ export default function CalendarPage() {
     if (allTasks.length === 0) {
       return (
         <p className="text-sm py-2" style={{ color: "var(--color-text-muted)" }}>
-          No tasks this month.
+          No seasonal treatments this month. Continue regular mowing and watering.
         </p>
       );
     }
@@ -185,7 +185,7 @@ export default function CalendarPage() {
     if (tasks.length === 0) {
       return (
         <p className="text-sm py-2" style={{ color: "var(--color-text-muted)" }}>
-          No tasks this month.
+          No seasonal treatments this month. Continue regular mowing and watering.
         </p>
       );
     }
@@ -303,9 +303,9 @@ export default function CalendarPage() {
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {categories.length === 0 ? (
-                      <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>
-                        —
-                      </span>
+                      <p className="text-xs leading-tight" style={{ color: "var(--color-text-muted)" }}>
+                        Routine care only
+                      </p>
                     ) : (
                       categories.map((cat) => (
                         <span
