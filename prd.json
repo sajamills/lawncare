@@ -16,7 +16,7 @@
         "Deploy to Vercel and confirm build succeeds (Clerk keys must also be set in Vercel environment variables)"
       ],
       "priority": 1,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {

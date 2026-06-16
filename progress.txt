@@ -31,3 +31,16 @@
 # Ralph Progress Log
 Started: Sun Jun 15 2026
 ---
+
+## 2026-06-15 - US-055
+- Installed @clerk/nextjs package
+- Wrapped layout.tsx <html> with <ClerkProvider> (server component, no "use client" needed)
+- env.local already had Clerk placeholder keys; fixed AFTER_SIGN_UP_URL from /dashboard to /onboarding/1
+- env.local.example updated to match
+- Deployed to Vercel: https://lawncare-4qnyvhq4h-sajamills-projects.vercel.app — build passed
+- Files changed: src/app/layout.tsx, env.local.example, package.json, package-lock.json
+- **Learnings for future iterations:**
+  - ClerkProvider goes OUTSIDE the <html> tag in layout.tsx (wraps the entire return)
+  - .env.local already existed with placeholder Clerk keys from a prior setup — check before adding duplicates
+  - Vercel build with placeholder Clerk keys succeeds (Clerk SDK doesn't throw at build time for missing keys)
+---
