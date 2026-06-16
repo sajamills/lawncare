@@ -11,7 +11,7 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.104.1",
-    "@clerk/nextjs": "^7.5.2",
+    "@clerk/nextjs": "^7.5.3",
     "@vercel/postgres": "^0.10.0",
     "ai": "^6.0.205",
     "next": "16.2.9",
