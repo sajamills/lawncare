@@ -5,7 +5,7 @@ import Link from "next/link";
 import { grassTypes } from "@/data/grass-types";
 import { getPreemergentWindow } from "@/data/preemergent-windows";
 import type { WeeklyPlan, WeeklyTask } from "@/app/api/parse-pdf/route";
-import { getISOWeek, getWeekDateRange, findNextTaskWeek } from "@/lib/week-utils";
+import { getISOWeek, clampWeek, getWeekDateRange, findNextTaskWeek } from "@/lib/week-utils";
 
 type TaskCategory = "mow" | "fertilize" | "water" | "aerate" | "seed" | "pest-weed" | "other";
 type TaskPriority = "urgent" | "routine" | "optional";
@@ -122,13 +122,18 @@ export default function DashboardPage() {
   const [completedTitles, setCompletedTitles] = useState<Set<string>>(new Set());
   const [currentWeek, setCurrentWeek] = useState(0);
   const [planError, setPlanError] = useState(false);
+  const [retrying, setRetrying] = useState(false);
+  const [retryFailed, setRetryFailed] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
   const [nextRealTask, setNextRealTask] = useState<{ week: number; title: string } | null>(null);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   useEffect(() => {
+    const isRetry = retryCount > 0;
     setPlanError(false);
+    setRetryFailed(false);
     setNextRealTask(null);
+    if (!isRetry) setLoading(true);
 
     async function loadData() {
       let stateCode: string | undefined;
@@ -179,7 +184,7 @@ export default function DashboardPage() {
       }
 
       const now = new Date();
-      const week = getISOWeek(now);
+      const week = clampWeek(getISOWeek(now));
       setCurrentWeek(week);
       setWeekRange(getWeekDateRange(week, now.getFullYear()));
       setNextWeekRange(getWeekDateRange(week + 1, now.getFullYear()));
@@ -197,20 +202,19 @@ export default function DashboardPage() {
 
       // Fetch the plan
       setGeneratingPlan(true);
+      setRetrying(isRetry);
       intervalRef.current = setInterval(() => {
         setLoadingMsgIdx((i) => (i + 1) % LOADING_MESSAGES.length);
       }, 3000);
 
+      let fetchSucceeded = false;
       try {
         const res = await fetch("/api/parse-pdf", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ state: stateCode, grassType }),
         });
-        if (!res.ok) {
-          console.error(`[dashboard] plan fetch failed status=${res.status}`);
-          setPlanError(true);
-        } else {
+        if (res.ok) {
           const { plan } = await res.json() as { plan: WeeklyPlan[] };
           const PRIORITY_ORDER: Record<TaskPriority, number> = { urgent: 0, routine: 1, optional: 2 };
 
@@ -219,13 +223,16 @@ export default function DashboardPage() {
             setTasks([...weekPlan.tasks].sort(
               (a, b) => PRIORITY_ORDER[a.priority as TaskPriority] - PRIORITY_ORDER[b.priority as TaskPriority]
             ));
+            fetchSucceeded = true;
           } else if (plan?.length > 0) {
             // Current week is quiet — find next future task
             const next = findNextTaskWeek(plan, week);
             if (next) setNextRealTask({ week: next.week, title: next.task.title });
+            fetchSucceeded = true;
           } else {
-            console.error(`[dashboard] plan returned but is empty week=${week}`);
-            setPlanError(true);
+            // Plan came back empty — treat as failure
+            if (isRetry) setRetryFailed(true);
+            else setPlanError(true);
           }
 
           const nextWeekPlan = plan?.find((w) => w.week === week + 1);
@@ -233,13 +240,18 @@ export default function DashboardPage() {
             setNextWeekTotalCount(nextWeekPlan.tasks.length);
             setNextWeekTasks(nextWeekPlan.tasks.slice(0, 3));
           }
+        } else {
+          if (isRetry) setRetryFailed(true);
+          else setPlanError(true);
         }
-      } catch (err) {
-        console.error("[dashboard] plan fetch threw", err instanceof Error ? err.message : String(err));
-        setPlanError(true);
+      } catch {
+        if (isRetry) setRetryFailed(true);
+        else setPlanError(true);
       } finally {
         if (intervalRef.current) clearInterval(intervalRef.current);
         setGeneratingPlan(false);
+        setRetrying(false);
+        if (isRetry && fetchSucceeded) setPlanError(false);
       }
 
       setLoading(false);
@@ -256,8 +268,7 @@ export default function DashboardPage() {
   };
 
   const retryPlan = () => {
-    setTasks([]);
-    setLoading(true);
+    // Don't clear tasks — keep prior valid plan visible while retrying
     setRetryCount((c) => c + 1);
   };
 
@@ -320,6 +331,38 @@ export default function DashboardPage() {
           </p>
         )}
       </div>
+
+      {/* Retry-failed notification — non-destructive, shown over existing tasks */}
+      {retryFailed && (
+        <div
+          className="rounded-lg px-4 py-3 border flex items-center justify-between gap-3"
+          style={{ backgroundColor: "var(--color-warning-bg)", borderColor: "var(--color-warning-border)" }}
+        >
+          <p className="text-sm" style={{ color: "var(--color-warning-text)" }}>
+            Could not refresh your plan. Showing your last saved plan.
+          </p>
+          <button
+            type="button"
+            onClick={() => setRetryFailed(false)}
+            className="text-sm shrink-0"
+            style={{ color: "var(--color-warning-text)" }}
+            aria-label="Dismiss"
+          >
+            ×
+          </button>
+        </div>
+      )}
+
+      {/* Retry loading indicator */}
+      {retrying && (
+        <div className="flex items-center gap-2 text-sm" style={{ color: "var(--color-text-muted)" }}>
+          <div
+            className="w-4 h-4 rounded-full border-2 border-t-transparent animate-spin shrink-0"
+            style={{ borderColor: "var(--color-primary)", borderTopColor: "transparent" }}
+          />
+          Refreshing your plan…
+        </div>
+      )}
 
       {/* Onboarding gate */}
       {showOnboardingGate && (

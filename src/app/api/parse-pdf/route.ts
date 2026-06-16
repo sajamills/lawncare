@@ -1,25 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
 import { db } from "@/lib/db";
-import { normalizeGrassId, normalizeStateCode } from "@/lib/week-utils";
+import type { WeeklyTask, WeeklyPlan } from "@/lib/week-utils";
+import {
+  normalizeGrassId,
+  normalizeStateCode,
+  validateWeeklyPlan,
+  extractPlanFromText,
+} from "@/lib/week-utils";
+
+// Re-export types so existing importers (dashboard, calendar) keep working
+export type { WeeklyTask, WeeklyPlan };
 
 const client = new Anthropic();
-
-type TaskCategory = "mow" | "fertilize" | "water" | "aerate" | "seed" | "pest-weed" | "other";
-type TaskPriority = "urgent" | "routine" | "optional";
-
-export interface WeeklyTask {
-  title: string;
-  description: string;
-  category: TaskCategory;
-  priority: TaskPriority;
-  petSafetyNote: string;
-}
-
-export interface WeeklyPlan {
-  week: number;
-  tasks: WeeklyTask[];
-}
 
 const SYSTEM_PROMPT = `You are a lawn care expert. Generate a week-by-week care plan for the specified grass type and US state.
 
@@ -73,15 +66,14 @@ export async function POST(request: NextRequest) {
       [stateKey, grassKey]
     );
     if (cached.rows.length > 0) {
-      const cachedPlan = cached.rows[0].parsed_plan as Array<Record<string, unknown>>;
-      // Detect stale 12-month format (entries have 'month' not 'week')
-      const isStale = Array.isArray(cachedPlan) && cachedPlan.length > 0 && !("week" in cachedPlan[0]);
-      if (!isStale) {
+      const cachedPlan = cached.rows[0].parsed_plan as unknown;
+      const error = validateWeeklyPlan(cachedPlan);
+      if (!error) {
         console.log(`[parse-pdf] stage=cache_hit state=${stateKey} grass=${grassKey}`);
         return NextResponse.json({ plan: cachedPlan, cached: true });
       }
-      // Stale format — delete and regenerate
-      console.log(`[parse-pdf] stage=cache_stale state=${stateKey} grass=${grassKey} — deleting and regenerating`);
+      // Invalid cached plan — delete and regenerate
+      console.error(`[parse-pdf] stage=cache_invalid state=${stateKey} grass=${grassKey}: ${error.message}`);
       await db.query(
         "DELETE FROM cached_plans WHERE state = $1 AND grass_type = $2",
         [stateKey, grassKey]
@@ -121,8 +113,8 @@ export async function POST(request: NextRequest) {
   }
 
   // Call Claude API
-  let plan: WeeklyPlan[];
   console.log(`[parse-pdf] stage=claude_call state=${stateKey} grass=${grassKey}`);
+  let plan: WeeklyPlan[];
   try {
     let message: Anthropic.Message;
     const userPrompt = `Generate a 52-week ISO 8601 lawn care plan for ${grassKey} grass in ${stateKey}. Return only the JSON array.`;
@@ -177,33 +169,26 @@ export async function POST(request: NextRequest) {
 
     const rawText =
       message.content[0].type === "text" ? message.content[0].text : "";
-    const jsonMatch = rawText.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) {
-      console.error(`[parse-pdf] stage=json_extract_failed state=${stateKey} grass=${grassKey} — no JSON array in response`);
-      throw new Error("No JSON array found in Claude response");
-    }
-    let parsed: WeeklyPlan[];
-    try {
-      parsed = JSON.parse(jsonMatch[0]) as WeeklyPlan[];
-    } catch (parseErr) {
-      console.error(`[parse-pdf] stage=json_parse_failed state=${stateKey} grass=${grassKey}`, parseErr instanceof Error ? parseErr.message : String(parseErr));
-      throw new Error(`JSON.parse failed: ${parseErr instanceof Error ? parseErr.message : String(parseErr)}`);
-    }
-    if (!Array.isArray(parsed) || parsed.length === 0) {
-      console.error(`[parse-pdf] stage=empty_plan state=${stateKey} grass=${grassKey} — Claude returned empty or non-array`);
-      throw new Error("Claude returned an empty plan array");
+    const parsed = extractPlanFromText(rawText);
+    if (!parsed) {
+      console.error(`[parse-pdf] stage=invalid_plan state=${stateKey} grass=${grassKey} — Claude response failed validation`);
+      return NextResponse.json(
+        { error: "Failed to parse plan: Claude response failed validation" },
+        { status: 500 }
+      );
     }
     plan = parsed;
   } catch (err) {
+    console.error(`[parse-pdf] stage=claude_error state=${stateKey} grass=${grassKey}`, err instanceof Error ? err.message : String(err));
     return NextResponse.json(
       {
-        error: `Failed to parse plan: ${err instanceof Error ? err.message : String(err)}`,
+        error: `Failed to generate plan: ${err instanceof Error ? err.message : String(err)}`,
       },
       { status: 500 }
     );
   }
 
-  // Cache to DB
+  // Cache to DB (only reached when plan is valid)
   try {
     await db.query(
       `INSERT INTO cached_plans (state, grass_type, pdf_url, parsed_plan)

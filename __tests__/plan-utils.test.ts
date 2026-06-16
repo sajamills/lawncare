@@ -2,12 +2,15 @@ import { describe, it, expect } from "vitest";
 import fixture from "./fixtures/ar-bermudagrass-plan.json";
 import {
   getISOWeek,
+  clampWeek,
   getWeekPlan,
   findNextTaskWeek,
   normalizeGrassId,
   normalizeStateCode,
+  validateWeeklyPlan,
+  extractPlanFromText,
 } from "@/lib/week-utils";
-import type { WeeklyPlan } from "@/app/api/parse-pdf/route";
+import type { WeeklyPlan } from "@/lib/week-utils";
 
 const plan = fixture as WeeklyPlan[];
 
@@ -19,6 +22,21 @@ describe("getISOWeek", () => {
 
   it("returns 1 for January 4 2026 (anchor of ISO week 1)", () => {
     expect(getISOWeek(new Date("2026-01-04T12:00:00Z"))).toBe(1);
+  });
+});
+
+// Year-boundary: week 52 and 53 policy
+describe("clampWeek (week 53 policy)", () => {
+  it("leaves week 52 unchanged", () => {
+    expect(clampWeek(52)).toBe(52);
+  });
+
+  it("maps week 53 to week 52", () => {
+    expect(clampWeek(53)).toBe(52);
+  });
+
+  it("leaves week 1 unchanged", () => {
+    expect(clampWeek(1)).toBe(1);
   });
 });
 
@@ -36,6 +54,12 @@ describe("getWeekPlan", () => {
     const tasks = getWeekPlan(plan, 1);
     expect(tasks).toEqual([]);
   });
+
+  it("returns same result for week 52 and week 53 (clamping)", () => {
+    const week52 = getWeekPlan(plan, 52);
+    const week53 = getWeekPlan(plan, 53);
+    expect(week52).toEqual(week53);
+  });
 });
 
 // TEST 3 — Quiet-week finder returns nearest future task
@@ -47,7 +71,7 @@ describe("findNextTaskWeek", () => {
     expect(result!.task.title).toBeDefined();
   });
 
-  it("returns first future week in order (week 11 for week 10 quiet lookup)", () => {
+  it("returns first future week in order (week 11 for week 9 quiet lookup)", () => {
     const result = findNextTaskWeek(plan, 9);
     expect(result).not.toBeNull();
     expect(result!.week).toBe(11);
@@ -57,76 +81,95 @@ describe("findNextTaskWeek", () => {
     const result = findNextTaskWeek(plan, 44);
     expect(result).toBeNull();
   });
+
+  it("returns null when called with week 52 and no later tasks exist", () => {
+    const result = findNextTaskWeek(plan, 52);
+    expect(result).toBeNull();
+  });
+
+  it("returns null when called with week 53 (clamped boundary — nothing past 52)", () => {
+    // afterWeek=53 means we look for weeks >53 which do not exist
+    const result = findNextTaskWeek(plan, 53);
+    expect(result).toBeNull();
+  });
 });
 
-// TEST 4 — Malformed AI responses are not treated as successful empty plans
-describe("malformed plan detection", () => {
-  function extractPlan(rawText: string): WeeklyPlan[] | null {
-    if (!rawText) return null;
-    const jsonMatch = rawText.match(/\[[\s\S]*\]/);
-    if (!jsonMatch) return null;
-    try {
-      const parsed = JSON.parse(jsonMatch[0]) as WeeklyPlan[];
-      if (!Array.isArray(parsed) || parsed.length === 0) return null;
-      return parsed;
-    } catch {
-      return null;
-    }
-  }
+// validateWeeklyPlan
+describe("validateWeeklyPlan", () => {
+  it("passes a valid 52-week fixture", () => {
+    expect(validateWeeklyPlan(plan)).toBeNull();
+  });
 
-  it("returns null for empty string response", () => {
-    expect(extractPlan("")).toBeNull();
+  it("rejects null", () => {
+    expect(validateWeeklyPlan(null)).not.toBeNull();
+  });
+
+  it("rejects empty array", () => {
+    expect(validateWeeklyPlan([])).not.toBeNull();
+  });
+
+  it("rejects plan with all-empty task arrays (no real tasks across the year)", () => {
+    const emptyPlan = Array.from({ length: 52 }, (_, i) => ({ week: i + 1, tasks: [] }));
+    expect(validateWeeklyPlan(emptyPlan)).not.toBeNull();
+  });
+
+  it("rejects plan with invalid category", () => {
+    const bad = [{ week: 1, tasks: [{ title: "X", description: "X", category: "unknown", priority: "routine", petSafetyNote: "" }] }];
+    expect(validateWeeklyPlan(bad)).not.toBeNull();
+  });
+
+  it("rejects plan with invalid priority", () => {
+    const bad = [{ week: 1, tasks: [{ title: "X", description: "X", category: "mow", priority: "high", petSafetyNote: "" }] }];
+    expect(validateWeeklyPlan(bad)).not.toBeNull();
+  });
+
+  it("rejects plan with duplicate week numbers", () => {
+    const bad = [
+      { week: 1, tasks: [{ title: "X", description: "X", category: "mow", priority: "routine", petSafetyNote: "" }] },
+      { week: 1, tasks: [] },
+    ];
+    expect(validateWeeklyPlan(bad)).not.toBeNull();
+  });
+
+  it("rejects plan with week > 53", () => {
+    const bad = [{ week: 54, tasks: [{ title: "X", description: "X", category: "mow", priority: "routine", petSafetyNote: "" }] }];
+    expect(validateWeeklyPlan(bad)).not.toBeNull();
+  });
+});
+
+// extractPlanFromText
+describe("extractPlanFromText", () => {
+  it("returns null for empty string", () => {
+    expect(extractPlanFromText("")).toBeNull();
   });
 
   it("returns null for partial JSON '{'", () => {
-    expect(extractPlan("{")).toBeNull();
+    expect(extractPlanFromText("{")).toBeNull();
   });
 
-  it("returns null for empty array '[]' — not a valid plan", () => {
-    expect(extractPlan("[]")).toBeNull();
+  it("returns null for empty array '[]'", () => {
+    expect(extractPlanFromText("[]")).toBeNull();
   });
 
-  it("returns plan when response contains valid JSON array", () => {
-    const validResponse = `Here is your plan:\n${JSON.stringify([{ week: 1, tasks: [{ title: "Test", description: "desc", category: "mow", priority: "routine", petSafetyNote: "" }] }])}`;
-    const result = extractPlan(validResponse);
+  it("returns null for array with tasks but all empty (no real tasks)", () => {
+    const text = JSON.stringify(Array.from({ length: 52 }, (_, i) => ({ week: i + 1, tasks: [] })));
+    expect(extractPlanFromText(text)).toBeNull();
+  });
+
+  it("extracts plan from Claude-style response with surrounding text", () => {
+    const validEntry = {
+      week: 1,
+      tasks: [{ title: "Mow", description: "Mow the lawn", category: "mow", priority: "routine", petSafetyNote: "" }],
+    };
+    const text = `Here is your plan:\n${JSON.stringify([validEntry])}\nEnd of plan.`;
+    const result = extractPlanFromText(text);
     expect(result).not.toBeNull();
-    expect(result!.length).toBeGreaterThan(0);
+    expect(result![0].week).toBe(1);
+    expect(result![0].tasks[0].title).toBe("Mow");
   });
 });
 
-// TEST 5 — Cache logic: read before write (verified via fixture structure)
-describe("cache read before write", () => {
-  it("fixture has 52 weeks so cache hit path can return without calling Claude", () => {
-    // A cache hit returns the stored plan directly. Verify the fixture is
-    // structurally valid (52 weeks, all have a 'week' key) — same shape the
-    // cache stores and the cache-hit branch returns.
-    expect(plan.length).toBe(52);
-    for (const entry of plan) {
-      expect(typeof entry.week).toBe("number");
-      expect(Array.isArray(entry.tasks)).toBe(true);
-    }
-  });
-
-  it("stale cache detection: plan with 'month' key is identified as stale", () => {
-    const staleFormatPlan = [{ month: 1, tasks: [] }] as unknown as WeeklyPlan[];
-    const isStale =
-      Array.isArray(staleFormatPlan) &&
-      staleFormatPlan.length > 0 &&
-      !("week" in staleFormatPlan[0]);
-    expect(isStale).toBe(true);
-  });
-
-  it("fresh cache: plan with 'week' key is NOT stale", () => {
-    const freshPlan = [{ week: 1, tasks: [] }] as WeeklyPlan[];
-    const isStale =
-      Array.isArray(freshPlan) &&
-      freshPlan.length > 0 &&
-      !("week" in freshPlan[0]);
-    expect(isStale).toBe(false);
-  });
-});
-
-// TEST 6 — Grass ID and state code normalization
+// TEST 6 — Input normalization
 describe("input normalization", () => {
   it("normalizeGrassId lowercases and trims", () => {
     expect(normalizeGrassId("Bermudagrass")).toBe("bermudagrass");
@@ -138,5 +181,6 @@ describe("input normalization", () => {
     expect(normalizeStateCode("ar")).toBe("AR");
     expect(normalizeStateCode("AR")).toBe("AR");
     expect(normalizeStateCode(" tx ")).toBe("TX");
+    expect(normalizeStateCode(" AR ")).toBe("AR");
   });
 });
