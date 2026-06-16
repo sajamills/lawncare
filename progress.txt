@@ -34,3 +34,15 @@
 # Ralph Progress Log
 Started: Sun Jun 15 2026 — UI/UX Remediation Sprint
 ---
+
+## 2026-06-15 - US-001
+- Added isValidZip() helper (5-digit numeric check) and canSave derived boolean
+- Added touchedZip + touchedGrass state to show errors only after field interaction
+- ZIP input: added inputMode="numeric" autoComplete="postal-code", red border + error message when touched and invalid
+- Grass type select: red border + error message when touched and empty
+- Save button: disabled when !canSave, adds cursor-not-allowed
+- Files changed: src/app/profile/page.tsx
+- **Learnings for future iterations:**
+  - Profile page uses getSessionId() from localStorage for DB queries — Clerk user_id migration is in platform-features PRD (US-060), not yet done
+  - canSave must be derived at render time (not inside handleSave) so button disabled state is reactive
+---
