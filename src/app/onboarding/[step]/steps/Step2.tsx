@@ -78,7 +78,7 @@ export default function Step2({ onNext }: { onNext: () => void }) {
           style={{
             backgroundColor: "var(--color-surface)",
             color: "var(--color-text-primary)",
-            borderColor: "#2d4a2d",
+            borderColor: "var(--color-border)",
           }}
         />
         <button
@@ -128,7 +128,7 @@ export default function Step2({ onNext }: { onNext: () => void }) {
                     : "var(--color-text-primary)",
                   borderColor: selected
                     ? "var(--color-primary)"
-                    : "#2d4a2d",
+                    : "var(--color-border)",
                 }}
               >
                 {opt}
@@ -157,7 +157,7 @@ export default function Step2({ onNext }: { onNext: () => void }) {
                 className="w-full px-4 py-3 rounded-lg text-left border transition-all"
                 style={{
                   backgroundColor: "var(--color-surface)",
-                  borderColor: selected ? "var(--color-primary)" : "#2d4a2d",
+                  borderColor: selected ? "var(--color-primary)" : "var(--color-border)",
                   borderWidth: selected ? "2px" : "1px",
                 }}
               >

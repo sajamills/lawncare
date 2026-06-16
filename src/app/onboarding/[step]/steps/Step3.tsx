@@ -88,7 +88,7 @@ export default function Step3({ onNext }: { onNext: () => void }) {
             style={{
               backgroundColor: "var(--color-surface)",
               color: "var(--color-text-primary)",
-              borderColor: "#2d4a2d",
+              borderColor: "var(--color-border)",
             }}
           >
             {opt.label}

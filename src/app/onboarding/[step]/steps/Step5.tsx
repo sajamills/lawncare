@@ -87,7 +87,7 @@ export default function Step5New({ onNext }: { onNext: () => void }) {
               className="w-full px-4 py-3 rounded-lg text-left border transition-all"
               style={{
                 backgroundColor: "var(--color-surface)",
-                borderColor: isSelected ? "var(--color-primary)" : "#2d4a2d",
+                borderColor: isSelected ? "var(--color-primary)" : "var(--color-border)",
                 borderWidth: isSelected ? "2px" : "1px",
                 color: "var(--color-text-primary)",
               }}
@@ -103,7 +103,7 @@ export default function Step5New({ onNext }: { onNext: () => void }) {
           className="w-full px-4 py-3 rounded-lg text-left border transition-all mt-1"
           style={{
             backgroundColor: "var(--color-surface)",
-            borderColor: selected.has(NONE_ID) ? "var(--color-primary)" : "#2d4a2d",
+            borderColor: selected.has(NONE_ID) ? "var(--color-primary)" : "var(--color-border)",
             borderWidth: selected.has(NONE_ID) ? "2px" : "1px",
             color: "var(--color-text-muted)",
           }}

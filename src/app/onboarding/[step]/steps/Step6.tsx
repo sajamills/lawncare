@@ -73,7 +73,7 @@ export default function Step6({ onNext }: { onNext: () => void }) {
           className="flex items-start gap-3 px-4 py-4 rounded-lg border transition-all hover:border-current"
           style={{
             backgroundColor: "var(--color-surface)",
-            borderColor: "#2d4a2d",
+            borderColor: "var(--color-border)",
             textDecoration: "none",
           }}
         >
