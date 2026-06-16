@@ -160,3 +160,10 @@ Started: Sun Jun 15 2026 — UI/UX Remediation Sprint
 - **Learnings for future iterations:**
   - When picking up a copy-cleanup story, grep for the target string first — an earlier story's wording change may have already satisfied part of the acceptance criteria.
 ---
+
+## 2026-06-16 - US-008
+- Replaced the 3-item HOW_IT_WORKS array in src/app/page.tsx with the 4 onboarding-accurate steps (ZIP code, grass type, yard description, personalized plan). Rendering is a vertical ol/li list (not a fixed-column grid), so growing from 3 to 4 items needed no layout/markup changes.
+- Files changed: src/app/page.tsx
+- **Learnings for future iterations:**
+  - HOW_IT_WORKS renders via .map() over a plain array with an inferred {step, title, description} shape — no separate type alias to update when changing item count or content.
+---

@@ -28,20 +28,23 @@ const HOW_IT_WORKS = [
   {
     step: 1,
     title: "Enter your ZIP code",
-    description:
-      "We detect your USDA zone and your state's extension resources.",
+    description: "We find your USDA zone and state extension resources.",
   },
   {
     step: 2,
-    title: "Tell us about your lawn",
-    description:
-      "Grass type, sun exposure, lawn size, and what you've done this year.",
+    title: "Identify your grass type",
+    description: "Choose from a visual guide or answer 5 quick questions.",
   },
   {
     step: 3,
-    title: "Get your plan",
+    title: "Describe your yard",
+    description: "Sun exposure, lawn size, pets, and recent treatments.",
+  },
+  {
+    step: 4,
+    title: "Get your personalized plan",
     description:
-      "A month-by-month care calendar with official university guide links.",
+      "A 52-week care calendar with timing, quantities, and university sources.",
   },
 ];
 

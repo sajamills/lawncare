@@ -166,8 +166,8 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 9,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Replaced the 3-item HOW_IT_WORKS array with the 4 specified steps; existing rendering logic (vertical ol/li list, no fixed grid) already handled the inferred {step, title, description} shape unchanged and scales to 4 items with no layout adjustment needed. Section heading 'How it works' untouched. No tests referenced the old copy."
     },
     {
       "id": "US-009",
