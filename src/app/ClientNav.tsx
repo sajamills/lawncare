@@ -2,11 +2,18 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { HomeIcon, CalendarIcon, ProfileIcon } from "@/components/icons";
 
-const NAV_ITEMS = [
-  { href: "/dashboard", label: "Home", icon: "🏠" },
-  { href: "/dashboard/calendar", label: "Calendar", icon: "📅" },
-  { href: "/profile", label: "Profile", icon: "👤" },
+type NavItem = {
+  href: string;
+  label: string;
+  Icon: React.ComponentType<{ className?: string }>;
+};
+
+const NAV_ITEMS: NavItem[] = [
+  { href: "/dashboard", label: "Home", Icon: HomeIcon },
+  { href: "/dashboard/calendar", label: "Calendar", Icon: CalendarIcon },
+  { href: "/profile", label: "Profile", Icon: ProfileIcon },
 ];
 
 export default function ClientNav({ children }: { children: React.ReactNode }) {
@@ -37,13 +44,16 @@ export default function ClientNav({ children }: { children: React.ReactNode }) {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="text-sm font-medium transition-colors"
+                  className="flex items-center gap-1.5 text-sm font-medium transition-colors"
                   style={{
                     color: isActive ? "var(--color-primary)" : "var(--color-text-muted)",
                     fontWeight: isActive ? "600" : "400",
+                    borderBottom: isActive ? "2px solid var(--color-primary)" : "2px solid transparent",
+                    paddingBottom: "2px",
                   }}
                 >
-                  {item.icon} {item.label}
+                  <item.Icon className="w-4 h-4" />
+                  {item.label}
                 </Link>
               );
             })}
@@ -62,6 +72,7 @@ export default function ClientNav({ children }: { children: React.ReactNode }) {
             backgroundColor: "var(--color-surface)",
             borderColor: "var(--color-border)",
             height: "56px",
+            paddingBottom: "env(safe-area-inset-bottom)",
           }}
         >
           {NAV_ITEMS.map((item) => {
@@ -77,7 +88,18 @@ export default function ClientNav({ children }: { children: React.ReactNode }) {
                   color: isActive ? "var(--color-primary)" : "var(--color-text-muted)",
                 }}
               >
-                <span className="text-xl leading-none">{item.icon}</span>
+                {/* Active pill indicator */}
+                <span
+                  style={{
+                    width: 24,
+                    height: 3,
+                    borderRadius: 99,
+                    backgroundColor: isActive ? "var(--color-primary)" : "transparent",
+                    marginBottom: 2,
+                    display: "block",
+                  }}
+                />
+                <item.Icon className="w-6 h-6" />
                 <span className="text-[10px] leading-none">{item.label}</span>
               </Link>
             );
