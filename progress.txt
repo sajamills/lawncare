@@ -204,3 +204,11 @@ Started: Sun Jun 15 2026 — UI/UX Remediation Sprint
 - **Learnings for future iterations:**
   - When a button needs a stacked label+subtitle AND a trailing indicator, wrap the stacked text in its own flex-col div so it can sit as a single flex item alongside the indicator span in the button's flex row.
 ---
+
+## 2026-06-16 - US-013
+- Removed the "extension resources" step (Step6) from onboarding. STEP_COMPONENTS in src/app/onboarding/[step]/page.tsx is now [Step1..Step5, Step7] — 6 steps total. Bounds check and handleNext guard updated from 7 to 6. TOTAL_STEPS in src/app/onboarding/layout.tsx updated from 7 to 6 (drives the "Step X of Y" label and progress segments).
+- Files changed: src/app/onboarding/[step]/page.tsx, src/app/onboarding/layout.tsx, prd.json, progress.txt. Screenshot: e2e/screenshots/onboarding-step6-final-414x896.png.
+- **Learnings for future iterations:**
+  - steps/Step6.tsx is now dead code (no longer imported by page.tsx) but was intentionally left on disk — the story's acceptance criteria only asked to remove the import/array entry, not delete the file. A future cleanup story could remove it outright; flagging here so the next iteration doesn't have to rediscover this.
+  - When renumbering onboarding steps, check three places for hardcoded counts: STEP_COMPONENTS array + bounds check in [step]/page.tsx, TOTAL_STEPS in onboarding/layout.tsx, and grep the whole repo for stray "/onboarding/<oldLastStep>" or "of <oldTotal>" references before assuming the rename is complete.
+---

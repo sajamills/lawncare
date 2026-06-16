@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 
-const TOTAL_STEPS = 7;
+const TOTAL_STEPS = 6;
 
 function getStep(pathname: string): number {
   const match = pathname.match(/\/onboarding\/(\d+)/);
