@@ -46,7 +46,7 @@
       ],
       "priority": 2,
       "passes": true,
-      "notes": ""
+      "notes": "Root causes: (1) SYSTEM_PROMPT week numbering ambiguous — fixed with ISO 8601 spec; (2) empty plan [] silently treated as success — fixed with validateWeeklyPlan(); (3) grassType not normalized — fixed with normalizeGrassId(); (4) silent error swallowing — fixed with planError state; (5) quiet-week hardcoded copy — fixed with findNextTaskWeek(). Patch: cached plans now validated with same validator; clampWeek() handles week 53; retry preserves prior plan; client console.error removed; 47 tests across 2 files."
     },
     {
       "id": "US-003",

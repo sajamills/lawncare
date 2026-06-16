@@ -65,4 +65,13 @@ Started: Sun Jun 15 2026 — UI/UX Remediation Sprint
   - Empty array [] from LLM is a common failure mode — always check plan.length > 0 after JSON.parse
   - Dashboard retryCount state pattern: increment to re-run useEffect without page refresh
   - All plan utility functions (getISOWeek, findNextTaskWeek, etc.) live in src/lib/week-utils.ts — import from there, not dashboard.tsx
+
+## 2026-06-15 - US-002 patch
+- validateWeeklyPlan() added to week-utils.ts — used for BOTH cached plans and new Claude responses; rejects empty array, invalid fields, duplicate weeks, all-empty-tasks plan
+- extractPlanFromText() centralizes Claude response parsing + validation; returns null on any failure
+- Week 53 policy: clampWeek(53) === 52; documented in week-utils.ts; dashboard uses clampWeek(getISOWeek(now))
+- WeeklyPlan/WeeklyTask types moved to week-utils.ts; route.ts re-exports for backward compat
+- Retry UX: prior valid tasks preserved during retry; retrying indicator shown inline; retryFailed notification is non-destructive dismissible banner
+- Client-side console.error removed from dashboard; all stage logging server-side only
+- 47 tests across plan-utils.test.ts and api-plan-processing.test.ts (no live services)
 ---
