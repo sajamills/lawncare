@@ -269,8 +269,8 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 15,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "In steps/Step7.tsx (now the final, step-6 screen after US-013's renumbering), changed the success heading from 'You're all set!' to 'Your lawn plan is ready'. Added a summary card reading zip/state/grass_type/square_footage from sessionStorage onboarding_state (grass_type id resolved to its display name via the existing grassTypes data array, same lookup pattern used in profile/page.tsx); the lawn-size row is omitted when square_footage is null/undefined. Added the 'what to expect' note and the device-storage note exactly as specified, both above the existing 'Go to my dashboard' CTA which is unchanged. Added e2e/onboarding-step6-complete.spec.ts seeding onboarding_state via addInitScript and asserting the heading, summary fields, both notes, the CTA, and the lawn-size-omitted case. Visually verified at 414x896 via screenshot with seeded sessionStorage data."
     },
     {
       "id": "US-015",

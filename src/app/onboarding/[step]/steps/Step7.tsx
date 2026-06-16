@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { saveProfile } from "@/actions/profile";
+import { grassTypes } from "@/data/grass-types";
 
 function getOnboardingState(): Record<string, unknown> {
   if (typeof window === "undefined") return {};
@@ -25,6 +26,12 @@ export default function Step7({ onNext: _onNext }: { onNext: () => void }) {
   const router = useRouter();
   const [status, setStatus] = useState<"loading" | "done" | "error">("loading");
   const started = useRef(false);
+  const state = getOnboardingState();
+  const zipCode = (state.zip as string) ?? "";
+  const stateAbbr = (state.state as string) ?? "";
+  const grassTypeId = (state.grass_type as string) ?? "";
+  const grassTypeName = grassTypes.find((g) => g.id === grassTypeId)?.name ?? grassTypeId;
+  const squareFootage = state.square_footage as number | null | undefined;
 
   useEffect(() => {
     if (started.current) return;
@@ -63,7 +70,7 @@ export default function Step7({ onNext: _onNext }: { onNext: () => void }) {
           className="text-2xl font-bold mb-1"
           style={{ color: "var(--color-text-primary)" }}
         >
-          {status === "loading" ? "Setting up your profile..." : "You're all set!"}
+          {status === "loading" ? "Setting up your profile..." : "Your lawn plan is ready"}
         </h1>
         <p style={{ color: "var(--color-text-muted)" }}>
           {status === "loading"
@@ -85,16 +92,54 @@ export default function Step7({ onNext: _onNext }: { onNext: () => void }) {
       )}
 
       {(status === "done" || status === "error") && (
-        <button
-          onClick={() => router.push("/dashboard")}
-          className="w-full py-3 rounded-lg font-semibold text-sm"
-          style={{
-            backgroundColor: "var(--color-primary)",
-            color: "var(--color-background)",
-          }}
-        >
-          Go to my dashboard →
-        </button>
+        <>
+          <div
+            className="rounded-lg border p-4 flex flex-col gap-2"
+            style={{
+              backgroundColor: "var(--color-surface)",
+              borderColor: "var(--color-border)",
+            }}
+          >
+            <div className="flex justify-between text-sm">
+              <span style={{ color: "var(--color-text-muted)" }}>Location</span>
+              <span style={{ color: "var(--color-text-primary)" }}>
+                {zipCode}{stateAbbr ? `, ${stateAbbr}` : ""}
+              </span>
+            </div>
+            <div className="flex justify-between text-sm">
+              <span style={{ color: "var(--color-text-muted)" }}>Grass type</span>
+              <span style={{ color: "var(--color-text-primary)" }}>{grassTypeName}</span>
+            </div>
+            {squareFootage != null && (
+              <div className="flex justify-between text-sm">
+                <span style={{ color: "var(--color-text-muted)" }}>Lawn size</span>
+                <span style={{ color: "var(--color-text-primary)" }}>
+                  {squareFootage.toLocaleString()} sq ft
+                </span>
+              </div>
+            )}
+          </div>
+
+          <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>
+            Your plan includes seasonal treatments, routine care tasks, and university
+            extension sources — updated each week based on where you are in the year.
+          </p>
+          <p className="text-xs mt-2" style={{ color: "var(--color-text-muted)" }}>
+            Your plan is saved on this device. Bookmark this page or use the Print
+            option from your dashboard to keep a copy.
+          </p>
+
+          <button
+            onClick={() => router.push("/dashboard")}
+            className="w-full py-3 rounded-lg font-semibold text-sm"
+            style={{
+              backgroundColor: "var(--color-primary)",
+              color: "var(--color-background)",
+            }}
+          >
+            Go to my dashboard →
+          </button>
+        </>
       )}
     </div>
   );

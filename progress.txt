@@ -212,3 +212,11 @@ Started: Sun Jun 15 2026 — UI/UX Remediation Sprint
   - steps/Step6.tsx is now dead code (no longer imported by page.tsx) but was intentionally left on disk — the story's acceptance criteria only asked to remove the import/array entry, not delete the file. A future cleanup story could remove it outright; flagging here so the next iteration doesn't have to rediscover this.
   - When renumbering onboarding steps, check three places for hardcoded counts: STEP_COMPONENTS array + bounds check in [step]/page.tsx, TOTAL_STEPS in onboarding/layout.tsx, and grep the whole repo for stray "/onboarding/<oldLastStep>" or "of <oldTotal>" references before assuming the rename is complete.
 ---
+
+## 2026-06-16 - US-014
+- Replaced the generic "You're all set!" completion screen (steps/Step7.tsx, now reachable at /onboarding/6 after US-013) with "Your lawn plan is ready" plus a summary card (location, grass type name, lawn size if provided), a "what to expect" note, and a device-storage note. The existing "Go to my dashboard" CTA is unchanged.
+- Files changed: src/app/onboarding/[step]/steps/Step7.tsx, e2e/onboarding-step6-complete.spec.ts (new), prd.json, progress.txt. Screenshot: e2e/screenshots/onboarding-step6-summary-414x896.png.
+- **Learnings for future iterations:**
+  - To seed sessionStorage before a Playwright page navigates (so client components read it on first render), use page.addInitScript(() => sessionStorage.setItem(...)) before page.goto() — setting it after goto() is too late for state read during the initial render.
+  - grass_type in onboarding_state is always the grass id (set directly in Step4, or indirectly via the quiz's scored results which Step4 then lets the user pick from) — resolve display names through the shared grassTypes array from @/data/grass-types, same as profile/page.tsx does.
+---
