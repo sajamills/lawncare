@@ -3,19 +3,22 @@ import Link from "next/link";
 const FEATURES = [
   {
     icon: "🌿",
-    title: "Zone-aware",
+    chip: "Zone-aware",
+    title: "Calibrated to your growing zone and local university research",
     description:
       "Plans calibrated to your USDA growing zone and local university extension research.",
   },
   {
     icon: "🌱",
-    title: "Grass-specific",
+    chip: "Grass-specific",
+    title: "Matched to your exact grass type and blade width",
     description:
       "From Bermuda to Tall Fescue, care schedules matched to your exact grass type.",
   },
   {
     icon: "🐾",
-    title: "Pet-friendly flags",
+    chip: "Pet-safe",
+    title: "Flags every product recommendation near your pets",
     description:
       "Every recommendation notes whether it's safe for dogs and cats on the lawn.",
   },
@@ -39,6 +42,25 @@ const HOW_IT_WORKS = [
     title: "Get your plan",
     description:
       "A month-by-month care calendar with official university guide links.",
+  },
+];
+
+const MOCK_TASKS = [
+  {
+    priority: "urgent" as const,
+    borderColor: "var(--color-urgent)",
+    icon: "🐛",
+    title: "Apply pre-emergent herbicide",
+    description:
+      "Apply before soil hits 55°F. Prevents crabgrass germination for the season.",
+  },
+  {
+    priority: "routine" as const,
+    borderColor: "var(--color-routine)",
+    icon: "🌿",
+    title: "Mow at 3.5 inches",
+    description:
+      "Raise mowing height during heat season. Never remove more than 1/3 of the blade.",
   },
 ];
 
@@ -107,34 +129,94 @@ export default function Home() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {FEATURES.map((f) => (
               <div
-                key={f.title}
-                className="flex flex-col gap-3 p-6 rounded-xl border"
+                key={f.chip}
+                className="flex flex-col rounded-xl border overflow-hidden"
                 style={{
                   backgroundColor: "var(--color-background)",
                   borderColor: "var(--color-border)",
                 }}
               >
-                <span className="text-3xl">{f.icon}</span>
-                <p
-                  className="font-semibold text-base"
-                  style={{ color: "var(--color-text-primary)" }}
-                >
-                  {f.title}
-                </p>
-                <p
-                  className="text-sm leading-relaxed"
-                  style={{ color: "var(--color-text-muted)" }}
-                >
-                  {f.description}
-                </p>
+                {/* Accent bar */}
+                <div
+                  style={{
+                    height: 4,
+                    backgroundColor: "var(--color-primary)",
+                  }}
+                />
+                <div className="flex flex-col gap-3 p-6">
+                  <span className="text-3xl">{f.icon}</span>
+                  <span
+                    className="text-xs font-semibold uppercase tracking-wide px-2 py-0.5 rounded-full self-start"
+                    style={{
+                      backgroundColor: "var(--color-surface-alt)",
+                      color: "var(--color-primary)",
+                    }}
+                  >
+                    {f.chip}
+                  </span>
+                  <p
+                    className="font-semibold text-base leading-snug"
+                    style={{ color: "var(--color-text-primary)" }}
+                  >
+                    {f.title}
+                  </p>
+                  <p
+                    className="text-sm leading-relaxed"
+                    style={{ color: "var(--color-text-muted)" }}
+                  >
+                    {f.description}
+                  </p>
+                </div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
+      {/* Product preview */}
+      <section className="px-6 py-16" style={{ backgroundColor: "var(--color-background)" }}>
+        <div className="max-w-2xl mx-auto flex flex-col gap-6">
+          <h2
+            className="text-2xl font-bold text-center"
+            style={{ color: "var(--color-text-primary)" }}
+          >
+            Your personalized weekly plan
+          </h2>
+          <div className="flex flex-col gap-3">
+            {MOCK_TASKS.map((task) => (
+              <div
+                key={task.title}
+                className="rounded-lg p-4 border flex flex-col gap-2"
+                style={{
+                  backgroundColor: "var(--color-surface)",
+                  borderColor: "var(--color-border)",
+                  borderLeftColor: task.borderColor,
+                  borderLeftWidth: "4px",
+                }}
+              >
+                <div className="flex items-center gap-2">
+                  <span>{task.icon}</span>
+                  <p className="font-semibold" style={{ color: "var(--color-text-primary)" }}>
+                    {task.title}
+                  </p>
+                </div>
+                <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>
+                  {task.description}
+                </p>
+              </div>
+            ))}
+          </div>
+          <p
+            className="text-sm text-center"
+            style={{ color: "var(--color-text-muted)" }}
+          >
+            Your plan includes 52 weeks of tasks tailored to your grass type and climate.
+          </p>
+        </div>
+      </section>
+
       {/* How it works */}
-      <section className="px-6 py-16">
+      <section className="px-6 py-16" style={{ backgroundColor: "var(--color-surface)" }}>
         <div className="max-w-2xl mx-auto flex flex-col gap-10">
           <h2
             className="text-2xl font-bold text-center"
@@ -177,7 +259,7 @@ export default function Home() {
       {/* Bottom CTA */}
       <section
         className="px-6 py-16 flex flex-col items-center gap-6"
-        style={{ backgroundColor: "var(--color-surface)" }}
+        style={{ backgroundColor: "var(--color-background)" }}
       >
         <h2
           className="text-2xl font-bold text-center"
