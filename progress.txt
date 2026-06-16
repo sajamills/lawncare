@@ -45,6 +45,17 @@ Started: Sun Jun 15 2026
   - Vercel build with placeholder Clerk keys succeeds (Clerk SDK doesn't throw at build time for missing keys)
 ---
 
+## 2026-06-15 - US-057
+- Created db/migrations/003_add_users_table.sql (migration file was already staged, just committed)
+- Created src/lib/user.ts with User interface and getOrCreateUser() upsert function (ON CONFLICT DO UPDATE SET email)
+- Build + typecheck passes (no POSTGRES_URL locally — migration runs on Vercel via npm run db:migrate after vercel env pull)
+- Files changed: db/migrations/003_add_users_table.sql, src/lib/user.ts
+- **Learnings for future iterations:**
+  - No local POSTGRES_URL in .env.local — migrations are applied against Vercel's Neon DB; run `vercel env pull` then `npm run db:migrate`
+  - User table: clerk_user_id is UNIQUE key for upsert; subscription_status defaults to 'free'
+  - getOrCreateUser uses INSERT ... ON CONFLICT DO UPDATE pattern so it's idempotent
+---
+
 ## 2026-06-15 - US-056
 - Replaced NextResponse.next() passthrough with clerkMiddleware + createRouteMatcher
 - Public routes: /, /sign-in(.*), /sign-up(.*), /api/zone(.*), /onboarding(.*)
