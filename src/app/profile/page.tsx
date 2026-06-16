@@ -226,20 +226,29 @@ export default function ProfilePage() {
             className="text-sm font-medium"
             style={{ color: "var(--color-text-primary)" }}
           >
-            Lawn Size (sq ft, optional)
+            Lawn Size (sq ft)
           </label>
+          <p className="text-xs mt-0.5" style={{ color: "var(--color-text-muted)" }}>
+            Used to calculate product quantities. Optional.
+          </p>
           <input
-            type="number"
-            min="0"
+            type="text"
+            inputMode="numeric"
+            placeholder="e.g. 5,000"
             value={sqFt}
-            onChange={(e) => setSqFt(e.target.value)}
+            onChange={(e) => setSqFt(e.target.value.replace(/\D/g, ""))}
             className="px-4 py-2 rounded-lg border"
             style={{
               backgroundColor: "var(--color-surface)",
               color: "var(--color-text-primary)",
-              borderColor: "var(--color-border)",
+              borderColor: sqFt !== "" && parseInt(sqFt, 10) < 100 ? "var(--color-urgent)" : "var(--color-border)",
             }}
           />
+          {sqFt !== "" && parseInt(sqFt, 10) < 100 && (
+            <p className="text-xs mt-1" style={{ color: "var(--color-urgent)" }}>
+              Enter a lawn size of at least 100 sq ft
+            </p>
+          )}
         </div>
 
         {/* Pets */}

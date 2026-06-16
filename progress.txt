@@ -167,3 +167,14 @@ Started: Sun Jun 15 2026 — UI/UX Remediation Sprint
 - **Learnings for future iterations:**
   - HOW_IT_WORKS renders via .map() over a plain array with an inferred {step, title, description} shape — no separate type alias to update when changing item count or content.
 ---
+
+## 2026-06-16 - US-009
+- Replaced the lawn-size number-spinner input on the profile page with a plain text input (type="text", inputMode="numeric") that strips non-digit characters on change, per the workflow optimization for US-004+.
+- Added inline validation: a non-empty value under 100 sq ft turns the border red and shows "Enter a lawn size of at least 100 sq ft" below the field.
+- Updated the label to "Lawn Size (sq ft)" with a muted helper line underneath ("Used to calculate product quantities. Optional.") and added placeholder="e.g. 5,000".
+- Files changed: src/app/profile/page.tsx, e2e/profile.spec.ts (new), prd.json, progress.txt. Screenshots: e2e/screenshots/profile-414x896.png, e2e/screenshots/profile-414x896-error.png.
+- **Learnings for future iterations:**
+  - No e2e coverage existed yet for `/profile` — added a small dedicated spec (e2e/profile.spec.ts) rather than folding profile assertions into an unrelated file. Mirrors the calendar/clerk-auth spec-per-route pattern.
+  - The two `react-hooks/set-state-in-effect` lint errors in src/app/profile/page.tsx (lines 44 and 68) are pre-existing from US-001 and out of scope for every story touching this file — confirmed unaffected by this change, not fixed.
+  - For text-input validation styling, reuse `var(--color-urgent)` for both the border and the error text color rather than introducing a new token.
+---

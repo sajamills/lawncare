@@ -1,11 +1,11 @@
 {
   "project": "LawnGuide",
   "branchName": "ralph/ui-ux-remediation",
-  "description": "UI/UX Remediation — fix core product promise, responsive layout, onboarding clarity, copy quality, and trust/conversion for Facebook-sourced mobile users (Gen X, Boomers, early Millennials)",
+  "description": "UI/UX Remediation \u2014 fix core product promise, responsive layout, onboarding clarity, copy quality, and trust/conversion for Facebook-sourced mobile users (Gen X, Boomers, early Millennials)",
   "userStories": [
     {
       "id": "US-001",
-      "title": "Prevent destructive profile saves — add required-field validation",
+      "title": "Prevent destructive profile saves \u2014 add required-field validation",
       "description": "As a user, I want the Save button to block saving when required fields are blank so my working plan is never overwritten with empty data.",
       "acceptanceCriteria": [
         "In src/app/profile/page.tsx, add a validation function: zipCode must be exactly 5 digits and grassType must be non-empty to enable save",
@@ -26,31 +26,31 @@
       "title": "Diagnose and fix empty generated lawn plans",
       "description": "As a developer, I need to understand why a valid Bermudagrass / Arkansas profile may produce zero tasks on the dashboard and annual calendar, and fix the root cause so the core product promise is delivered.",
       "acceptanceCriteria": [
-        "INVESTIGATE — Week convention: read getISOWeek() in src/app/dashboard/page.tsx and confirm exactly what week number it returns for June 15 2026 under the app's own logic before writing any test fixture. Do not assume ISO week 25 without verifying.",
-        "INVESTIGATE — Trace the full plan-generation path: sessionStorage onboarding_state → POST /api/parse-pdf → Anthropic SDK call → raw text → JSON parse → WeeklyPlan[] → find(w => w.week === currentWeek) → setTasks(). Read src/app/api/parse-pdf/route.ts in full.",
-        "INVESTIGATE — Identify the failure stage: (a) grass-id mismatch between grassTypes[].id and what Claude's prompt sends; (b) state/region key mismatch in extension-sources data; (c) week-number produced by getISOWeek() not matching week values in WeeklyPlan[]; (d) Claude returning malformed JSON; (e) JSON.parse throwing and being silently swallowed; (f) /api/parse-pdf 4xx/5xx swallowed by the dashboard's catch block.",
-        "TESTS — All tests must use deterministic in-process fixtures. Do NOT call Claude, Anthropic, or any external PDF service from tests.",
-        "TEST 1 — A fixture WeeklyPlan[] for AR + Bermudagrass containing tasks in multiple weeks is stored as a JSON file in __tests__/fixtures/ar-bermudagrass-plan.json.",
-        "TEST 2 — Given the fixture, the lookup getWeekPlan(plan, knownWeek) returns the correct WeeklyTask[] for that week (tests the week-lookup logic in isolation).",
-        "TEST 3 — Given the fixture and a week that has no tasks, the 'next real task' finder returns the nearest future week entry with tasks (not a hardcoded message).",
-        "TEST 4 — A malformed AI response (empty string, '{', '[]', null) is caught and results in a plan-generation error, not a zero-task success.",
-        "TEST 5 — A failed generation attempt does not overwrite a previously valid cached plan in the DB (test the cache-read-before-write logic in the API route).",
-        "TEST 6 — Grass IDs and state codes are normalized to lowercase + trimmed before lookup so 'Bermuda ' and 'BERMUDA' both match the canonical id.",
-        "LOGGING — Add server-side console.error (never client-side) at each failure stage: JSON parse failure, empty-plan result for a profile that reached Claude, week-lookup miss. Log the stage name and input values (state, grassType, week) but never user PII.",
-        "FIX — Fix the identified root cause without adding any generic advice (mowing, watering, fertilizer) that does not come from the Claude-generated plan data.",
-        "EMPTY PLAN ERROR STATE — When /api/parse-pdf returns an empty plan or the dashboard's fetch fails, show: heading 'We could not build your plan' with body 'Something went wrong generating your recommendations.' plus a Retry button (re-calls loadData) and a link to /profile labeled 'Check your lawn details'.",
-        "QUIET WEEK STATE — When the annual plan IS populated but the current week has no tasks, show the next real future task from the plan: 'Nothing due this week. Up next: [task.title] — Week [week].' with a link to the calendar. No hardcoded advice.",
+        "INVESTIGATE \u2014 Week convention: read getISOWeek() in src/app/dashboard/page.tsx and confirm exactly what week number it returns for June 15 2026 under the app's own logic before writing any test fixture. Do not assume ISO week 25 without verifying.",
+        "INVESTIGATE \u2014 Trace the full plan-generation path: sessionStorage onboarding_state \u2192 POST /api/parse-pdf \u2192 Anthropic SDK call \u2192 raw text \u2192 JSON parse \u2192 WeeklyPlan[] \u2192 find(w => w.week === currentWeek) \u2192 setTasks(). Read src/app/api/parse-pdf/route.ts in full.",
+        "INVESTIGATE \u2014 Identify the failure stage: (a) grass-id mismatch between grassTypes[].id and what Claude's prompt sends; (b) state/region key mismatch in extension-sources data; (c) week-number produced by getISOWeek() not matching week values in WeeklyPlan[]; (d) Claude returning malformed JSON; (e) JSON.parse throwing and being silently swallowed; (f) /api/parse-pdf 4xx/5xx swallowed by the dashboard's catch block.",
+        "TESTS \u2014 All tests must use deterministic in-process fixtures. Do NOT call Claude, Anthropic, or any external PDF service from tests.",
+        "TEST 1 \u2014 A fixture WeeklyPlan[] for AR + Bermudagrass containing tasks in multiple weeks is stored as a JSON file in __tests__/fixtures/ar-bermudagrass-plan.json.",
+        "TEST 2 \u2014 Given the fixture, the lookup getWeekPlan(plan, knownWeek) returns the correct WeeklyTask[] for that week (tests the week-lookup logic in isolation).",
+        "TEST 3 \u2014 Given the fixture and a week that has no tasks, the 'next real task' finder returns the nearest future week entry with tasks (not a hardcoded message).",
+        "TEST 4 \u2014 A malformed AI response (empty string, '{', '[]', null) is caught and results in a plan-generation error, not a zero-task success.",
+        "TEST 5 \u2014 A failed generation attempt does not overwrite a previously valid cached plan in the DB (test the cache-read-before-write logic in the API route).",
+        "TEST 6 \u2014 Grass IDs and state codes are normalized to lowercase + trimmed before lookup so 'Bermuda ' and 'BERMUDA' both match the canonical id.",
+        "LOGGING \u2014 Add server-side console.error (never client-side) at each failure stage: JSON parse failure, empty-plan result for a profile that reached Claude, week-lookup miss. Log the stage name and input values (state, grassType, week) but never user PII.",
+        "FIX \u2014 Fix the identified root cause without adding any generic advice (mowing, watering, fertilizer) that does not come from the Claude-generated plan data.",
+        "EMPTY PLAN ERROR STATE \u2014 When /api/parse-pdf returns an empty plan or the dashboard's fetch fails, show: heading 'We could not build your plan' with body 'Something went wrong generating your recommendations.' plus a Retry button (re-calls loadData) and a link to /profile labeled 'Check your lawn details'.",
+        "QUIET WEEK STATE \u2014 When the annual plan IS populated but the current week has no tasks, show the next real future task from the plan: 'Nothing due this week. Up next: [task.title] \u2014 Week [week].' with a link to the calendar. No hardcoded advice.",
         "Typecheck passes",
         "Tests pass",
-        "Verify in browser using dev-browser skill — confirm a Bermudagrass / AR profile either shows real tasks or the correct quiet-week or error state"
+        "Verify in browser using dev-browser skill \u2014 confirm a Bermudagrass / AR profile either shows real tasks or the correct quiet-week or error state"
       ],
       "priority": 2,
       "passes": true,
-      "notes": "Root causes: (1) SYSTEM_PROMPT week numbering ambiguous — fixed with ISO 8601 spec; (2) empty plan [] silently treated as success — fixed with validateWeeklyPlan(); (3) grassType not normalized — fixed with normalizeGrassId(); (4) silent error swallowing — fixed with planError state; (5) quiet-week hardcoded copy — fixed with findNextTaskWeek(). Patch: cached plans now validated with same validator; clampWeek() handles week 53; retry preserves prior plan; client console.error removed; 47 tests across 2 files."
+      "notes": "Root causes: (1) SYSTEM_PROMPT week numbering ambiguous \u2014 fixed with ISO 8601 spec; (2) empty plan [] silently treated as success \u2014 fixed with validateWeeklyPlan(); (3) grassType not normalized \u2014 fixed with normalizeGrassId(); (4) silent error swallowing \u2014 fixed with planError state; (5) quiet-week hardcoded copy \u2014 fixed with findNextTaskWeek(). Patch: cached plans now validated with same validator; clampWeek() handles week 53; retry preserves prior plan; client console.error removed; 47 tests across 2 files."
     },
     {
       "id": "US-003",
-      "title": "Fix calendar horizontal scroll — replace overflow-x strip with responsive grid",
+      "title": "Fix calendar horizontal scroll \u2014 replace overflow-x strip with responsive grid",
       "description": "As a mobile user, I want the annual calendar to show without requiring horizontal scrolling, which is easy to miss and inaccessible.",
       "acceptanceCriteria": [
         "In src/app/dashboard/calendar/page.tsx, replace the calendar viewMode block that uses overflow-x-auto + min-w-max + flex gap-2 with a CSS grid",
@@ -97,7 +97,7 @@
       "title": "Replace calendar month dashes with descriptive no-task text",
       "description": "As a user, I want months with no special tasks to show a helpful message instead of a dash, so the calendar doesn't look empty or broken.",
       "acceptanceCriteria": [
-        "In src/app/dashboard/calendar/page.tsx, in the calendar view's month card, replace the dash span: when categories.length === 0, show <p className='text-xs leading-tight' style={{ color: 'var(--color-text-muted)' }}>Routine care only</p> instead of <span>—</span>",
+        "In src/app/dashboard/calendar/page.tsx, in the calendar view's month card, replace the dash span: when categories.length === 0, show <p className='text-xs leading-tight' style={{ color: 'var(--color-text-muted)' }}>Routine care only</p> instead of <span>\u2014</span>",
         "In list view's MonthTaskListFlat, when tasks.length === 0, replace 'No tasks this month.' with: 'No seasonal treatments this month. Continue regular mowing and watering.'",
         "In the expanded month detail panel (MonthTaskList), apply the same replacement for the empty state",
         "Typecheck passes",
@@ -105,7 +105,7 @@
       ],
       "priority": 5,
       "passes": true,
-      "notes": "Replaced the dash with 'Routine care only' in the calendar-view month card empty state, and 'No tasks this month.' with 'No seasonal treatments this month. Continue regular mowing and watering.' in both MonthTaskList (expanded panel) and MonthTaskListFlat (list view) — same text used in both since they share the identical empty-state copy already. Text-only change, no layout/responsive/color impact, so no new screenshots captured. Verified via existing scoped e2e/calendar.spec.ts (7/7) plus full suite at the end (tsc clean, scoped+full eslint with only the pre-existing unrelated profile/page.tsx failures from US-001, vitest 47/47, playwright 21/21)."
+      "notes": "Replaced the dash with 'Routine care only' in the calendar-view month card empty state, and 'No tasks this month.' with 'No seasonal treatments this month. Continue regular mowing and watering.' in both MonthTaskList (expanded panel) and MonthTaskListFlat (list view) \u2014 same text used in both since they share the identical empty-state copy already. Text-only change, no layout/responsive/color impact, so no new screenshots captured. Verified via existing scoped e2e/calendar.spec.ts (7/7) plus full suite at the end (tsc clean, scoped+full eslint with only the pre-existing unrelated profile/page.tsx failures from US-001, vitest 47/47, playwright 21/21)."
     },
     {
       "id": "US-005",
@@ -128,9 +128,9 @@
       "title": "Fix landing page CTA copy and hero heading",
       "description": "As a visitor, I want the CTA to use clear action-oriented language and the hero to state a specific outcome so I know what I'll receive.",
       "acceptanceCriteria": [
-        "In src/app/page.tsx, change the CtaButton label from 'Get my free lawn plan →' to 'Build my free lawn plan →' (update both the text in the <Link> and anywhere else this phrase appears on the page)",
+        "In src/app/page.tsx, change the CtaButton label from 'Get my free lawn plan \u2192' to 'Build my free lawn plan \u2192' (update both the text in the <Link> and anywhere else this phrase appears on the page)",
         "Change the <h1> from 'The lawn plan built for your yard, your grass, and your zone.' to 'A lawn-care plan for your grass and your location'",
-        "Change the hero sub-copy from 'Answer a few questions and get a science-backed care calendar — free, no account required.' to 'Answer a few questions and see what to do this week, what is coming next, and the university guidance behind every recommendation.'",
+        "Change the hero sub-copy from 'Answer a few questions and get a science-backed care calendar \u2014 free, no account required.' to 'Answer a few questions and see what to do this week, what is coming next, and the university guidance behind every recommendation.'",
         "The second bottom CTA section: change 'Ready to get started?' to 'Your plan is free and ready in 2 minutes.'",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
@@ -145,22 +145,22 @@
       "description": "As a visitor, I want trust language that names a real source (university extension) rather than a vague claim like 'science-backed' so the product feels credible.",
       "acceptanceCriteria": [
         "In src/app/page.tsx, update the FEATURES array: the Zone-aware card description changes from 'Plans calibrated to your USDA growing zone and local university extension research.' to 'Plans calibrated to your USDA growing zone and based on university extension guidance for your region.'",
-        "Remove any remaining use of 'science-backed' in src/app/page.tsx — replace with 'university-extension-based' or 'based on extension research'",
-        "In src/app/dashboard/page.tsx LOADING_MESSAGES array, change 'Consulting university extension research…' — this one is already accurate, keep it",
+        "Remove any remaining use of 'science-backed' in src/app/page.tsx \u2014 replace with 'university-extension-based' or 'based on extension research'",
+        "In src/app/dashboard/page.tsx LOADING_MESSAGES array, change 'Consulting university extension research\u2026' \u2014 this one is already accurate, keep it",
         "Search all .tsx files in src/ for the string 'science-backed' and replace with 'based on university extension guidance' using a grep: grep -r 'science-backed' src/ to find all occurrences",
         "Typecheck passes"
       ],
       "priority": 8,
       "passes": true,
-      "notes": "Updated the FEATURES Zone-aware card description as specified. grep -r 'science-backed' src/ returned zero matches before any edit here — the only prior occurrence (hero sub-copy) was already replaced as part of US-006's wording change, so no further replacement was needed for that criterion. Dashboard LOADING_MESSAGES 'Consulting university extension research…' left unchanged per the story (already accurate). Pure copy change, no layout impact."
+      "notes": "Updated the FEATURES Zone-aware card description as specified. grep -r 'science-backed' src/ returned zero matches before any edit here \u2014 the only prior occurrence (hero sub-copy) was already replaced as part of US-006's wording change, so no further replacement was needed for that criterion. Dashboard LOADING_MESSAGES 'Consulting university extension research\u2026' left unchanged per the story (already accurate). Pure copy change, no layout impact."
     },
     {
       "id": "US-008",
       "title": "Align 'How it works' steps with the real 7-step onboarding",
       "description": "As a visitor, I want the landing page's 'How it works' to describe what actually happens in onboarding so I'm not confused when the wizard doesn't match what I expected.",
       "acceptanceCriteria": [
-        "In src/app/page.tsx, replace the HOW_IT_WORKS array with 4 items that accurately reflect the onboarding: (1) 'Enter your ZIP code — We find your USDA zone and state extension resources.' (2) 'Identify your grass type — Choose from a visual guide or answer 5 quick questions.' (3) 'Describe your yard — Sun exposure, lawn size, pets, and recent treatments.' (4) 'Get your personalized plan — A 52-week care calendar with timing, quantities, and university sources.'",
-        "Update the HOW_IT_WORKS type to match (step: number, title: string, description: string) — keep the same rendering logic",
+        "In src/app/page.tsx, replace the HOW_IT_WORKS array with 4 items that accurately reflect the onboarding: (1) 'Enter your ZIP code \u2014 We find your USDA zone and state extension resources.' (2) 'Identify your grass type \u2014 Choose from a visual guide or answer 5 quick questions.' (3) 'Describe your yard \u2014 Sun exposure, lawn size, pets, and recent treatments.' (4) 'Get your personalized plan \u2014 A 52-week care calendar with timing, quantities, and university sources.'",
+        "Update the HOW_IT_WORKS type to match (step: number, title: string, description: string) \u2014 keep the same rendering logic",
         "The section heading remains 'How it works'",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
@@ -183,15 +183,15 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 10,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Changed lawn-size input from type=number/min=0 to type=text/inputMode=numeric with an onChange handler stripping non-digits (e.target.value.replace(/\\D/g, '')). Added inline validation: when sqFt is non-empty and parseInt(sqFt) < 100, the border turns var(--color-urgent) and an error line reads 'Enter a lawn size of at least 100 sq ft'. Added placeholder='e.g. 5,000' (display only; raw digits are still what's submitted). Updated label to 'Lawn Size (sq ft)' with a helper note below it. The pre-existing react-hooks/set-state-in-effect lint errors at lines 44/68 in this file are out of scope (from US-001, documented in prior stories) and were left untouched. Added e2e/profile.spec.ts (3 tests: digit-stripping, validation show/hide, label/helper-text presence) since no profile e2e coverage existed yet. Visually verified at 414x896 via screenshot."
     },
     {
       "id": "US-010",
       "title": "Standardize sunlight options with hour descriptions in profile",
       "description": "As a user editing my profile, I want the same descriptive sunlight labels I saw in onboarding (e.g. '6+ hours of direct sun') so I know I'm picking the same value.",
       "acceptanceCriteria": [
-        "In src/app/profile/page.tsx, expand the SUN_OPTIONS array to include descriptions: [{ value: 'full-sun', label: 'Full Sun', desc: '6+ hours direct sun' }, { value: 'partial-shade', label: 'Partial Shade', desc: '3–6 hours' }, { value: 'full-shade', label: 'Full Shade', desc: 'Under 3 hours' }]",
+        "In src/app/profile/page.tsx, expand the SUN_OPTIONS array to include descriptions: [{ value: 'full-sun', label: 'Full Sun', desc: '6+ hours direct sun' }, { value: 'partial-shade', label: 'Partial Shade', desc: '3\u20136 hours' }, { value: 'full-shade', label: 'Full Shade', desc: 'Under 3 hours' }]",
         "Update the button rendering to show both label and desc: <span className='font-medium text-sm'>{opt.label}</span> and <span className='text-xs mt-0.5' style={{ color: selected ? 'var(--color-background)' : 'var(--color-text-muted)' }}>{opt.desc}</span> stacked in a flex flex-col",
         "Each button: flex flex-col items-center gap-0.5; increase height to py-3",
         "Selected button: text for desc changes to var(--color-background) for contrast",
@@ -207,11 +207,11 @@
       "title": "Add 'None / Just getting started' to treatment history step",
       "description": "As a new user who hasn't done any treatments, I want a clear 'none of these' option at the top so I don't feel like I failed a test before starting.",
       "acceptanceCriteria": [
-        "Find the treatment history step — it is src/app/onboarding/[step]/steps/Step5New.tsx (the one imported as Step5 in page.tsx — check which file page.tsx imports as Step5)",
-        "In the TASKS array, the current NONE_ID option at the bottom reads 'None of the above' — move it to the TOP of the rendered list, before all other options",
-        "Rename the NONE_ID button label to: 'None — I'm just getting started' in text-sm font-medium; add a subtitle below: 'Skip ahead to get your plan' in text-xs var(--color-text-muted)",
+        "Find the treatment history step \u2014 it is src/app/onboarding/[step]/steps/Step5New.tsx (the one imported as Step5 in page.tsx \u2014 check which file page.tsx imports as Step5)",
+        "In the TASKS array, the current NONE_ID option at the bottom reads 'None of the above' \u2014 move it to the TOP of the rendered list, before all other options",
+        "Rename the NONE_ID button label to: 'None \u2014 I'm just getting started' in text-sm font-medium; add a subtitle below: 'Skip ahead to get your plan' in text-xs var(--color-text-muted)",
         "The button should be visually distinct: slightly taller (py-4) and the label/subtitle stacked in a flex-col",
-        "Selecting 'None — I'm just getting started' still clears all other selections (existing logic handles this)",
+        "Selecting 'None \u2014 I'm just getting started' still clears all other selections (existing logic handles this)",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
@@ -222,13 +222,13 @@
     {
       "id": "US-012",
       "title": "Add visible checkmark indicator to treatment history selected items",
-      "description": "As a user selecting treatments, I want a visible checkmark on selected items — not just a border color change — so it's obvious at a glance what I've chosen.",
+      "description": "As a user selecting treatments, I want a visible checkmark on selected items \u2014 not just a border color change \u2014 so it's obvious at a glance what I've chosen.",
       "acceptanceCriteria": [
         "In the treatment history step component (Step5 / Step5New), update each selectable treatment button to show a checkmark circle on the right when selected",
-        "Add to the button's inner layout: when isSelected, render <span className='ml-auto w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold shrink-0' style={{ backgroundColor: 'var(--color-primary)', color: 'var(--color-background)' }}>✓</span>",
+        "Add to the button's inner layout: when isSelected, render <span className='ml-auto w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold shrink-0' style={{ backgroundColor: 'var(--color-primary)', color: 'var(--color-background)' }}>\u2713</span>",
         "When not selected, render a <span className='ml-auto w-5 h-5 rounded-full border shrink-0' style={{ borderColor: 'var(--color-border)' }} /> empty circle placeholder",
         "Button inner div: change to flex items-center gap-3 so text is on the left and the check circle is on the right",
-        "The 'None — I'm just getting started' button also gets the checkmark treatment",
+        "The 'None \u2014 I'm just getting started' button also gets the checkmark treatment",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
@@ -238,15 +238,15 @@
     },
     {
       "id": "US-013",
-      "title": "Remove extension resource step from onboarding — renumber to 6 steps",
+      "title": "Remove extension resource step from onboarding \u2014 renumber to 6 steps",
       "description": "As a user completing onboarding, I want to go straight to plan generation after my last data question, not wade through a generic university links page that delays my plan.",
       "acceptanceCriteria": [
         "In src/app/onboarding/[step]/page.tsx, remove the import of Step6 and remove it from STEP_COMPONENTS array; move Step7 to index 5 (making it the new step 6)",
-        "Update STEP_COMPONENTS to: [Step1, Step2, Step3, Step4, Step5, Step7] — only 6 steps",
+        "Update STEP_COMPONENTS to: [Step1, Step2, Step3, Step4, Step5, Step7] \u2014 only 6 steps",
         "Update the bounds check from stepNum > 7 to stepNum > 6",
         "Update the handleNext function: if (stepNum < 6) then navigate to next, otherwise let Step7 (now step 6) handle its own redirect to /dashboard",
         "In src/app/onboarding/layout.tsx, update TOTAL_STEPS from 7 to 6 if that constant exists there; also check src/app/onboarding/[step]/steps/ files for any hardcoded '7' in progress display and change to '6'",
-        "The HOW_IT_WORKS on the landing page (updated in US-008) already reflects 4 accurate steps — no change needed there",
+        "The HOW_IT_WORKS on the landing page (updated in US-008) already reflects 4 accurate steps \u2014 no change needed there",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
@@ -256,13 +256,13 @@
     },
     {
       "id": "US-014",
-      "title": "Improve plan completion screen — 'Your plan is ready' with summary",
+      "title": "Improve plan completion screen \u2014 'Your plan is ready' with summary",
       "description": "As a user finishing onboarding, I want a completion screen that confirms what I entered and previews my first task, not just a generic 'You're all set!' message.",
       "acceptanceCriteria": [
-        "Find Step7.tsx — the final onboarding step that generates the plan and completes onboarding",
+        "Find Step7.tsx \u2014 the final onboarding step that generates the plan and completes onboarding",
         "After plan generation succeeds (success state), change the heading from 'You're all set!' (or current text) to 'Your lawn plan is ready'",
-        "Add a summary card showing: location (zip_code / state), grass type name, and lawn size (if provided) — read these from sessionStorage onboarding_state",
-        "Below the summary, add a 'What to expect' note: <p className='text-sm' style={{ color: 'var(--color-text-muted)' }}>Your plan includes seasonal treatments, routine care tasks, and university extension sources — updated each week based on where you are in the year.</p>",
+        "Add a summary card showing: location (zip_code / state), grass type name, and lawn size (if provided) \u2014 read these from sessionStorage onboarding_state",
+        "Below the summary, add a 'What to expect' note: <p className='text-sm' style={{ color: 'var(--color-text-muted)' }}>Your plan includes seasonal treatments, routine care tasks, and university extension sources \u2014 updated each week based on where you are in the year.</p>",
         "Add a storage note below: <p className='text-xs mt-2' style={{ color: 'var(--color-text-muted)' }}>Your plan is saved on this device. Bookmark this page or use the Print option from your dashboard to keep a copy.</p>",
         "The 'Go to My Plan' (or equivalent CTA) button remains prominent",
         "Typecheck passes",
@@ -279,7 +279,7 @@
       "acceptanceCriteria": [
         "Create src/app/faq/page.tsx as a server component (no 'use client')",
         "Page title: 'Frequently Asked Questions' in text-3xl font-bold",
-        "Include these 8 Q&A items using an accordion-style <details>/<summary> HTML pattern (no JS needed): (1) 'What if I don't know my grass type?' (2) 'What if I don't know my lawn size?' (3) 'What is a USDA growing zone?' (4) 'What is pre-emergent herbicide?' (5) 'Is the plan free?' (6) 'How is my plan saved?' — answer: 'Your plan is saved on this device using browser storage. It will persist as long as you use the same browser and don't clear your data. We recommend bookmarking your dashboard or printing your plan.' (7) 'Is this safe around pets and children?' (8) 'Where does the advice come from?'",
+        "Include these 8 Q&A items using an accordion-style <details>/<summary> HTML pattern (no JS needed): (1) 'What if I don't know my grass type?' (2) 'What if I don't know my lawn size?' (3) 'What is a USDA growing zone?' (4) 'What is pre-emergent herbicide?' (5) 'Is the plan free?' (6) 'How is my plan saved?' \u2014 answer: 'Your plan is saved on this device using browser storage. It will persist as long as you use the same browser and don't clear your data. We recommend bookmarking your dashboard or printing your plan.' (7) 'Is this safe around pets and children?' (8) 'Where does the advice come from?'",
         "Each <details> has className='border-b py-4' with style borderColor var(--color-border); <summary> is cursor-pointer font-semibold text-base; answer text is text-sm var(--color-text-muted) mt-2",
         "Max-width container: max-w-2xl mx-auto px-6 py-12",
         "Add a link to /faq in the landing page footer (create a simple footer if none exists)",
@@ -295,8 +295,8 @@
       "title": "Add Open Graph meta tags for Facebook link previews",
       "description": "As a marketer, I want Facebook to show a proper preview image, title, and description when the link is shared, so more people click through.",
       "acceptanceCriteria": [
-        "In src/app/metadata.ts (or wherever the root metadata is exported), add og fields: title: 'LawnGuide — Free Personalized Lawn Care Plan', description: 'Answer a few questions and get a step-by-step lawn care plan based on your grass type, location, and university extension guidance.', type: 'website'",
-        "Add openGraph.images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'LawnGuide lawn care plan preview' }] — create a placeholder og-image.png in /public: a 1200x630 green rectangle PNG (use a script or just note the file needs to be added manually)",
+        "In src/app/metadata.ts (or wherever the root metadata is exported), add og fields: title: 'LawnGuide \u2014 Free Personalized Lawn Care Plan', description: 'Answer a few questions and get a step-by-step lawn care plan based on your grass type, location, and university extension guidance.', type: 'website'",
+        "Add openGraph.images: [{ url: '/og-image.png', width: 1200, height: 630, alt: 'LawnGuide lawn care plan preview' }] \u2014 create a placeholder og-image.png in /public: a 1200x630 green rectangle PNG (use a script or just note the file needs to be added manually)",
         "Add twitter card meta: twitter: { card: 'summary_large_image', title: same as og title, description: same as og description }",
         "Add canonical URL in metadata: alternates: { canonical: process.env.NEXT_PUBLIC_APP_URL ?? 'https://lawncare-azure.vercel.app' }",
         "Verify the metadata export compiles with no TypeScript errors",
@@ -309,14 +309,14 @@
     {
       "id": "US-019",
       "title": "Increase base font sizes for the target older audience",
-      "description": "As a user in the 45–65 age range, I want body text that is large enough to read comfortably without zooming.",
+      "description": "As a user in the 45\u201365 age range, I want body text that is large enough to read comfortably without zooming.",
       "acceptanceCriteria": [
         "In src/app/globals.css, add to the body selector (or create one if absent): font-size: 1.0625rem; (17px) line-height: 1.55;",
         "In the Tailwind v4 @theme block, add: --text-base: 1.0625rem; --leading-normal: 1.55;",
         "Update task card description text in src/app/dashboard/page.tsx: change className from 'text-sm' to 'text-base' for the task description <p>",
         "Update calendar month task description text in src/app/dashboard/calendar/page.tsx: change task description from 'text-xs' to 'text-sm'",
         "Profile field labels: change from 'text-sm' to 'text-base'",
-        "Do NOT increase heading sizes — they are already large enough",
+        "Do NOT increase heading sizes \u2014 they are already large enough",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
@@ -331,8 +331,8 @@
       "acceptanceCriteria": [
         "In src/app/dashboard/page.tsx, add a timing label above each task title: for urgent tasks show <span className='text-xs font-semibold uppercase tracking-wide' style={{ color: 'var(--color-urgent)' }}>Due this week</span>; for routine tasks show <span className='text-xs font-semibold uppercase tracking-wide' style={{ color: 'var(--color-routine)' }}>Routine care</span>; for optional tasks show <span className='text-xs font-semibold uppercase tracking-wide' style={{ color: 'var(--color-optional)' }}>Optional</span>",
         "Place the timing label as the first element inside the task card, before the title/icon row",
-        "Remove the priority badge spans in the calendar view (src/app/dashboard/calendar/page.tsx) — replace them with the same text-label pattern",
-        "In the calendar list view, change the priority badge to a plain label: urgent → 'Due this week', routine → 'Routine', optional → 'Optional'",
+        "Remove the priority badge spans in the calendar view (src/app/dashboard/calendar/page.tsx) \u2014 replace them with the same text-label pattern",
+        "In the calendar list view, change the priority badge to a plain label: urgent \u2192 'Due this week', routine \u2192 'Routine', optional \u2192 'Optional'",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
@@ -343,11 +343,11 @@
     {
       "id": "US-022",
       "title": "Show quantity calculation breakdown on task cards",
-      "description": "As a user, I want to see how my fertilizer quantity was calculated (rate × my lawn size = total) so I know the recommendation is based on my actual yard.",
+      "description": "As a user, I want to see how my fertilizer quantity was calculated (rate \u00d7 my lawn size = total) so I know the recommendation is based on my actual yard.",
       "acceptanceCriteria": [
-        "In src/app/dashboard/page.tsx, the scaleQuantity() function already replaces the description text — extend it to ALSO add a calculation note when it matches",
+        "In src/app/dashboard/page.tsx, the scaleQuantity() function already replaces the description text \u2014 extend it to ALSO add a calculation note when it matches",
         "When scaleQuantity finds a match, append a <span> or separate element: create a new helper formatQuantityBreakdown(description, sqFt) that returns an object { text: string, calcNote: string | null }",
-        "calcNote format: 'Calculation: {amount} lbs per 1,000 sq ft × {sqFt.toLocaleString()} sq ft = {total} lbs total'",
+        "calcNote format: 'Calculation: {amount} lbs per 1,000 sq ft \u00d7 {sqFt.toLocaleString()} sq ft = {total} lbs total'",
         "In the task card, render calcNote (when non-null) as a separate <p className='text-xs mt-1 font-medium' style={{ color: 'var(--color-primary)' }}>{calcNote}</p> below the description",
         "Only show the calcNote when sqFt is non-null and the regex matched; otherwise show the description unchanged",
         "Typecheck passes",
@@ -377,8 +377,8 @@
       "title": "Rewrite treatment history labels in plain English",
       "description": "As a user who isn't a lawn expert, I want treatment history options in plain English so I can understand what each one means without prior lawn-care knowledge.",
       "acceptanceCriteria": [
-        "In the treatment history step (Step5New.tsx or Step5.tsx — whichever is used as Step5), rewrite the TASKS array labels: 'Applied fertilizer' → 'Applied fertilizer or lawn food'; 'Applied pre-emergent weed control' → 'Used a product to prevent weeds before they sprouted'; 'Applied post-emergent (weed killer)' → 'Used weed killer on existing weeds'; 'Aerated the lawn' → 'Poked holes in the soil (aeration)'; 'Overseeded' → 'Spread grass seed to fill in thin areas'; 'Dethatched' → 'Removed the layer of dead grass above the soil (dethatching)'; 'Applied lime or soil amendment' → 'Adjusted soil pH with lime or a soil amendment'; 'Applied pesticide / grub control' → 'Treated for insects, grubs, or lawn pests'; 'Started regular mowing' → 'Started mowing regularly this season'; 'Set up / ran irrigation system' → 'Used a sprinkler or irrigation system recently'",
-        "The NONE_ID label (updated in US-011) remains 'None — I'm just getting started'",
+        "In the treatment history step (Step5New.tsx or Step5.tsx \u2014 whichever is used as Step5), rewrite the TASKS array labels: 'Applied fertilizer' \u2192 'Applied fertilizer or lawn food'; 'Applied pre-emergent weed control' \u2192 'Used a product to prevent weeds before they sprouted'; 'Applied post-emergent (weed killer)' \u2192 'Used weed killer on existing weeds'; 'Aerated the lawn' \u2192 'Poked holes in the soil (aeration)'; 'Overseeded' \u2192 'Spread grass seed to fill in thin areas'; 'Dethatched' \u2192 'Removed the layer of dead grass above the soil (dethatching)'; 'Applied lime or soil amendment' \u2192 'Adjusted soil pH with lime or a soil amendment'; 'Applied pesticide / grub control' \u2192 'Treated for insects, grubs, or lawn pests'; 'Started regular mowing' \u2192 'Started mowing regularly this season'; 'Set up / ran irrigation system' \u2192 'Used a sprinkler or irrigation system recently'",
+        "The NONE_ID label (updated in US-011) remains 'None \u2014 I'm just getting started'",
         "IDs (id values in the TASKS array) remain unchanged so stored history is not invalidated",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
@@ -393,7 +393,7 @@
       "description": "As a visitor on mobile, I want the headline and CTA visible without scrolling through an empty dark band.",
       "acceptanceCriteria": [
         "In src/app/page.tsx, change the hero section top padding from pt-20 to pt-12",
-        "No mock task cards added to the hero — that portion of the original story is deferred to tasks/deferred-ui-stories.md pending US-002 diagnosis",
+        "No mock task cards added to the hero \u2014 that portion of the original story is deferred to tasks/deferred-ui-stories.md pending US-002 diagnosis",
         "Typecheck passes",
         "Verify in browser using dev-browser skill"
       ],
