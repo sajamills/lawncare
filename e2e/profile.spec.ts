@@ -29,3 +29,12 @@ test.describe("profile lawn size input", () => {
     await expect(page.getByText("Used to calculate product quantities. Optional.")).toBeVisible();
   });
 });
+
+test.describe("profile sun exposure options", () => {
+  test("shows hour-range descriptions for each option", async ({ page }) => {
+    await page.goto("/profile");
+    await expect(page.getByText("6+ hours direct sun")).toBeVisible();
+    await expect(page.getByText("3–6 hours")).toBeVisible();
+    await expect(page.getByText("Under 3 hours")).toBeVisible();
+  });
+});

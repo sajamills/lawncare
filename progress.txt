@@ -178,3 +178,12 @@ Started: Sun Jun 15 2026 — UI/UX Remediation Sprint
   - The two `react-hooks/set-state-in-effect` lint errors in src/app/profile/page.tsx (lines 44 and 68) are pre-existing from US-001 and out of scope for every story touching this file — confirmed unaffected by this change, not fixed.
   - For text-input validation styling, reuse `var(--color-urgent)` for both the border and the error text color rather than introducing a new token.
 ---
+
+## 2026-06-16 - US-010
+- Standardized the profile page's sunlight options to show the same descriptive hour-range labels used during onboarding ("6+ hours direct sun", "3-6 hours", "Under 3 hours").
+- Buttons changed from a single inline label to a stacked flex-col layout (label + desc), with desc text color flipping to var(--color-background) when selected for contrast against the unfilled-but-bordered selected state.
+- Files changed: src/app/profile/page.tsx, e2e/profile.spec.ts, prd.json, progress.txt. Screenshot: e2e/screenshots/profile-sun-414x896.png.
+- **Learnings for future iterations:**
+  - When a screenshot looks visually tight/clipped at small scale, verify with a Playwright boundingBox() check before assuming a layout bug — in this case the description text fit comfortably and the screenshot just renders small.
+  - profile.spec.ts is the right home for all /profile UI assertions going forward; keep adding test.describe blocks per field rather than new files.
+---

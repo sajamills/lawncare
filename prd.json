@@ -199,8 +199,8 @@
         "Verify in browser using dev-browser skill"
       ],
       "priority": 11,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Expanded SUN_OPTIONS in src/app/profile/page.tsx to include a desc field ('6+ hours direct sun', '3-6 hours', 'Under 3 hours'), matching the onboarding sunlight step's descriptive labels. Updated the sun-exposure buttons to flex flex-col items-center gap-0.5 py-3, stacking the label and desc; desc text color switches to var(--color-background) when selected for contrast. Verified no text clipping via bounding-box check (desc box ~110px fits within the ~117px button at 414px viewport) and a screenshot. Added a scoped Playwright test asserting all three descriptions render."
     },
     {
       "id": "US-011",

@@ -127,10 +127,10 @@ export default function ProfilePage() {
     );
   }
 
-  const SUN_OPTIONS: { value: SunExposure; label: string }[] = [
-    { value: "full-sun", label: "Full Sun" },
-    { value: "partial-shade", label: "Partial Shade" },
-    { value: "full-shade", label: "Full Shade" },
+  const SUN_OPTIONS: { value: SunExposure; label: string; desc: string }[] = [
+    { value: "full-sun", label: "Full Sun", desc: "6+ hours direct sun" },
+    { value: "partial-shade", label: "Partial Shade", desc: "3–6 hours" },
+    { value: "full-shade", label: "Full Shade", desc: "Under 3 hours" },
   ];
 
   return (
@@ -302,7 +302,7 @@ export default function ProfilePage() {
                 <button
                   key={opt.value}
                   onClick={() => setSunExposure(opt.value)}
-                  className="flex-1 py-2 rounded-lg text-sm"
+                  className="flex-1 py-3 rounded-lg flex flex-col items-center gap-0.5"
                   style={{
                     backgroundColor: "var(--color-surface)",
                     color: selected
@@ -313,7 +313,15 @@ export default function ProfilePage() {
                     borderColor: selected ? "var(--color-primary)" : "var(--color-border)",
                   }}
                 >
-                  {opt.label}
+                  <span className="font-medium text-sm">{opt.label}</span>
+                  <span
+                    className="text-xs mt-0.5"
+                    style={{
+                      color: selected ? "var(--color-background)" : "var(--color-text-muted)",
+                    }}
+                  >
+                    {opt.desc}
+                  </span>
                 </button>
               );
             })}
