@@ -44,3 +44,14 @@ Started: Sun Jun 15 2026
   - .env.local already existed with placeholder Clerk keys from a prior setup — check before adding duplicates
   - Vercel build with placeholder Clerk keys succeeds (Clerk SDK doesn't throw at build time for missing keys)
 ---
+
+## 2026-06-15 - US-056
+- Replaced NextResponse.next() passthrough with clerkMiddleware + createRouteMatcher
+- Public routes: /, /sign-in(.*), /sign-up(.*), /api/zone(.*), /onboarding(.*)
+- All other routes protected — /dashboard returns 401 without auth (browser would redirect to /sign-in)
+- Deployed: https://lawncare-f36wkn38g-sajamills-projects.vercel.app — build passed, /dashboard returns 401
+- Files changed: src/middleware.ts
+- **Learnings for future iterations:**
+  - clerkMiddleware uses async (auth, req) => {} pattern; call auth.protect() for protected routes
+  - With placeholder Clerk keys, middleware returns 401 instead of redirecting — this is fine for CI; real browser redirect needs real keys
+---

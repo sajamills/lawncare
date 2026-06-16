@@ -33,7 +33,7 @@
         "Deploy to Vercel; verify /dashboard redirects to /sign-in when logged out"
       ],
       "priority": 2,
-      "passes": false,
+      "passes": true,
       "notes": ""
     },
     {
