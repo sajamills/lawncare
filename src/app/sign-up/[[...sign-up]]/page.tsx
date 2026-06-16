@@ -1,4 +1,5 @@
 import { SignUp } from "@clerk/nextjs";
+import { clerkAppearance } from "@/lib/clerk-appearance";
 
 export default function SignUpPage() {
   return (
@@ -9,14 +10,7 @@ export default function SignUpPage() {
       >
         LawnGuide
       </p>
-      <SignUp
-        appearance={{
-          variables: {
-            colorBackground: "#1a2e1a",
-            colorPrimary: "#4caf50",
-          },
-        }}
-      />
+      <SignUp appearance={clerkAppearance} />
     </div>
   );
 }

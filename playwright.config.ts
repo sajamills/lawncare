@@ -6,7 +6,12 @@ const baseURL = `http://localhost:${PORT}`;
 export default defineConfig({
   testDir: "./e2e",
   fullyParallel: true,
-  retries: 0,
+  // Clerk's dev instance rate-limits its API ("too_many_requests") under enough
+  // concurrent test traffic, which only shows up when running the full suite with
+  // several parallel workers. Retry once to absorb that transient external limit
+  // without masking real failures.
+  retries: 1,
+  workers: 2,
   reporter: "list",
   use: {
     baseURL,
