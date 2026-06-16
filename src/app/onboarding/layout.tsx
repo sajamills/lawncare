@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 
-const TOTAL_STEPS = 5;
+const TOTAL_STEPS = 7;
 
 function getStep(pathname: string): number {
   const match = pathname.match(/\/onboarding\/(\d+)/);
@@ -21,7 +21,11 @@ export default function OnboardingLayout({
     <div className="flex-1 flex flex-col items-center py-8 px-4">
       <div className="w-full max-w-md">
         {currentStep > 0 && (
-          <div className="flex gap-2 mb-8">
+          <div className="mb-8">
+          <p className="text-xs text-center mb-2" style={{ color: "var(--color-text-muted)" }}>
+            Step {currentStep} of {TOTAL_STEPS}
+          </p>
+          <div className="flex gap-2">
             {Array.from({ length: TOTAL_STEPS }, (_, i) => {
               const step = i + 1;
               const isActive = step === currentStep;
@@ -40,6 +44,7 @@ export default function OnboardingLayout({
                 />
               );
             })}
+          </div>
           </div>
         )}
         {children}
