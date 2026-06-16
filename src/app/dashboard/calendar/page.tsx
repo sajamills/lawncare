@@ -31,13 +31,15 @@ const CATEGORY_ICONS: Record<TaskCategory, string> = {
   other: "📋",
 };
 
-const PRIORITY_COLORS: Record<TaskPriority, { bg: string; text: string }> = {
-  urgent: { bg: "rgba(239,68,68,0.13)", text: "var(--color-urgent)" },
-  routine: { bg: "rgba(234,179,8,0.13)", text: "var(--color-routine)" },
-  optional: { bg: "rgba(107,114,128,0.13)", text: "var(--color-optional)" },
+const TIMING_LABELS: Record<TaskPriority, { text: string; color: string }> = {
+  urgent: { text: "Due this week", color: "var(--color-urgent)" },
+  routine: { text: "Routine", color: "var(--color-routine)" },
+  optional: { text: "Optional", color: "var(--color-optional)" },
 };
 
-const DEFAULT_PRIORITY = { bg: "rgba(107,114,128,0.13)", text: "var(--color-optional)" };
+function getTimingLabel(priority: string): { text: string; color: string } {
+  return TIMING_LABELS[priority as TaskPriority] ?? TIMING_LABELS.optional;
+}
 
 function weekToMonth(week: number): number {
   return Math.min(Math.ceil(week / (52 / 12)), 12);
@@ -149,42 +151,42 @@ export default function CalendarPage() {
               >
                 Week {weekPlan.week}
               </p>
-              {weekPlan.tasks.map((task, i) => (
-                <div
-                  key={i}
-                  className="rounded-lg p-3 border flex flex-col gap-1 mb-2"
-                  style={{
-                    backgroundColor: "var(--color-surface)",
-                    borderColor: "var(--color-border)",
-                  }}
-                >
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-sm">
-                        {CATEGORY_ICONS[task.category as TaskCategory] ?? "📋"}
-                      </span>
-                      <p
-                        className="text-sm font-medium"
-                        style={{ color: "var(--color-text-primary)" }}
+              {weekPlan.tasks.map((task, i) => {
+                const timingLabel = getTimingLabel(task.priority);
+                return (
+                  <div
+                    key={i}
+                    className="rounded-lg p-3 border flex flex-col gap-1 mb-2"
+                    style={{
+                      backgroundColor: "var(--color-surface)",
+                      borderColor: "var(--color-border)",
+                    }}
+                  >
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-sm">
+                          {CATEGORY_ICONS[task.category as TaskCategory] ?? "📋"}
+                        </span>
+                        <p
+                          className="text-sm font-medium"
+                          style={{ color: "var(--color-text-primary)" }}
+                        >
+                          {task.title}
+                        </p>
+                      </div>
+                      <span
+                        className="text-xs font-semibold uppercase tracking-wide shrink-0"
+                        style={{ color: timingLabel.color }}
                       >
-                        {task.title}
-                      </p>
+                        {timingLabel.text}
+                      </span>
                     </div>
-                    <span
-                      className="text-xs px-1.5 py-0.5 rounded-full shrink-0"
-                      style={{
-                        backgroundColor: (PRIORITY_COLORS[task.priority as TaskPriority] ?? DEFAULT_PRIORITY).bg,
-                        color: (PRIORITY_COLORS[task.priority as TaskPriority] ?? DEFAULT_PRIORITY).text,
-                      }}
-                    >
-                      {task.priority}
-                    </span>
+                    <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>
+                      {task.description}
+                    </p>
                   </div>
-                  <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>
-                    {task.description}
-                  </p>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ))}
       </div>
@@ -202,39 +204,39 @@ export default function CalendarPage() {
     }
     return (
       <div className="flex flex-col gap-2">
-        {tasks.map((task, i) => (
-          <div
-            key={i}
-            className="rounded-lg p-3 border flex flex-col gap-1"
-            style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)" }}
-          >
-            <div className="flex items-center justify-between gap-2">
-              <div className="flex items-center gap-1.5">
-                <span className="text-sm">
-                  {CATEGORY_ICONS[task.category as TaskCategory] ?? "📋"}
-                </span>
-                <p
-                  className="text-sm font-medium"
-                  style={{ color: "var(--color-text-primary)" }}
+        {tasks.map((task, i) => {
+          const timingLabel = getTimingLabel(task.priority);
+          return (
+            <div
+              key={i}
+              className="rounded-lg p-3 border flex flex-col gap-1"
+              style={{ backgroundColor: "var(--color-surface)", borderColor: "var(--color-border)" }}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm">
+                    {CATEGORY_ICONS[task.category as TaskCategory] ?? "📋"}
+                  </span>
+                  <p
+                    className="text-sm font-medium"
+                    style={{ color: "var(--color-text-primary)" }}
+                  >
+                    {task.title}
+                  </p>
+                </div>
+                <span
+                  className="text-xs font-semibold uppercase tracking-wide shrink-0"
+                  style={{ color: timingLabel.color }}
                 >
-                  {task.title}
-                </p>
+                  {timingLabel.text}
+                </span>
               </div>
-              <span
-                className="text-xs px-1.5 py-0.5 rounded-full shrink-0"
-                style={{
-                  backgroundColor: (PRIORITY_COLORS[task.priority as TaskPriority] ?? DEFAULT_PRIORITY).bg,
-                  color: (PRIORITY_COLORS[task.priority as TaskPriority] ?? DEFAULT_PRIORITY).text,
-                }}
-              >
-                {task.priority}
-              </span>
+              <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>
+                {task.description}
+              </p>
             </div>
-            <p className="text-xs" style={{ color: "var(--color-text-muted)" }}>
-              {task.description}
-            </p>
-          </div>
-        ))}
+          );
+        })}
       </div>
     );
   }

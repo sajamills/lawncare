@@ -89,7 +89,7 @@ export default function Home() {
       style={{ backgroundColor: "var(--color-background)" }}
     >
       {/* Hero */}
-      <section className="flex flex-col items-center text-center px-6 pt-20 pb-16 gap-6">
+      <section className="flex flex-col items-center text-center px-6 pt-12 pb-16 gap-6">
         <p
           className="text-sm font-semibold uppercase tracking-widest"
           style={{ color: "var(--color-primary)" }}

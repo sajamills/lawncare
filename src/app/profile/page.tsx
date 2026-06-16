@@ -159,7 +159,7 @@ export default function ProfilePage() {
         {/* ZIP */}
         <div className="flex flex-col gap-1">
           <label
-            className="text-sm font-medium"
+            className="text-base font-medium"
             style={{ color: "var(--color-text-primary)" }}
           >
             ZIP Code
@@ -190,7 +190,7 @@ export default function ProfilePage() {
         {/* Grass type */}
         <div className="flex flex-col gap-1">
           <label
-            className="text-sm font-medium"
+            className="text-base font-medium"
             style={{ color: "var(--color-text-primary)" }}
           >
             Grass Type
@@ -223,7 +223,7 @@ export default function ProfilePage() {
         {/* Square footage */}
         <div className="flex flex-col gap-1">
           <label
-            className="text-sm font-medium"
+            className="text-base font-medium"
             style={{ color: "var(--color-text-primary)" }}
           >
             Lawn Size (sq ft)
@@ -254,7 +254,7 @@ export default function ProfilePage() {
         {/* Pets */}
         <div className="flex flex-col gap-1">
           <p
-            className="text-sm font-medium"
+            className="text-base font-medium"
             style={{ color: "var(--color-text-primary)" }}
           >
             Pets on the lawn?
@@ -290,7 +290,7 @@ export default function ProfilePage() {
         {/* Sun */}
         <div className="flex flex-col gap-1">
           <p
-            className="text-sm font-medium"
+            className="text-base font-medium"
             style={{ color: "var(--color-text-primary)" }}
           >
             Sun Exposure

@@ -11,7 +11,7 @@ test.describe("onboarding step 5 - treatment history", () => {
     const allButtons = page.locator("div.flex.flex-col.gap-2 > button");
     await expect(allButtons.first()).toContainText("None — I'm just getting started");
 
-    const fertilizeButton = page.getByRole("button", { name: "Applied fertilizer" });
+    const fertilizeButton = page.getByRole("button", { name: "Applied fertilizer or lawn food" });
     await fertilizeButton.click();
     await noneButton.click();
 
@@ -22,7 +22,7 @@ test.describe("onboarding step 5 - treatment history", () => {
   test("shows a filled checkmark on selected items and an empty circle otherwise", async ({ page }) => {
     await page.goto("/onboarding/5");
 
-    const fertilizeButton = page.getByRole("button", { name: "Applied fertilizer" });
+    const fertilizeButton = page.getByRole("button", { name: "Applied fertilizer or lawn food" });
     const checkCircle = fertilizeButton.locator("span.rounded-full");
 
     await expect(checkCircle).not.toContainText("✓");

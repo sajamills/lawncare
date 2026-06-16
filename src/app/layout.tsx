@@ -1,14 +1,9 @@
-import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import ClientNav from "./ClientNav";
 import { ClerkProvider } from "@clerk/nextjs";
 
-export const metadata: Metadata = {
-  title: "LawnGuide",
-  description: "Your personalized lawn care planner",
-  manifest: "/manifest.json",
-};
+export { metadata } from "./metadata";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",

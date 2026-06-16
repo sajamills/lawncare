@@ -229,3 +229,66 @@ Started: Sun Jun 15 2026 — UI/UX Remediation Sprint
   - Native <details>/<summary> is the right tool for simple accordions in a server component — avoids needing "use client" or any JS state just to expand/collapse text.
   - The landing page (src/app/page.tsx) had no footer before this story; if a later story needs more footer links (e.g. privacy, terms), extend the <footer> block added here rather than creating a new one.
 ---
+
+## 2026-06-16 - US-018
+- Added full Open Graph/Twitter/canonical metadata to src/app/metadata.ts: shared title/description constants, website OG type, /og-image.png image metadata (1200x630), twitter summary_large_image fields, metadataBase, and canonical URL using NEXT_PUBLIC_APP_URL with fallback to https://lawncare-azure.vercel.app.
+- Re-exported metadata from src/app/layout.tsx so the App Router root layout owns the metadata export while keeping the metadata object centralized in src/app/metadata.ts.
+- Created public/og-image.png as a real 1200x630 solid green PNG placeholder; verified dimensions with `file`.
+- Files changed: src/app/metadata.ts, src/app/layout.tsx, public/og-image.png, prd.json, progress.txt.
+- **Learnings for future iterations:**
+  - Next App Router metadata must be exported from a layout or page; keeping the object in src/app/metadata.ts is fine as long as src/app/layout.tsx re-exports it.
+---
+
+## 2026-06-16 - US-019
+- Increased global base text sizing in src/app/globals.css: body font-size 1.0625rem (17px), body line-height 1.55, and Tailwind v4 @theme tokens --text-base / --leading-normal.
+- Updated dashboard task descriptions to text-base, calendar task descriptions in both expanded/list month renderers to text-sm, and profile field labels (ZIP, Grass Type, Lawn Size, Pets, Sun Exposure) to text-base. Headings were intentionally left unchanged.
+- Browser verification: /profile field labels computed to 17px font-size and 25.5px line-height; /dashboard/calendar body computed to 17px and had no horizontal overflow.
+- Verification: `npx tsc --noEmit` passed; `npx playwright test e2e/profile.spec.ts e2e/calendar.spec.ts` passed 14/14.
+- Files changed: src/app/globals.css, src/app/dashboard/page.tsx, src/app/dashboard/calendar/page.tsx, src/app/profile/page.tsx, prd.json, progress.txt.
+- **Learnings for future iterations:**
+  - Scoped eslint on these touched files still reports pre-existing react-hooks/set-state-in-effect errors in dashboard/page.tsx and profile/page.tsx; these are unrelated to the text-size story and should be handled in a separate cleanup story.
+---
+
+## 2026-06-16 - US-020
+- Added plain-language timing labels to dashboard task cards before the title/icon row: urgent -> "Due this week", routine -> "Routine care", optional -> "Optional", each colored with the existing semantic priority tokens.
+- Replaced calendar priority pill badges in both expanded month task rows and list-view task rows with text-only uppercase labels: urgent -> "Due this week", routine -> "Routine", optional -> "Optional"; removed the old calendar priority background-pill constants.
+- Added e2e/timing-labels.spec.ts with a mocked /api/parse-pdf response and seeded onboarding_state so timing labels are tested deterministically without calling Claude, the database, or external services.
+- Verification: `npx tsc --noEmit` passed; `npx playwright test e2e/timing-labels.spec.ts e2e/calendar.spec.ts` passed 12/12; Browser sanity check confirmed /dashboard/calendar still rendered with no horizontal overflow after the change.
+- Files changed: src/app/dashboard/page.tsx, src/app/dashboard/calendar/page.tsx, e2e/timing-labels.spec.ts, prd.json, progress.txt.
+- **Learnings for future iterations:**
+  - For dashboard/calendar UI that normally depends on generated plans, mock /api/parse-pdf in Playwright and seed onboarding_state before navigation; this gives real browser coverage without live Claude/DB dependencies.
+---
+
+## 2026-06-16 - US-022
+- Replaced scaleQuantity() in src/app/dashboard/page.tsx with formatQuantityBreakdown(description, sqFt), returning { text, calcNote }.
+- Task descriptions now remain unchanged; when the existing lbs-per-1,000-sq-ft regex matches and sqFt is available, the dashboard renders a separate calculation note below the description.
+- Calc note format: "Calculation: {amount} lbs per 1,000 sq ft × {sqFt.toLocaleString()} sq ft = {total} lbs total".
+- Extended e2e/timing-labels.spec.ts so the mocked dashboard plan includes a rate-bearing description and asserts the visible calculation note.
+- Verification: `npx tsc --noEmit` passed; `npx playwright test e2e/timing-labels.spec.ts` passed 2/2.
+- Files changed: src/app/dashboard/page.tsx, e2e/timing-labels.spec.ts, prd.json, progress.txt.
+- **Learnings for future iterations:**
+  - Keep the recommendation sentence intact and put math in a second line; it preserves readability while still making the quantity transparent.
+---
+
+## 2026-06-16 - US-023
+- Added an "Edit lawn details" link to /profile below the dashboard grass/state/week subtitle.
+- The link is guarded by the existing grassName condition, so it only renders for users with a loaded profile and does not show on the onboarding gate.
+- Extended e2e/timing-labels.spec.ts dashboard coverage to assert the link is visible and has href="/profile" for a seeded profile.
+- Verification: `npx tsc --noEmit` passed; `npx playwright test e2e/timing-labels.spec.ts` passed 2/2.
+- Files changed: src/app/dashboard/page.tsx, e2e/timing-labels.spec.ts, prd.json, progress.txt.
+---
+
+## 2026-06-16 - US-024
+- Rewrote the active treatment-history TASKS labels in src/app/onboarding/[step]/steps/Step5.tsx to plain English while preserving every existing id value, so stored history remains compatible.
+- NONE_ID remains "None — I'm just getting started" with the existing "Skip ahead to get your plan" subtitle.
+- Updated e2e/onboarding-step5.spec.ts to target the new "Applied fertilizer or lawn food" label.
+- Verification: `npx tsc --noEmit` passed; `npx playwright test e2e/onboarding-step5.spec.ts` passed 2/2.
+- Files changed: src/app/onboarding/[step]/steps/Step5.tsx, e2e/onboarding-step5.spec.ts, prd.json, progress.txt.
+---
+
+## 2026-06-16 - US-025
+- Reduced landing hero top padding in src/app/page.tsx from pt-20 to pt-12.
+- Did not add mock task cards, per the story's deferred scope note.
+- Verification: `npx tsc --noEmit` passed; `npx playwright test e2e/faq.spec.ts` passed 2/2, including the existing landing-page footer smoke check.
+- Files changed: src/app/page.tsx, prd.json, progress.txt.
+---

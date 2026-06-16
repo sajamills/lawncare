@@ -3,16 +3,16 @@
 import { useState } from "react";
 
 const TASKS = [
-  { id: "fertilize", label: "Applied fertilizer" },
-  { id: "pre-emergent", label: "Applied pre-emergent weed control" },
-  { id: "post-emergent", label: "Applied post-emergent (weed killer)" },
-  { id: "aerate", label: "Aerated the lawn" },
-  { id: "overseed", label: "Overseeded" },
-  { id: "dethatch", label: "Dethatched" },
-  { id: "lime", label: "Applied lime or soil amendment" },
-  { id: "pesticide", label: "Applied pesticide / grub control" },
-  { id: "mow-started", label: "Started regular mowing" },
-  { id: "irrigation", label: "Set up / ran irrigation system" },
+  { id: "fertilize", label: "Applied fertilizer or lawn food" },
+  { id: "pre-emergent", label: "Used a product to prevent weeds before they sprouted" },
+  { id: "post-emergent", label: "Used weed killer on existing weeds" },
+  { id: "aerate", label: "Poked holes in the soil (aeration)" },
+  { id: "overseed", label: "Spread grass seed to fill in thin areas" },
+  { id: "dethatch", label: "Removed the layer of dead grass above the soil (dethatching)" },
+  { id: "lime", label: "Adjusted soil pH with lime or a soil amendment" },
+  { id: "pesticide", label: "Treated for insects, grubs, or lawn pests" },
+  { id: "mow-started", label: "Started mowing regularly this season" },
+  { id: "irrigation", label: "Used a sprinkler or irrigation system recently" },
 ] as const;
 
 const NONE_ID = "none";

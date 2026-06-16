@@ -17,11 +17,15 @@
   --color-urgent: #ef4444;
   --color-routine: #eab308;
   --color-optional: #6b7280;
+  --text-base: 1.0625rem;
+  --leading-normal: 1.55;
 }
 
 body {
   background-color: var(--color-background);
   color: var(--color-text-primary);
+  font-size: 1.0625rem;
+  line-height: 1.55;
 }
 
 input:focus-visible,

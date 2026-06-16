@@ -20,10 +20,10 @@ const CATEGORY_ICONS: Record<TaskCategory, string> = {
   other: "📋",
 };
 
-const PRIORITY_COLORS: Record<TaskPriority, { bg: string; text: string }> = {
-  urgent: { bg: "rgba(239,68,68,0.13)", text: "var(--color-urgent)" },
-  routine: { bg: "rgba(234,179,8,0.13)", text: "var(--color-routine)" },
-  optional: { bg: "rgba(107,114,128,0.13)", text: "var(--color-optional)" },
+const TIMING_LABELS: Record<TaskPriority, { text: string; color: string }> = {
+  urgent: { text: "Due this week", color: "var(--color-urgent)" },
+  routine: { text: "Routine care", color: "var(--color-routine)" },
+  optional: { text: "Optional", color: "var(--color-optional)" },
 };
 
 const LOADING_MESSAGES = [
@@ -88,15 +88,27 @@ function getOnboardingState(): Record<string, unknown> {
   }
 }
 
-function scaleQuantity(description: string, sqFt: number | null): string {
-  if (!sqFt) return description;
-  return description.replace(
-    /(\d+(?:\.\d+)?)\s*lbs?\s+(?:of\s+)?(\w+)\s+per\s+1[,.]?000\s+sq\s*ft/gi,
-    (_, amount, product) => {
-      const total = ((parseFloat(amount) * sqFt) / 1000).toFixed(1);
-      return `${amount} lbs ${product} per 1,000 sq ft × your ${sqFt.toLocaleString()} sq ft = ${total} lbs total`;
-    }
+function formatQuantityBreakdown(
+  description: string,
+  sqFt: number | null
+): { text: string; calcNote: string | null } {
+  if (!sqFt) return { text: description, calcNote: null };
+
+  const match = description.match(
+    /(\d+(?:\.\d+)?)\s*lbs?\s+(?:of\s+)?(\w+)\s+per\s+1[,.]?000\s+sq\s*ft/i
   );
+  if (!match) return { text: description, calcNote: null };
+
+  const amount = match[1];
+  const total = ((parseFloat(amount) * sqFt) / 1000).toFixed(1);
+  return {
+    text: description,
+    calcNote: `Calculation: ${amount} lbs per 1,000 sq ft × ${sqFt.toLocaleString()} sq ft = ${total} lbs total`,
+  };
+}
+
+function getTimingLabel(priority: string): { text: string; color: string } {
+  return TIMING_LABELS[priority as TaskPriority] ?? TIMING_LABELS.optional;
 }
 
 const BANNER_DISMISSED_KEY = "preemergent_banner_dismissed";
@@ -326,9 +338,18 @@ export default function DashboardPage() {
           {currentWeek > 0 ? `Week ${currentWeek}` : "Right Now"}
         </h1>
         {grassName && (
-          <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>
-            {grassName}{stateCode ? ` · ${stateCode}` : ""}{weekRange ? ` · ${weekRange}` : ""}
-          </p>
+          <>
+            <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>
+              {grassName}{stateCode ? ` · ${stateCode}` : ""}{weekRange ? ` · ${weekRange}` : ""}
+            </p>
+            <Link
+              href="/profile"
+              className="text-xs underline mt-1 inline-block"
+              style={{ color: "var(--color-text-muted)" }}
+            >
+              Edit lawn details
+            </Link>
+          </>
         )}
       </div>
 
@@ -445,6 +466,8 @@ export default function DashboardPage() {
             <div className="flex flex-col gap-3">
               {sortedTasks.map((task, i) => {
                 const done = completedTitles.has(task.title);
+                const timingLabel = getTimingLabel(task.priority);
+                const quantity = formatQuantityBreakdown(task.description, sqFt);
                 return (
                   <div
                     key={i}
@@ -461,6 +484,12 @@ export default function DashboardPage() {
                       opacity: done ? 0.6 : 1,
                     }}
                   >
+                    <span
+                      className="text-xs font-semibold uppercase tracking-wide"
+                      style={{ color: timingLabel.color }}
+                    >
+                      {timingLabel.text}
+                    </span>
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2 flex-1 min-w-0">
                         <span>{CATEGORY_ICONS[task.category as TaskCategory] ?? "📋"}</span>
@@ -486,9 +515,17 @@ export default function DashboardPage() {
                         </button>
                       </div>
                     </div>
-                    <p className="text-sm" style={{ color: "var(--color-text-muted)" }}>
-                      {scaleQuantity(task.description, sqFt)}
+                    <p className="text-base" style={{ color: "var(--color-text-muted)" }}>
+                      {quantity.text}
                     </p>
+                    {quantity.calcNote && (
+                      <p
+                        className="text-xs mt-1 font-medium"
+                        style={{ color: "var(--color-primary)" }}
+                      >
+                        {quantity.calcNote}
+                      </p>
+                    )}
                     {hasPets && task.petSafetyNote && (
                       <div className="flex items-start gap-2 text-xs px-3 py-2 rounded-md" style={{ backgroundColor: "var(--color-warning-bg)", color: "var(--color-warning-text)" }}>
                         <span>⚠️</span>
