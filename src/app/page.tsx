@@ -6,7 +6,7 @@ const FEATURES = [
     chip: "Zone-aware",
     title: "Calibrated to your growing zone and local university research",
     description:
-      "Plans calibrated to your USDA growing zone and local university extension research.",
+      "Plans calibrated to your USDA growing zone and based on university extension guidance for your region.",
   },
   {
     icon: "🌱",

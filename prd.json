@@ -151,8 +151,8 @@
         "Typecheck passes"
       ],
       "priority": 8,
-      "passes": false,
-      "notes": ""
+      "passes": true,
+      "notes": "Updated the FEATURES Zone-aware card description as specified. grep -r 'science-backed' src/ returned zero matches before any edit here — the only prior occurrence (hero sub-copy) was already replaced as part of US-006's wording change, so no further replacement was needed for that criterion. Dashboard LOADING_MESSAGES 'Consulting university extension research…' left unchanged per the story (already accurate). Pure copy change, no layout impact."
     },
     {
       "id": "US-008",

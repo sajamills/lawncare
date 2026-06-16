@@ -151,3 +151,12 @@ Started: Sun Jun 15 2026 — UI/UX Remediation Sprint
 - **Learnings for future iterations:**
   - Landing page CTA text lives in a single shared CtaButton() component in src/app/page.tsx, reused for both the hero and the bottom-of-page CTA — copy edits there propagate to both locations automatically.
 ---
+
+## 2026-06-16 - US-007
+- Updated the FEATURES "Zone-aware" card description in src/app/page.tsx to "Plans calibrated to your USDA growing zone and based on university extension guidance for your region."
+- grep -r "science-backed" src/ returned zero matches before starting this story — the only occurrence (hero sub-copy) had already been replaced as part of US-006's wording change in the prior story, so that acceptance criterion was already satisfied.
+- Dashboard LOADING_MESSAGES "Consulting university extension research…" left as-is (already accurate per the story).
+- Files changed: src/app/page.tsx
+- **Learnings for future iterations:**
+  - When picking up a copy-cleanup story, grep for the target string first — an earlier story's wording change may have already satisfied part of the acceptance criteria.
+---
