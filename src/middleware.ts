@@ -8,8 +8,14 @@ const isPublicRoute = createRouteMatcher([
   "/onboarding(.*)",
 ]);
 
+// Test-only bypass for Playwright E2E runs against protected routes (e.g. /dashboard/*).
+// Only takes effect outside production and requires an explicit opt-in env var set by
+// playwright.config.ts's webServer — never enabled in normal dev or prod usage.
+const bypassAuthForE2E =
+  process.env.NODE_ENV !== "production" && process.env.PLAYWRIGHT_TEST_BYPASS_AUTH === "1";
+
 export default clerkMiddleware(async (auth, req) => {
-  if (!isPublicRoute(req)) {
+  if (!isPublicRoute(req) && !bypassAuthForE2E) {
     await auth.protect();
   }
 });

@@ -241,8 +241,9 @@ export default function CalendarPage() {
           {(["calendar", "list"] as ViewMode[]).map((mode) => (
             <button
               key={mode}
+              data-testid={`view-toggle-${mode}`}
               onClick={() => setViewMode(mode)}
-              className="px-3 py-1.5 capitalize"
+              className="px-3 py-1.5 capitalize focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[color:var(--color-primary)]"
               style={{
                 backgroundColor: viewMode === mode ? "var(--color-primary)" : "var(--color-surface)",
                 color: viewMode === mode ? "var(--color-background)" : "var(--color-text-muted)",
@@ -255,7 +256,10 @@ export default function CalendarPage() {
       </div>
 
       {viewMode === "calendar" ? (
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-12 gap-2">
+        <div
+          data-testid="calendar-grid"
+          className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-3"
+        >
           {MONTH_NAMES.map((name, idx) => {
             const monthNum = idx + 1;
             const isCurrentMonth = monthNum === currentMonth;
@@ -263,25 +267,40 @@ export default function CalendarPage() {
             const categories = getMonthCategories(monthNum);
 
             return (
-              <div key={name} className="flex flex-col gap-2 w-full">
+              <div key={name} className="flex flex-col gap-2 w-full" data-testid={`month-card-${name}`}>
                 <button
                   onClick={() => setExpandedMonth(isExpanded ? null : monthNum)}
-                  className="rounded-lg p-3 border text-left w-full"
+                  aria-expanded={isExpanded}
+                  aria-current={isCurrentMonth ? "date" : undefined}
+                  className="rounded-lg p-3 border text-left w-full break-words focus:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-[color:var(--color-primary)]"
                   style={{
-                    backgroundColor: "var(--color-surface)",
+                    backgroundColor: isExpanded ? "var(--color-surface-alt)" : "var(--color-surface)",
                     borderColor: isCurrentMonth ? "var(--color-primary)" : "var(--color-border)",
                     borderWidth: isCurrentMonth ? "2px" : "1px",
-                    minHeight: "80px",
+                    borderStyle: "solid",
+                    minHeight: "96px",
                   }}
                 >
-                  <p
-                    className="text-sm font-semibold mb-2"
-                    style={{
-                      color: isCurrentMonth ? "var(--color-primary)" : "var(--color-text-primary)",
-                    }}
-                  >
-                    {name}
-                  </p>
+                  <div className="flex items-center justify-between gap-1 mb-2">
+                    <p
+                      className="text-sm font-semibold break-words"
+                      style={{
+                        color: isCurrentMonth ? "var(--color-primary)" : "var(--color-text-primary)",
+                      }}
+                    >
+                      {name}
+                    </p>
+                    <span className="flex items-center gap-1 text-xs shrink-0">
+                      {isCurrentMonth && (
+                        <span style={{ color: "var(--color-primary)" }}>Now</span>
+                      )}
+                      {isExpanded && (
+                        <span aria-hidden="true" style={{ color: "var(--color-text-muted)" }}>
+                          ▾
+                        </span>
+                      )}
+                    </span>
+                  </div>
                   <div className="flex flex-wrap gap-1">
                     {categories.length === 0 ? (
                       <span className="text-xs" style={{ color: "var(--color-text-muted)" }}>
